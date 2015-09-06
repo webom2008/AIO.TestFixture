@@ -1,6 +1,6 @@
 # Build and Release Folders
-freeRtosStm32f105.uvguix.user
-JLinkLog.txt
-JLinkSettings.ini
+*.uvguix.user
+*.txt
+*.ini
 
 # Others
