@@ -64,7 +64,7 @@ extern "C"{
 #define IRQPriority10Uart1          (KERNEL_INTERRUPT_PRIORITY_BASE - 1) //10
 #define IRQPriority09unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 2) //9
 #define IRQPriority08unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 3) //8
-#define IRQPriority07unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 4) //7
+#define IRQPriority07Uart2          (KERNEL_INTERRUPT_PRIORITY_BASE - 4) //7
 #define IRQPriority06unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 5) //6
 #define IRQPriority05unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 6) //5
 #define IRQPriority04unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 7) //4
@@ -84,6 +84,17 @@ extern "C"{
 
 #define MyMini(a,b)                 (a)>(b) ? (b):(a)
 #define MyMaxi(a,b)                 (a)>(b) ? (a):(b)
+
+
+
+typedef enum
+{
+    PKT_ID_RESERVED         = 0x00,
+    PKT_ID_DRIVER_TEST,
+    PKT_ID_CONNECTED,
+
+    PKT_ID_UNVALID
+} MainMCUPacketID_DEF;
 
 #ifdef __cplusplus
 #if __cplusplus

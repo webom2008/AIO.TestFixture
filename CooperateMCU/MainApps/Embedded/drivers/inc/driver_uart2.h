@@ -28,8 +28,8 @@ extern "C"{
 
 int Uart2Init(void);
 int Uart2Open(void);
-int Uart2Read(void);
-int Uart2Write(void);
+int Uart2Read(char *pReadData, const int nDataLen);
+int Uart2Write(char *pWriteData, const int nDataLen);
 int Uart2Ctrl(void);
 int Uart2Close(void);
 

@@ -26,11 +26,6 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-
-//defines for DMA MODE
-#define UART1_DMA_RX_INCOMPLETE_EVENT_BIT   (1 << 0)
-#define UART1_DMA_RX_COMPLETE_EVENT_BIT	    (1 << 1)
-
 int Uart1Init(void);
 int Uart1Open(void);
 int Uart1Read(char *pReadData, const int nDataLen);

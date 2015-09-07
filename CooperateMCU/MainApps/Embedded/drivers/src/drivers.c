@@ -54,6 +54,8 @@ int DriverMoudleInit(void)
     int ret = 0;
     ret |= Uart1Init();
     ret |= Uart1Open();
+    ret |= Uart2Init();
+    ret |= Uart2Open();
     
     while (ret < 0); //error hanppen
     return 0;

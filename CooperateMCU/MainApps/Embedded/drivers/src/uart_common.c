@@ -156,8 +156,15 @@ static int UartCommonGPIOInit(const UART_NUM_DEF uart_num)
     }
     
 	/* Enable USARTx clock */
-	RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx \
-	                        | UART_GPIO[uart_num].RCC_Periph_UARTx_Tx \
+    if (UART_NUM01 == uart_num)
+    {
+    	RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx,ENABLE );
+    }
+    else
+    {
+        RCC_APB1PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx,ENABLE );
+    }
+	RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx_Tx \
 	                        | UART_GPIO[uart_num].RCC_Periph_UARTx_Rx \
 	                        | UART_GPIO[uart_num].RCC_Periph_UARTx_AFIO,
 	                        ENABLE );	
@@ -395,6 +402,7 @@ int UartDeviceDefaultInit(UART_DEVICE_TypeDef *pUartDevice)
     pUartDevice->pRxDMABuffer   = NULL;
     pUartDevice->pTxDMABuffer   = NULL;
     pUartDevice->IRQPriority    = 15; //lowest level
+    pUartDevice->IsDeviceOpen   = false;
     return 0;
 }
 
@@ -561,5 +569,17 @@ int UartCommonTerminate(const UART_DEVICE_TypeDef *pUartDevice)
         UartCommonDMATerminate(pUartDevice);
     }
     UartCommonNVICTerminate(pUartDevice);
+    return 0;
+}
+
+
+int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket)
+{
+    pPacket->StartHeader    = DMA_UART_START_HEADER_TAG;
+    pPacket->EndHeader      = DMA_UART_END_HEADER_TAG;
+    pPacket->ID             = (u8)PKT_ID_RESERVED;
+    pPacket->ParityTag      = DMA_UART_PACKET_PARITY_OK;
+    pPacket->ACK            = DMA_UART_PACKET_NACK;
+    memset(pPacket->Data, 0x00, sizeof(pPacket->Data));
     return 0;
 }

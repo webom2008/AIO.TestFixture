@@ -29,6 +29,13 @@ extern "C"{
 #include <stdbool.h>
 #include "stm32f10x.h"
 
+
+
+//defines for DMA MODE
+#define UART_DMA_RX_INCOMPLETE_EVENT_BIT    (1 << 0)
+#define UART_DMA_RX_COMPLETE_EVENT_BIT	    (1 << 1)
+
+
 typedef enum
 {
     UART_INTERRUPT_MODE = 0,
@@ -87,6 +94,25 @@ typedef struct _UART_DEVICE_DEF_
 } UART_DEVICE_TypeDef;
 
 
+#define DMA_UART_START_HEADER_TAG       (u8)0xA5
+#define DMA_UART_END_HEADER_TAG         (u8)0x5A
+#define DMA_UART_PACKET_NACK            (u8)0x00
+#define DMA_UART_PACKET_ACK             (u8)0x01
+#define DMA_UART_PACKET_PARITY_OK       (u8)0x00
+#define DMA_UART_PACKET_PARITY_ERR      (u8)0x01
+
+
+typedef struct 
+{ 
+    u8 StartHeader;     //Start Header Tag
+    u8 ID;              //Packet ID
+    u8 Data[27];        //Packet Data
+    u8 ACK;             //Tag for ack or nack
+    u8 ParityTag;       //Tage for Parity result OK or Error
+    u8 EndHeader;       //End Header Tag
+} DmaUartProtocolPacket;
+
+int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket);
 
 int UartDeviceDefaultInit(UART_DEVICE_TypeDef *pUartDevice);
 

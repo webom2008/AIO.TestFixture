@@ -354,7 +354,7 @@ void USART1_IRQHandler(void)
                 //boardcast message to handle
             	xResult = xEventGroupSetBitsFromISR(
             						xUart1RxEventGroup,	// The event group being updated.
-            						UART1_DMA_RX_INCOMPLETE_EVENT_BIT,// The bits being set.
+            						UART_DMA_RX_INCOMPLETE_EVENT_BIT,// The bits being set.
             						&xHigherPriorityTaskWoken );
 
             	// Was the message posted successfully?
@@ -445,7 +445,7 @@ void DMA1_Channel5_IRQHandler(void)
     //boardcast message to handle
 	xResult = xEventGroupSetBitsFromISR(
 						xUart1RxEventGroup,	// The event group being updated.
-						UART1_DMA_RX_COMPLETE_EVENT_BIT,// The bits being set.
+						UART_DMA_RX_COMPLETE_EVENT_BIT,// The bits being set.
 						&xHigherPriorityTaskWoken );
 
 	// Was the message posted successfully?

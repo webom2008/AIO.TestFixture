@@ -55,11 +55,15 @@
 #endif
 
 
+#ifdef CONFIG_DRIVER_TEST_UART2
+#include "uart2_test.c"
+#endif
+
 int drivers_test_start(void)
 {
 #ifdef CONFIG_DRIVER_TEST_UART1
-    xTaskCreate(uart_driver_task,
-                "uart_driver_task",
+    xTaskCreate(uart1_driver_task,
+                "uart1_driver_task",
                 configMINIMAL_STACK_SIZE,
                 NULL,
                 TEST_DRIVERS_TASK_PRIORITY,
@@ -73,6 +77,23 @@ int drivers_test_start(void)
                 NULL);
  #endif /* CONFIG_UART1_DMA_MODE */
 #endif /* CONFIG_DRIVER_TEST_UART1 */
+
+
+#ifdef CONFIG_DRIVER_TEST_UART2
+    xTaskCreate(uart2_driver_task,
+                "uart2_driver_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+    xTaskCreate(uart2_unpack_task,
+                "uart2_unpack_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+#endif
+
     return 0;
 }
 
