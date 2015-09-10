@@ -54,10 +54,23 @@
 #include "uart1_test.c"
 #endif
 
-
 #ifdef CONFIG_DRIVER_TEST_UART2
 #include "uart2_test.c"
 #endif
+
+#ifdef CONFIG_DRIVER_TEST_UART3
+#include "uart3_test.c"
+#endif
+
+#ifdef CONFIG_DRIVER_TEST_UART4
+#include "uart4_test.c"
+#endif
+
+#ifdef CONFIG_DRIVER_TEST_UART5
+#include "uart5_test.c"
+#endif
+
+
 
 int drivers_test_start(void)
 {
@@ -68,14 +81,12 @@ int drivers_test_start(void)
                 NULL,
                 TEST_DRIVERS_TASK_PRIORITY,
                 NULL);
- #ifdef CONFIG_UART1_DMA_MODE
     xTaskCreate(uart1_unpack_task,
                 "uart1_unpack_task",
                 configMINIMAL_STACK_SIZE,
                 NULL,
                 TEST_DRIVERS_TASK_PRIORITY,
                 NULL);
- #endif /* CONFIG_UART1_DMA_MODE */
 #endif /* CONFIG_DRIVER_TEST_UART1 */
 
 
@@ -88,6 +99,57 @@ int drivers_test_start(void)
                 NULL);
     xTaskCreate(uart2_unpack_task,
                 "uart2_unpack_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+#endif
+
+
+
+#ifdef CONFIG_DRIVER_TEST_UART3
+    xTaskCreate(uart3_driver_task,
+                "uart3_driver_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+    xTaskCreate(uart3_unpack_task,
+                "uart3_unpack_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+#endif
+
+
+
+#ifdef CONFIG_DRIVER_TEST_UART4
+    xTaskCreate(uart4_driver_task,
+                "uart4_driver_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+    xTaskCreate(uart4_unpack_task,
+                "uart4_unpack_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+#endif
+
+
+
+#ifdef CONFIG_DRIVER_TEST_UART5
+    xTaskCreate(uart5_driver_task,
+                "uart5_driver_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+    xTaskCreate(uart5_unpack_task,
+                "uart5_unpack_task",
                 configMINIMAL_STACK_SIZE,
                 NULL,
                 TEST_DRIVERS_TASK_PRIORITY,

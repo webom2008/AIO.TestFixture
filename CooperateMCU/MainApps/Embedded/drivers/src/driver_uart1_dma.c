@@ -181,6 +181,11 @@ int Uart1Read(char *pReadData, const int nDataLen)
         return -1;
     }
     
+    if( pdTRUE != xSemaphoreTake( xSerialRxHandleLock, ( TickType_t ) 100 ))
+    {
+        return -2;
+    }
+    
     if (uart1_rx_dma_buf.IdleBufferIndex) //Buffer2 ready
     {
        rLen = MyMini(nDataLen, uart1_rx_dma_buf.nBuff2Offset);
@@ -192,6 +197,7 @@ int Uart1Read(char *pReadData, const int nDataLen)
        memcpy(pReadData, uart1_rx_dma_buf.pPingPongBuff1, rLen);
     }
     
+    xSemaphoreGive( xSerialRxHandleLock );
     return rLen;
 }
 
@@ -322,8 +328,9 @@ void USART1_IRQHandler(void)
         USART_ClearITPendingBit(USART1, USART_IT_IDLE);
         DMA_ClearFlag(DMA1_FLAG_GL5);//clear all interrupt flags     
         DMA_Cmd(DMA1_Channel5, DISABLE); //close DMA incase receive data while handling
-        
-        if( pdTRUE == xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken))
+
+        xResult = xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken);
+        if( pdTRUE == xResult)
         {
             if (uart1_rx_dma_buf.IdleBufferIndex) //buf1 busy, buf2 idle
             {
@@ -347,7 +354,7 @@ void USART1_IRQHandler(void)
                     uart1_rx_dma_buf.IdleBufferIndex = 1;
                 }
             }
-            xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
+            xResult = xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
 
             if (u16BufferUsedLen > 0)
             {
@@ -356,16 +363,6 @@ void USART1_IRQHandler(void)
             						xUart1RxEventGroup,	// The event group being updated.
             						UART_DMA_RX_INCOMPLETE_EVENT_BIT,// The bits being set.
             						&xHigherPriorityTaskWoken );
-
-            	// Was the message posted successfully?
-            	if( xResult == pdPASS )
-            	{
-            		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-            		// switch should be requested.  The macro used is port specific and 
-            		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-            		// refer to the documentation page for the port being used.
-            		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-            	}
             } //End if u16BufferUsedLen > 0
         }// End if pdTRUE == xSemaphoreTakeFromISR
         DMA_Cmd(DMA1_Channel5, ENABLE);                 //open DMA after handled
@@ -388,6 +385,14 @@ void USART1_IRQHandler(void)
         USART_ClearITPendingBit(USART1, USART_IT_FE | USART_IT_NE);
     }
     
+	if( xResult == pdPASS )
+	{
+		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+		// switch should be requested.  The macro used is port specific and 
+		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+		// refer to the documentation page for the port being used.
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
 }
 
 /*****************************************************************************
@@ -476,12 +481,17 @@ void DMA1_Channel5_IRQHandler(void)
 *****************************************************************************/
 void DMA1_Channel4_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken;
+    BaseType_t xHigherPriorityTaskWoken, xResult;
+
+	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
+	xHigherPriorityTaskWoken = pdFALSE;
+    
     DMA_ClearITPendingBit(DMA1_IT_TC4);
 //    DMA_ClearITPendingBit(DMA1_IT_TE4);
     DMA_Cmd(DMA1_Channel4, DISABLE);    // close DMA
-    
-    if( pdTRUE != xSemaphoreTakeFromISR( xSerialTxHandleLock, &xHigherPriorityTaskWoken))
+
+    xResult = xSemaphoreTakeFromISR( xSerialTxHandleLock, &xHigherPriorityTaskWoken);
+    if( pdTRUE != xResult)
     {
         return;
     }
@@ -523,7 +533,16 @@ void DMA1_Channel4_IRQHandler(void)
             uart1_tx_dma_buf.IsDMAWroking = 0;
         }
     }
-    xSemaphoreGiveFromISR( xSerialTxHandleLock , &xHigherPriorityTaskWoken);
+    
+    xResult = xSemaphoreGiveFromISR( xSerialTxHandleLock , &xHigherPriorityTaskWoken);
+	if( xResult == pdPASS )
+	{
+		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+		// switch should be requested.  The macro used is port specific and 
+		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+		// refer to the documentation page for the port being used.
+		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
 }
 
 //============================================================

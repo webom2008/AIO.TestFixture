@@ -1,24 +1,24 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : drivers.h
+  File Name     : driver_uart5.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/2
+  Created       : 2015/9/8
   Last Modified :
-  Description   : drivers.c header file
+  Description   : driver_uart5.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/2
+  1.Date        : 2015/9/8
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
 
-#ifndef __DRIVERS_H__
-#define __DRIVERS_H__
+#ifndef __DRIVER_UART5_H__
+#define __DRIVER_UART5_H__
 
 
 #ifdef __cplusplus
@@ -27,18 +27,12 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#include "uart_common.h"
-#include "driver_uart1.h"
-#include "driver_uart2.h"
-#include "driver_uart3.h"
-#include "driver_uart4.h"
-#include "driver_uart5.h"
-
-#include "spi_common.h"
-
-#include "i2c_common.h"
-
-int DriverMoudleInit(void);
+int Uart5Init(void);
+int Uart5Open(void);
+int Uart5Read(char *pReadData, const int nDataLen);
+int Uart5Write(char *pWriteData, const int nDataLen);
+int Uart5Ctrl(void);
+int Uart5Close(void);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -47,4 +41,4 @@ int DriverMoudleInit(void);
 #endif /* __cplusplus */
 
 
-#endif /* __DRIVERS_H__ */
+#endif /* __DRIVER_UART5_H__ */

@@ -16,10 +16,7 @@
     Modification: Created file
 
 ******************************************************************************/
-#include "defines.h"
-#include "fifo.h"
-#include "uart_common.h"
-#include "driver_uart1.h"
+#include "includes.h"
 
 /*----------------------------------------------*
  * external variables                           *
@@ -41,10 +38,10 @@
  * module-wide global variables                 *
  *----------------------------------------------*/
 static UART_DEVICE_TypeDef uart1_device;
-static char uart1_tx_buffer[128];
-static CHAR_FIFO_StructDef uart1_tx_fifo;
-static char uart1_rx_buffer[128];
-static CHAR_FIFO_StructDef uart1_rx_fifo;
+static QueueHandle_t    uart1_tx_queue  = NULL;
+static QueueHandle_t    uart1_rx_queue  = NULL;
+static xSemaphoreHandle xReadOpLock     = NULL; //read operate lock
+static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
 
 /*----------------------------------------------*
  * constants                                    *
@@ -53,17 +50,12 @@ static CHAR_FIFO_StructDef uart1_rx_fifo;
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+#define UART1_TX_QUEUE_SIZE         128
+#define UART1_RX_QUEUE_SIZE         230// 10ms buffer length
 
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
-
-
-static void Uart1BufferInit(void)
-{
-    char_fifo_init(&uart1_tx_fifo, uart1_tx_buffer, sizeof(uart1_tx_buffer));
-    char_fifo_init(&uart1_rx_fifo, uart1_rx_buffer, sizeof(uart1_rx_buffer));
-}
 
 /*****************************************************************************
  Prototype    : Uart1Init
@@ -82,8 +74,6 @@ static void Uart1BufferInit(void)
 *****************************************************************************/
 int Uart1Init(void)
 {
-    Uart1BufferInit();
-    
     UartDeviceDefaultInit(&uart1_device);
     uart1_device.num        = UART_NUM01;
     uart1_device.mode       = UART_INTERRUPT_MODE;
@@ -91,6 +81,16 @@ int Uart1Init(void)
     uart1_device.baudrate   = B230400;
     uart1_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart1_device.IRQPriority= IRQPriority10Uart1;
+        
+    uart1_tx_queue  = xQueueCreate( UART1_TX_QUEUE_SIZE, sizeof( char ) );
+    uart1_rx_queue  = xQueueCreate( UART1_RX_QUEUE_SIZE, sizeof( char ) );
+    xReadOpLock     = xSemaphoreCreateMutex();
+    xWriteOpLock    = xSemaphoreCreateMutex();
+    
+	do{} while ((NULL == uart1_tx_queue) \
+                ||(NULL == uart1_rx_queue)\
+                ||(NULL == xReadOpLock)\
+                ||(NULL == xWriteOpLock));
     
     return 0;
 }
@@ -148,18 +148,25 @@ int Uart1Open(void)
 *****************************************************************************/
 int Uart1Read(char *pReadData, const int nDataLen)
 {
-    int ret = 0, i;
+    int i;
     if (!uart1_device.IsDeviceOpen)
     {
         return -1;
     }
     
-    for (i=0; i < nDataLen; i++)
+    if( pdTRUE != xSemaphoreTake( xReadOpLock, ( TickType_t ) 5 ))
     {
-        ret = char_fifo_pop(&uart1_rx_fifo, pReadData++);
-        if(ret < 0) break;
+        return -2;
     }
     
+    for (i=0; i < nDataLen; i++)
+    {
+		if(pdPASS != xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
+		{
+            break;
+		}
+    }
+    xSemaphoreGive( xReadOpLock );
     return i;
 }
 
@@ -188,12 +195,22 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     {
         return -1;
     }
+    if( pdTRUE != xSemaphoreTake( xWriteOpLock, ( TickType_t ) 5 ))
+    {
+        return -2;
+    }
     
     for (i=0; i < nDataLen; i++)
     {
-        char_fifo_push(&uart1_tx_fifo, pData++);
+		if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
+		{
+            // Failed to post the message, even after 10 ticks.
+			break;
+		}
     }
+    xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+    
     return i;
 }
 
@@ -245,13 +262,21 @@ int Uart1Close(void)
 *****************************************************************************/
 void USART1_IRQHandler(void)
 {
-    int ret = 0;
-    char temp = 0;
+    volatile char temp = 0;
+    BaseType_t xHigherPriorityTaskWoken, xResult;
+
+	// We have not woken a task at the start of the ISR.
+	xHigherPriorityTaskWoken = pdFALSE;
     
     if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
     {
         temp = USART_ReceiveData(USART1);
-        char_fifo_push(&uart1_rx_fifo, &temp);
+        xResult = xQueueSendToBackFromISR(uart1_rx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        if (errQUEUE_FULL == xResult)
+        {
+            //TODO: do something.
+            __ASM("nop;");
+        }
         if(USART_GetFlagStatus(USART1, USART_FLAG_ORE) != RESET)
         {
             USART_ClearFlag(USART1, USART_FLAG_ORE);
@@ -261,14 +286,14 @@ void USART1_IRQHandler(void)
   
     if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
     {
-        ret = char_fifo_pop(&uart1_tx_fifo, &temp);
-        if(ret < 0) //empty
-        {
-            USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-        }
-        else
+        xResult = xQueueReceiveFromISR(uart1_tx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        if (pdPASS == xResult)
         {
             USART_SendData(USART1, temp);
+        }
+        else //empty
+        {
+            USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
         }
     }
     
@@ -283,7 +308,11 @@ void USART1_IRQHandler(void)
     {
         USART_ClearITPendingBit(USART1, USART_IT_FE | USART_IT_NE);
     }
-    
+
+	if(xHigherPriorityTaskWoken)
+	{
+		taskYIELD ();
+	}
 }
 
 #if 1 // user define printf

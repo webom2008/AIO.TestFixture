@@ -664,16 +664,6 @@
           <GroupName>Drivers</GroupName>
           <Files>
             <File>
-              <FileName>driver_uart1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Embedded\drivers\src\driver_uart1.c</FilePath>
-            </File>
-            <File>
-              <FileName>driver_uart2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Embedded\drivers\src\driver_uart2.c</FilePath>
-            </File>
-            <File>
               <FileName>drivers.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\drivers.c</FilePath>
@@ -692,6 +682,31 @@
               <FileName>uart_common.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\uart_common.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_uart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_uart1.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_uart2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_uart2.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_uart3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_uart3.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_uart4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_uart4.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_uart5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_uart5.c</FilePath>
             </File>
           </Files>
         </Group>

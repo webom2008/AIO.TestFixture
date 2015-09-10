@@ -62,13 +62,8 @@ static u32 test_uart1_tx_count;
  *----------------------------------------------*/
 
 
-
 static void uart1_driver_task(void *pvParameters)
 {
-#ifdef CONFIG_UART1_INT_MODE
-    char rBuf[64];
-    int rLen = 0;
-#endif
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
 	/* Just to stop compiler warnings. */
@@ -78,27 +73,36 @@ static void uart1_driver_task(void *pvParameters)
     for (;;)
     {
         TEST_INFO(">>uart1_driver_task :%d",test_count++);
-        TEST_INFO(">>Uart1Write Testing...");
-#ifdef CONFIG_UART1_INT_MODE
-        TEST_INFO(">>Uart1Read :");
-        memset(rBuf, 0x00, sizeof(rBuf));
-        rLen = Uart1Read(rBuf, sizeof(rBuf));
-        if (rLen > 0)
-        {
-            TEST_INFO("rLen=%d :",rLen);
-            if (rLen >= sizeof(rBuf)) rLen = sizeof(rBuf) -1;
-            rBuf[rLen] = '\0';
-            TEST_INFO("%s",rBuf);
-        }
-        else
-        {
-            TEST_INFO("Empty");
-        }
-#endif
         TEST_INFO(">>totoal read count=%d",test_uart1_rx_count);
         vTaskDelay(xTicksToWait);
     }
 }
+
+
+#ifdef CONFIG_UART1_INT_MODE
+static void uart1_unpack_task(void *pvParameters)
+{
+    int rLen = 0;
+    char rBuf[100];
+    const TickType_t xTicksToWait = 4 / portTICK_PERIOD_MS;
+    
+	/* Just to stop compiler warnings. */
+	( void ) pvParameters;
+    
+    udprintf("\r\n[TEST] uart1_unpack_task running...");
+    for (;;)
+    {
+        rLen = 0;
+        memset(rBuf, 0x00, sizeof(rBuf));
+        rLen = Uart1Read(rBuf, sizeof(rBuf));
+        if (rLen > 0)
+        {
+            test_uart1_rx_count += rLen;
+        }
+        vTaskDelay(xTicksToWait);
+    }
+}
+#endif
 
 
 #ifdef CONFIG_UART1_DMA_MODE
