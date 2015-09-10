@@ -70,7 +70,7 @@ static void uart5_driver_task(void *pvParameters)
     udprintf("\r\n[TEST] uart5_driver_task running...");
     for (;;)
     {
-        TEST_UART5_INFO(">>uart5_driver_task :%d",test_count++);
+        TEST_UART5_INFO(">>uart5_driver_task :%d,read_count=%d",test_count++,test_uart5_rx_count);
         memset(txBuf, 0x00, sizeof(txBuf));
         sprintf(txBuf, "Uart5Write:%d", test_count);
         Uart5Write(txBuf, strlen(txBuf));
@@ -98,7 +98,7 @@ static void uart5_unpack_task(void *pvParameters)
         if (rLen > 0)
         {
             test_uart5_rx_count += rLen;
-            TEST_UART5_INFO(">>uart5_unpack_task rLen:%d,total:%d",rLen, test_uart5_rx_count);
+            TEST_UART5_INFO(">>uart5_unpack_task rLen:%d",rLen);
         }
         vTaskDelay(xTicksToWait);
     }

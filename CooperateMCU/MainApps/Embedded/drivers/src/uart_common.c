@@ -254,7 +254,7 @@ static int UartCommonNVICInit(const UART_DEVICE_TypeDef *pUartDevice)
     
     if (UART_INTERRUPT_MODE == pUartDevice->mode)
     {
-        USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+        USART_ITConfig(UART_GPIO[pUartDevice->num].UARTx, USART_IT_RXNE, ENABLE);
     }
     else
     {

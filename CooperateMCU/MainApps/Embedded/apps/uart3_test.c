@@ -70,7 +70,7 @@ static void uart3_driver_task(void *pvParameters)
     udprintf("\r\n[TEST] uart3_driver_task running...");
     for (;;)
     {
-        TEST_UART3_INFO(">>uart3_driver_task :%d",test_count++);
+        TEST_UART3_INFO(">>uart3_driver_task :%d, read_count=%d",test_count++,test_uart3_rx_count);
         memset(txBuf, 0x00, sizeof(txBuf));
         sprintf(txBuf, "Uart3Write:%d", test_count);
         Uart3Write(txBuf, strlen(txBuf));
@@ -98,7 +98,7 @@ static void uart3_unpack_task(void *pvParameters)
         if (rLen > 0)
         {
             test_uart3_rx_count += rLen;
-            TEST_UART3_INFO(">>uart3_unpack_task rLen:%d,total:%d",rLen, test_uart3_rx_count);
+            TEST_UART3_INFO(">>uart3_unpack_task rLen:%d",rLen);
         }
         vTaskDelay(xTicksToWait);
     }

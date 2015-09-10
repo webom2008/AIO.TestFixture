@@ -70,7 +70,7 @@ static void uart4_driver_task(void *pvParameters)
     udprintf("\r\n[TEST] uart4_driver_task running...");
     for (;;)
     {
-        TEST_UART4_INFO(">>uart4_driver_task :%d",test_count++);
+        TEST_UART4_INFO(">>uart4_driver_task :%d read_count=%d",test_count++, test_uart4_rx_count);
         memset(txBuf, 0x00, sizeof(txBuf));
         sprintf(txBuf, "Uart4Write:%d", test_count);
         Uart4Write(txBuf, strlen(txBuf));
@@ -98,7 +98,7 @@ static void uart4_unpack_task(void *pvParameters)
         if (rLen > 0)
         {
             test_uart4_rx_count += rLen;
-            TEST_UART4_INFO(">>uart4_unpack_task rLen:%d,total:%d",rLen, test_uart4_rx_count);
+            TEST_UART4_INFO(">>uart4_unpack_task rLen:%d",rLen);
         }
         vTaskDelay(xTicksToWait);
     }
