@@ -37,12 +37,10 @@
  * module-wide global variables                 *
  *----------------------------------------------*/
 static UART_DEVICE_TypeDef uart5_device;
-static char uart5_tx_buffer[128];
-static CHAR_FIFO_StructDef uart5_tx_fifo;
-static char uart5_rx_buffer[128];
-static CHAR_FIFO_StructDef uart5_rx_fifo;
-static xSemaphoreHandle xSerialTxHandleLock = NULL;
-static xSemaphoreHandle xSerialRxHandleLock = NULL;
+static QueueHandle_t    uart5_tx_queue  = NULL;
+static QueueHandle_t    uart5_rx_queue  = NULL;
+static xSemaphoreHandle xReadOpLock     = NULL; //read operate lock
+static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -50,32 +48,30 @@ static xSemaphoreHandle xSerialRxHandleLock = NULL;
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+#define UART5_TX_QUEUE_SIZE         128
+#define UART5_RX_QUEUE_SIZE         230// 10ms buffer length
 
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
-
-static void Uart5BufferInit(void)
-{
-    char_fifo_init(&uart5_tx_fifo, uart5_tx_buffer, sizeof(uart5_tx_buffer));
-    char_fifo_init(&uart5_rx_fifo, uart5_rx_buffer, sizeof(uart5_rx_buffer));
-}
-
 int Uart5Init(void)
 {
-    Uart5BufferInit();
-    
     UartDeviceDefaultInit(&uart5_device);
     uart5_device.num        = UART_NUM05;
     uart5_device.mode       = UART_INTERRUPT_MODE;
     uart5_device.baudrate   = B230400;
     uart5_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart5_device.IRQPriority= IRQPriority06Uart5;
-
-    xSerialTxHandleLock = xSemaphoreCreateMutex();
-    xSerialRxHandleLock = xSemaphoreCreateMutex();
-	do{} while ((NULL == xSerialTxHandleLock) \
-        ||(NULL == xSerialRxHandleLock));
+        
+    uart5_tx_queue  = xQueueCreate( UART5_TX_QUEUE_SIZE, sizeof( char ) );
+    uart5_rx_queue  = xQueueCreate( UART5_RX_QUEUE_SIZE, sizeof( char ) );
+    xReadOpLock     = xSemaphoreCreateMutex();
+    xWriteOpLock    = xSemaphoreCreateMutex();
+    
+	do{} while ((NULL == uart5_tx_queue) \
+                ||(NULL == uart5_rx_queue)\
+                ||(NULL == xReadOpLock)\
+                ||(NULL == xWriteOpLock));
     
     return 0;
 }
@@ -103,24 +99,25 @@ int Uart5Open(void)
 
 int Uart5Read(char *pReadData, const int nDataLen)
 {
-    int ret = 0, i;
+    int i;
     if (!uart5_device.IsDeviceOpen)
     {
         return -1;
     }
     
-    if( pdTRUE != xSemaphoreTake( xSerialRxHandleLock, ( TickType_t ) 100 ))
+    if( pdTRUE != xSemaphoreTake( xReadOpLock, ( TickType_t ) 5 ))
     {
         return -2;
     }
     
     for (i=0; i < nDataLen; i++)
     {
-        ret = char_fifo_pop(&uart5_rx_fifo, pReadData++);
-        if(ret < 0) break;
+		if(pdPASS != xQueueReceive(uart5_rx_queue, pReadData++, (TickType_t)10))
+		{
+            break;
+		}
     }
-    
-    xSemaphoreGive( xSerialRxHandleLock );
+    xSemaphoreGive( xReadOpLock );
     return i;
 }
 
@@ -134,17 +131,20 @@ int Uart5Write(char *pWriteData, const int nDataLen)
     {
         return -1;
     }
-    
-    if( pdTRUE != xSemaphoreTake( xSerialTxHandleLock, ( TickType_t ) 100 ))
+    if( pdTRUE != xSemaphoreTake( xWriteOpLock, ( TickType_t ) 5 ))
     {
         return -2;
     }
     
     for (i=0; i < nDataLen; i++)
     {
-        char_fifo_push(&uart5_tx_fifo, pData++);
+		if(pdPASS != xQueueSendToBack(uart5_tx_queue, (void *)pData++, (TickType_t)3))
+		{
+            // Failed to post the message, even after 10 ticks.
+			break;
+		}
     }
-    xSemaphoreGive( xSerialTxHandleLock );
+    xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(UART5, USART_IT_TXE, ENABLE);
     
     return i;
@@ -168,9 +168,8 @@ int Uart5Close(void)
 
 void UART5_IRQHandler(void)
 {
+    volatile char temp = 0;
     BaseType_t xHigherPriorityTaskWoken, xResult;
-    int ret = 0;
-    char temp = 0;
 
 	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
 	xHigherPriorityTaskWoken = pdFALSE;
@@ -178,11 +177,11 @@ void UART5_IRQHandler(void)
     if(USART_GetITStatus(UART5, USART_IT_RXNE) != RESET)
     {
         temp = USART_ReceiveData(UART5);
-        xResult = xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken);
-        if( pdTRUE == xResult)
+        xResult = xQueueSendToBackFromISR(uart5_rx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        if (errQUEUE_FULL == xResult)
         {
-            char_fifo_push(&uart5_rx_fifo, &temp);
-            xResult = xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
+            //TODO: do something.
+            __ASM("nop;");
         }
         if(USART_GetFlagStatus(UART5, USART_FLAG_ORE) != RESET)
         {
@@ -193,19 +192,14 @@ void UART5_IRQHandler(void)
   
     if(USART_GetITStatus(UART5, USART_IT_TXE) != RESET)
     {
-        xResult = xSemaphoreTakeFromISR( xSerialTxHandleLock, &xHigherPriorityTaskWoken);
-        if( pdTRUE == xResult)
+        xResult = xQueueReceiveFromISR(uart5_tx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        if (pdPASS == xResult)
         {
-            ret = char_fifo_pop(&uart5_tx_fifo, &temp);
-            xResult = xSemaphoreGiveFromISR( xSerialTxHandleLock , &xHigherPriorityTaskWoken);
-            if(ret < 0) //empty
-            {
-                USART_ITConfig(UART5, USART_IT_TXE, DISABLE);
-            }
-            else
-            {
-                USART_SendData(UART5, temp);
-            }
+            USART_SendData(UART5, temp);
+        }
+        else //empty
+        {
+            USART_ITConfig(UART5, USART_IT_TXE, DISABLE);
         }
     }
     
@@ -220,13 +214,9 @@ void UART5_IRQHandler(void)
     {
         USART_ClearITPendingBit(UART5, USART_IT_FE | USART_IT_NE);
     }
-    
-    if( xResult == pdPASS )
+
+	if(xHigherPriorityTaskWoken)
 	{
-		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		// switch should be requested.  The macro used is port specific and 
-		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-		// refer to the documentation page for the port being used.
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+		taskYIELD ();
 	}
 }

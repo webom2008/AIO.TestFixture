@@ -98,8 +98,8 @@ static void uart4_unpack_task(void *pvParameters)
         if (rLen > 0)
         {
             test_uart4_rx_count += rLen;
+            TEST_UART4_INFO(">>uart4_unpack_task rLen:%d,total:%d",rLen, test_uart4_rx_count);
         }
-        TEST_UART4_INFO(">>uart4_unpack_task rLen:%d,total:%d",rLen, test_uart4_rx_count);
         vTaskDelay(xTicksToWait);
     }
 }
