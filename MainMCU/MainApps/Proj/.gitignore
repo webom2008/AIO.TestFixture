@@ -1,0 +1,6 @@
+# Build and Release Folders
+*.uvguix.user
+*.txt
+*.ini
+
+# Others
