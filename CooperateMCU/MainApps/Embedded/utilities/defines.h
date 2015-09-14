@@ -39,7 +39,10 @@ extern "C"{
 
 
 //PRIORITY DEFINES
-#define TEST_DRIVERS_TASK_PRIORITY  ( tskIDLE_PRIORITY + 1 )
+#define TEST_DRIVERS_TASK_PRIORITY          ( tskIDLE_PRIORITY + 1 )
+#define MAIN_MCU_EXE_PKT_TASK_PRIORITY      ( tskIDLE_PRIORITY + 2 )
+#define MAIN_MCU_UNPACK_TASK_PRIORITY       ( tskIDLE_PRIORITY + 12 )
+
 
 /* QWB:20150411
  * 1.逻辑优先级低于configMAX_SYSCALL_INTERRUPT_PRIORITY可以使用OS_API函数,否则不能使用
@@ -76,15 +79,12 @@ extern "C"{
 
 
 
-//ASCLL
-//0x0A - LF (NL line feed, new line)
-//0x0D - CR (carriage return)
-#define CLI_CMD_END_TAG             (u8)(0x0D) //
-
 
 #define MyMini(a,b)                 (a)>(b) ? (b):(a)
 #define MyMaxi(a,b)                 (a)>(b) ? (a):(b)
 
+#define DELAY_NO_WAIT           ( TickType_t ) 0
+#define DELAY_MAX_WAIT          portMAX_DELAY
 
 
 typedef enum

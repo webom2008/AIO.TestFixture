@@ -71,12 +71,16 @@ static int platform_init(void)
 {
     int res = 0;
     res = DriverMoudleInit();
+    res |= AppMainMcuInit();
+    
+    while (res < 0); //error hanppen
     return res;
 }
 
 static int startAllApps(void)
 {
     drivers_test_start();
+    AppMainMcuStart();
     return 0;
 }
 

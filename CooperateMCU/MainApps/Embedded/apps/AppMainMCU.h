@@ -28,6 +28,10 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+int AppMainMcuInit(void);
+
+int AppMainMcuStart(void);
+
 
 #ifdef __cplusplus
 #if __cplusplus
