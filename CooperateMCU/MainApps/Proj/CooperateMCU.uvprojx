@@ -718,6 +718,31 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\drivers_test.c</FilePath>
             </File>
+            <File>
+              <FileName>AppAIOStm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppAIOStm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppAmperemeter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppAmperemeter.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppMainMCU.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppMainMCU.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppManometer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppManometer.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppSPO2Board.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppSPO2Board.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
