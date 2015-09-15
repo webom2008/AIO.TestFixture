@@ -50,7 +50,7 @@ static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
-#define UART3_TX_QUEUE_SIZE         128
+#define UART3_TX_QUEUE_SIZE         230
 #define UART3_RX_QUEUE_SIZE         230// 10ms buffer length
 
 /*----------------------------------------------*
@@ -63,7 +63,7 @@ int Uart3Init(void)
     uart3_device.mode       = UART_INTERRUPT_MODE;
     uart3_device.baudrate   = B230400;
     uart3_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart3_device.IRQPriority= IRQPriority09Uart3;
+    uart3_device.IRQPriority= IRQPriority11Uart23;
         
     uart3_tx_queue  = xQueueCreate( UART3_TX_QUEUE_SIZE, sizeof( char ) );
     uart3_rx_queue  = xQueueCreate( UART3_RX_QUEUE_SIZE, sizeof( char ) );

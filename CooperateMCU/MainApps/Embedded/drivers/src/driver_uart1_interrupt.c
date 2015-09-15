@@ -80,7 +80,7 @@ int Uart1Init(void)
 //    uart1_device.mode       = UART_DMA_MODE;
     uart1_device.baudrate   = B230400;
     uart1_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart1_device.IRQPriority= IRQPriority10Uart1;
+    uart1_device.IRQPriority= IRQPriority14Uart145;
         
     uart1_tx_queue  = xQueueCreate( UART1_TX_QUEUE_SIZE, sizeof( char ) );
     uart1_rx_queue  = xQueueCreate( UART1_RX_QUEUE_SIZE, sizeof( char ) );

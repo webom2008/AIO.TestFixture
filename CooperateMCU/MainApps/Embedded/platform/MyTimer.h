@@ -3,22 +3,22 @@
    Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : AppAIOStm32.h
+  File Name     : MyTimer.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/12
+  Created       : 2015/9/15
   Last Modified :
-  Description   : AppAIOStm32.c header file
+  Description   : MyTimer.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/12
+  1.Date        : 2015/9/15
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
 
-#ifndef __APPAIOSTM32_H__
-#define __APPAIOSTM32_H__
+#ifndef __MYTIMER_H__
+#define __MYTIMER_H__
 
 
 #ifdef __cplusplus
@@ -28,14 +28,26 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+#define MY_TIM_TICK_PERIOD_MS           100
+
+#define MY_TIM_DEFAULT_TIMEOUT_MS       400
+
+int MyTimerInit(void);
+
+int MyTimerStart(void);
+
+u32 getMyTimerTick(void);
+
+int IsMyTimerOnTime(const u32 u32Target);
+
+int IsMyTimerOverTime(const u32 u32Base, const u32 u32Duration);
+
+
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif /* __cplusplus */
 
-int AppAioStmInit(void);
 
-int AppAioStmStart(void);
-
-#endif /* __APPAIOSTM32_H__ */
+#endif /* __MYTIMER_H__ */

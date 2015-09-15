@@ -106,7 +106,8 @@ typedef struct
 { 
     u8 StartHeader;     //Start Header Tag
     u8 ID;              //Packet ID
-    u8 Data[27];        //Packet Data
+    u8 DataLen;         //Packet Data Length
+    u8 Data[26];        //Packet Data
     u8 ACK;             //Tag for ack or nack
     u8 ParityTag;       //Tage for Parity result OK or Error
     u8 EndHeader;       //End Header Tag

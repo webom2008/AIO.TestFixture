@@ -53,13 +53,15 @@ extern "C"{
 
 //includes apps headers
 #include "../apps/drivers_test.h"
+#include "../apps/MainMcuProtocol.h"
 #include "../apps/AppMainMCU.h"
 #include "../apps/AppAIOStm32.h"
 #include "../apps/AppManometer.h"
 #include "../apps/AppAmperemeter.h"
 #include "../apps/AppSPO2Board.h"
 
-
+//includes others
+#include "../platform/MyTimer.h"
 
 #ifdef __cplusplus
 #if __cplusplus

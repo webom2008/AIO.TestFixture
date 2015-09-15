@@ -658,6 +658,11 @@
               <FileType>5</FileType>
               <FilePath>..\Embedded\utilities\sysconfigs.h</FilePath>
             </File>
+            <File>
+              <FileName>MyTimer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\platform\MyTimer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -742,6 +747,16 @@
               <FileName>AppSPO2Board.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\AppSPO2Board.c</FilePath>
+            </File>
+            <File>
+              <FileName>AioStmUpdate.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AioStmUpdate.c</FilePath>
+            </File>
+            <File>
+              <FileName>MainMcuProtocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\MainMcuProtocol.c</FilePath>
             </File>
           </Files>
         </Group>

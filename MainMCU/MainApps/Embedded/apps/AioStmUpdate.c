@@ -1,17 +1,17 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : main.c
+  File Name     : AioStmUpdate.c
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/4/8
+  Created       : 2015/9/15
   Last Modified :
-  Description   : main
+  Description   : AIO-STM Update interrface
   Function List :
   History       :
-  1.Date        : 2015/4/8
+  1.Date        : 2015/9/15
     Author      : qiuweibo
     Modification: Created file
 
@@ -21,12 +21,22 @@
 /*----------------------------------------------*
  * external variables                           *
  *----------------------------------------------*/
-extern char APP_VERSION[];
 
 /*----------------------------------------------*
  * external routine prototypes                  *
  *----------------------------------------------*/
-extern void version_init(void);
+
+/*----------------------------------------------*
+ * internal routine prototypes                  *
+ *----------------------------------------------*/
+
+/*----------------------------------------------*
+ * project-wide global variables                *
+ *----------------------------------------------*/
+
+/*----------------------------------------------*
+ * module-wide global variables                 *
+ *----------------------------------------------*/
 
 /*----------------------------------------------*
  * constants                                    *
@@ -36,75 +46,21 @@ extern void version_init(void);
  * macros                                       *
  *----------------------------------------------*/
 
-#define _MAIN_INFO_
-#ifdef _MAIN_INFO_
-#define MAIN_INFO(fmt, arg...) udprintf("\r\n[Main] "fmt, ##arg)
-#else
-#define MAIN_INFO(fmt, arg...) do{}while(0)
-#endif
-
-/*----------------------------------------------*
- * project-wide global variables                *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
- * internal variables                           *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
- * internal routine prototypes                  *
- *----------------------------------------------*/
-
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
 
-
-static int system_init(void)
+int AioStmUpdateStart(void)
 {
-    version_init();
-    NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
-    return 0;
-}
 
-static int platform_init(void)
-{
-    int res = 0;
-    res = DriverMoudleInit();
-    res |= MyTimerInit();
-    res |= AppMainMcuInit();
-    res |= AppAioStmInit();
+    //make the test board into BOOT mode
+    BOOT0_HIGH; //BOOT0 = 1
+    POWER_DISABLE; //low level power off
+    vTaskDelay(1000);
+    POWER_ENABLE; //high level power on
+    vTaskDelay(1000);
+
+    //Send CO-MCU AioStmUpdateTask
     
-    while (res < 0); //error hanppen
-    return res;
-}
-
-static int startAllApps(void)
-{
-    drivers_test_start();
-    AppMainMcuStart();
-    AppAioStmStart();
-    return 0;
-}
-
-int main(void)
-{
-    int res = 0;
-    
-    res |= system_init();
-    res |= platform_init();
-    
-    MAIN_INFO("VERSION:%s",APP_VERSION);
-    if (res)
-    {
-        MAIN_INFO("System Initialize failed!");
-        while(1);
-    }
-    else
-    {
-        startAllApps();
-        MyTimerStart();
-        vTaskStartScheduler();
-    }
 }
 

@@ -17,6 +17,8 @@
 
 ******************************************************************************/
 #include "includes.h"
+#include "AioStmUpdate.h"
+
 /*----------------------------------------------*
  * external variables                           *
  *----------------------------------------------*/
@@ -47,7 +49,7 @@ static QueueHandle_t    pMainMcuRxPktQueue  = NULL;
  * macros                                       *
  *----------------------------------------------*/
 //#define _SEND_DEMO_PKT_
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -82,7 +84,15 @@ static void MainMcuExecutePktTask(void *pvParameters)
             {
             case PKT_ID_DRIVER_TEST:
                 break;
-            case PKT_ID_CONNECTED:
+            case PKT_ID_AIOSTM_UPDATE_START:
+                xSemaphoreGive(gpAioStmDev->pStartUpdateSemaphore);
+                break;
+            case PKT_ID_AIOSTM_UPDATE_ERROR:
+                break;
+            case PKT_ID_AIOSTM_UPDATE_BOOT:
+                AioStmCtrl(AIO_STM_CTRL_CMD_SET_BOOT0, rxPacket.Data);
+                break;
+            case PKT_ID_AIOSTM_UPDATE_END:
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);
@@ -92,6 +102,24 @@ static void MainMcuExecutePktTask(void *pvParameters)
 
     }
 }
+
+
+static void MainMcuTimeoutPktTask(void *pvParameters)
+{
+    const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
+    
+	/* Just to stop compiler warnings. */
+	( void ) pvParameters;
+    
+    INFO("MainMcuTimeoutPktTask running...\n");
+    for (;;)
+    {
+        checkAndResendMainMcuACKPkt();
+        INFO("MainMcuTimeoutPktTask running %d\n",getMyTimerTick());
+        vTaskDelay(xTicksToWait);
+    }
+}
+
 
 static void MainMcuUnpackTask(void *pvParameters)
 {
@@ -163,6 +191,7 @@ int AppMainMcuInit(void)
     int ret = 0;
     
     pMainMcuRxPktQueue  = xQueueCreate(2, sizeof(DmaUartProtocolPacket));
+    ret |= MainMcuProtocolInit();
     
 	if(NULL == pMainMcuRxPktQueue)
 	{
@@ -187,6 +216,12 @@ int AppMainMcuStart(void)
                 configMINIMAL_STACK_SIZE,
                 NULL,
                 MAIN_MCU_EXE_PKT_TASK_PRIORITY,
+                NULL);
+    xTaskCreate(MainMcuTimeoutPktTask,
+                "MainMcuTimeoutPktTask",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                MAIN_MCU_TIMEOUT_PKT_TASK_PRIORITY,
                 NULL);
 #endif /* CONFIG_DRIVER_TEST_UART2 */
 
