@@ -28,9 +28,9 @@ extern "C"{
 #endif /* __cplusplus */
 
 
-#define MY_TIM_TICK_PERIOD_MS           100
+#define MY_TIM_TICK_PERIOD_MS           (u32)100
 
-#define MY_TIM_DEFAULT_TIMEOUT_MS       400
+#define MY_TIM_DEFAULT_TIMEOUT_MS       (u32)400
 
 int MyTimerInit(void);
 

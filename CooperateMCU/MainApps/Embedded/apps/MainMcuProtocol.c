@@ -132,46 +132,23 @@ int checkAndResendMainMcuACKPkt(void)
         if ((IDLE_FLAG_USED == gNeedAckPktBuffer[i].idle_flag) \
             && (1 == IsMyTimerOnTime(gNeedAckPktBuffer[i].timeoutTick)))
         {
-            sendMainMcuPkt(gNeedAckPktBuffer[i].pkt.ID,
-                gNeedAckPktBuffer[i].pkt.Data,
-                gNeedAckPktBuffer[i].pkt.DataLen,
-                gNeedAckPktBuffer[i].pkt.ACK,
-                gNeedAckPktBuffer[i].timeoutTick);
+            sendMainMcuPkt( &gNeedAckPktBuffer[i].pkt, \
+                            gNeedAckPktBuffer[i].timeoutTick);
         }
     }
     return 0;
 }
 
-int sendMainMcuPkt( const u8 ID,
-                    const u8 *pSendData,
-                    const u8 DataLen,
-                    const u8 Ack,
-                    const u32 timeout_ms)
+int sendMainMcuPkt( DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms)
 {
-    DmaUartProtocolPacket txPacket;
     u32 tick;
-    
-    if (DataLen > sizeof(txPacket.Data))
-    {
-        return -1;
-    }
-    
-    DmaUartProtocolPacketInit(&txPacket);
-    txPacket.ID = ID;
-    txPacket.DataLen = DataLen;
-    txPacket.ACK = Ack;
-    if (DataLen > 0)
-    {
-        memcpy(txPacket.Data, pSendData, DataLen);
-    }
-    
-    Uart2Write((char *)&txPacket, sizeof(DmaUartProtocolPacket));
-    if (DMA_UART_PACKET_ACK == Ack)
+    Uart2Write((char *)pTxPacket, sizeof(DmaUartProtocolPacket));
+    if (DMA_UART_PACKET_ACK == pTxPacket->ACK)
     {
         tick = timeout_ms / MY_TIM_TICK_PERIOD_MS;
         tick = MyMaxi(tick, 2);
         tick = tick + getMyTimerTick();
-        addMainMcuAckPkt(&txPacket, tick);
+        addMainMcuAckPkt(pTxPacket, tick);
     }
     return 0;
 }

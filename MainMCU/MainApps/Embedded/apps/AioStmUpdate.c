@@ -233,13 +233,13 @@ static void AioStmUpdateTask(void *pvParameters)
         vTaskDelay(1000);
 
         //Send CO-MCU AioStmUpdateTask
-        if (0 != waitAioStmUpdateEnd())
+        if (0 != sendAioStmUpdateStart())
         {
             break;
         }
 
         //Wait for End
-        if (0 != sendAioStmUpdateStart())
+        if (0 != waitAioStmUpdateEnd())
         {
             break;
         }

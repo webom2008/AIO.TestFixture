@@ -42,8 +42,8 @@ static AioStmDev_TypeDef gAioStmDev;
 AioStmDev_TypeDef *gpAioStmDev = &gAioStmDev;
 
 
-#define ACK   0x79
-#define NACK  0x1F
+const uint8_t ACK = 0x79;
+const uint8_t NACK = 0x1F;
 
 #define TICKTOWAIT	1000
 #define SIZE_WRITE	128
@@ -249,17 +249,20 @@ void AioStmUpdateTask(void *pvParameter)
 	uint8_t Get_Info_Data[15] = {0};
 	uint8_t Address[5] = {0}; // 4 Bytes Address + 1 Bytes checksum
     uint8_t isError = 0;
+    DmaUartProtocolPacket txPacket;
 
     INFO("AioStmUpdateTask running...\n");
 	while(1)
 	{
         if (0 != isError) //Error Happend, send pkt to tell Main MCU know
         {
-            sendMainMcuPkt( PKT_ID_AIOSTM_UPDATE_ERROR,
-                            &isError,
-                            1,
-                            DMA_UART_PACKET_NACK,
-                            0);
+            DmaUartProtocolPacketInit(&txPacket);
+            txPacket.ID = PKT_ID_AIOSTM_UPDATE_ERROR;
+            txPacket.DataLen = 1;
+            txPacket.Data[0] = isError;
+            txPacket.ACK = DMA_UART_PACKET_NACK;
+            sendMainMcuPkt(&txPacket, 0);
+            isError = 0;
         }
         
         if (pdTRUE != xSemaphoreTake(gpAioStmDev->pStartUpdateSemaphore, DELAY_MAX_WAIT))
@@ -304,7 +307,7 @@ void AioStmUpdateTask(void *pvParameter)
 			ERROR("get cmd error\r\n");
 			continue; //faild reback
 		}
-		INFO("get cmd success\r\n");
+        INFO("get cmd success\r\n");
 
         //S3: ==========>erase command
 		if(Erase_Operation() == 0)
@@ -312,7 +315,7 @@ void AioStmUpdateTask(void *pvParameter)
 			ERROR("erase error\r\n");
 			continue;//failed reback
 		}
-		INFO("erase success\r\n");
+        INFO("erase success\r\n");
 
 	    //S4: ==========>write command
 		Count = 0;
@@ -471,11 +474,11 @@ void AioStmUpdateTask(void *pvParameter)
         }
 		INFO("go command\r\n");
 
-        sendMainMcuPkt( PKT_ID_AIOSTM_UPDATE_END,
-                        NULL, 
-                        0,
-                        DMA_UART_PACKET_ACK,
-                        MY_TIM_DEFAULT_TIMEOUT_MS);
+        DmaUartProtocolPacketInit(&txPacket);
+        txPacket.ID = PKT_ID_AIOSTM_UPDATE_END;
+        txPacket.DataLen = 0;
+        txPacket.ACK = DMA_UART_PACKET_ACK;
+        sendMainMcuPkt(&txPacket, MY_TIM_DEFAULT_TIMEOUT_MS);
 	}
 }
 
