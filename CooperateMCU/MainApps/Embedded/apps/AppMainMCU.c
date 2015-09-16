@@ -49,7 +49,7 @@ static QueueHandle_t    pMainMcuRxPktQueue  = NULL;
  * macros                                       *
  *----------------------------------------------*/
 //#define _SEND_DEMO_PKT_
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
