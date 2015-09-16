@@ -53,8 +53,12 @@ extern "C"{
 
 //includes apps headers
 #include "../apps/drivers_test.h"
+#include "../apps/CoopMcuProtocol.h"
+#include "../apps/AppCoopMCU.h"
 
 
+//includes others
+#include "../platform/MyTimer.h"
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -108,7 +108,7 @@ int Uart2Init(void)
     uart2_device.mode           = UART_DMA_MODE;
     uart2_device.baudrate       = B230400;
     uart2_device.ParityType     = PARITY_EVEN; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart2_device.IRQPriority    = IRQPriority07Uart2;
+    uart2_device.IRQPriority    = IRQPriority11Uart23;
     uart2_device.pTxDMABuffer   = &uart2_tx_dma_buf;
     uart2_device.pRxDMABuffer   = &uart2_rx_dma_buf;
     

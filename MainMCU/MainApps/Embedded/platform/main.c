@@ -38,7 +38,7 @@ extern void version_init(void);
 
 #define _MAIN_INFO_
 #ifdef _MAIN_INFO_
-#define MAIN_INFO(fmt, arg...) udprintf("\r\n[Main] "fmt, ##arg)
+#define MAIN_INFO(fmt, arg...) udprintf("[Main] "fmt, ##arg)
 #else
 #define MAIN_INFO(fmt, arg...) do{}while(0)
 #endif
@@ -71,6 +71,9 @@ static int platform_init(void)
 {
     int res = 0;
     res = DriverMoudleInit();
+    res |= MyTimerInit();
+    
+    while (res < 0); //error hanppen
     return res;
 }
 
@@ -87,7 +90,7 @@ int main(void)
     res |= system_init();
     res |= platform_init();
     
-    MAIN_INFO("VERSION:%s",APP_VERSION);
+    MAIN_INFO("VERSION:%s\n",APP_VERSION);
     if (res)
     {
         MAIN_INFO("System Initialize failed!");
@@ -96,6 +99,7 @@ int main(void)
     else
     {
         startAllApps();
+        MyTimerStart();
         vTaskStartScheduler();
     }
 }

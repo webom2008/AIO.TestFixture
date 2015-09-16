@@ -61,7 +61,7 @@ int Uart4Init(void)
     uart4_device.mode       = UART_INTERRUPT_MODE;
     uart4_device.baudrate   = B230400;
     uart4_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart4_device.IRQPriority= IRQPriority08Uart4;
+    uart4_device.IRQPriority= IRQPriority14Uart145;
         
     uart4_tx_queue  = xQueueCreate( UART4_TX_QUEUE_SIZE, sizeof( char ) );
     uart4_rx_queue  = xQueueCreate( UART4_RX_QUEUE_SIZE, sizeof( char ) );
