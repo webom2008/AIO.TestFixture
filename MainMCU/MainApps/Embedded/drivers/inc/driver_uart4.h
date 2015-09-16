@@ -27,6 +27,9 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+#define UART4_TX_DMA_BUF_LEN        256
+#define UART4_RX_DMA_BUF_LEN        128
+
 int Uart4Init(void);
 int Uart4Open(void);
 int Uart4Read(char *pReadData, const int nDataLen);

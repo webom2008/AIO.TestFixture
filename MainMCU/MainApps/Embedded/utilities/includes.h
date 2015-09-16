@@ -56,6 +56,7 @@ extern "C"{
 #include "../apps/CoopMcuProtocol.h"
 #include "../apps/AioStmUpdate.h"
 #include "../apps/AppCoopMCU.h"
+#include "../apps/AppTestedAIO.h"
 
 
 //includes others
