@@ -49,7 +49,7 @@ typedef struct _NeedAckPkt_StructDef_
     DmaUartProtocolPacket pkt;
 } NeedAckPkt_StructDef;
 
-#define ACK_PKT_BUFFER_MAX_SIZE         20     
+#define ACK_PKT_BUFFER_MAX_SIZE         10     
 NeedAckPkt_StructDef gNeedAckPktBuffer[ACK_PKT_BUFFER_MAX_SIZE];
 
 /*----------------------------------------------*
@@ -132,46 +132,34 @@ int checkAndResendCoopMcuACKPkt(void)
         if ((IDLE_FLAG_USED == gNeedAckPktBuffer[i].idle_flag) \
             && (1 == IsMyTimerOnTime(gNeedAckPktBuffer[i].timeoutTick)))
         {
-            sendCoopMcuPkt(gNeedAckPktBuffer[i].pkt.ID,
-                gNeedAckPktBuffer[i].pkt.Data,
-                gNeedAckPktBuffer[i].pkt.DataLen,
-                gNeedAckPktBuffer[i].pkt.ACK,
-                gNeedAckPktBuffer[i].timeoutTick);
+            sendCoopMcuPkt( &gNeedAckPktBuffer[i].pkt, \
+                            gNeedAckPktBuffer[i].timeoutTick);
         }
     }
     return 0;
 }
 
-int sendCoopMcuPkt( const u8 ID,
-                    const u8 *pSendData,
-                    const u8 DataLen,
-                    const u8 Ack,
-                    const u32 timeout_ms)
+int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket)
 {
-    DmaUartProtocolPacket txPacket;
+    pPacket->StartHeader    = DMA_UART_START_HEADER_TAG;
+    pPacket->EndHeader      = DMA_UART_END_HEADER_TAG;
+    pPacket->ID             = (u8)PKT_ID_RESERVED;
+    pPacket->ParityTag      = DMA_UART_PACKET_PARITY_OK;
+    pPacket->ACK            = DMA_UART_PACKET_NACK;
+    memset(pPacket->Data, 0x00, sizeof(pPacket->Data));
+    return 0;
+}
+
+int sendCoopMcuPkt(DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms)
+{
     u32 tick;
-    
-    if (DataLen > sizeof(txPacket.Data))
-    {
-        return -1;
-    }
-    
-    DmaUartProtocolPacketInit(&txPacket);
-    txPacket.ID = ID;
-    txPacket.DataLen = DataLen;
-    txPacket.ACK = Ack;
-    if (DataLen > 0)
-    {
-        memcpy(txPacket.Data, pSendData, DataLen);
-    }
-    
-    Uart3Write((char *)&txPacket, sizeof(DmaUartProtocolPacket));
-    if (DMA_UART_PACKET_ACK == Ack)
+    Uart3Write((char *)pTxPacket, sizeof(DmaUartProtocolPacket));
+    if (DMA_UART_PACKET_ACK == pTxPacket->ACK)
     {
         tick = timeout_ms / MY_TIM_TICK_PERIOD_MS;
         tick = MyMaxi(tick, 2);
         tick = tick + getMyTimerTick();
-        addCoopMcuAckPkt(&txPacket, tick);
+        addCoopMcuAckPkt(pTxPacket, tick);
     }
     return 0;
 }

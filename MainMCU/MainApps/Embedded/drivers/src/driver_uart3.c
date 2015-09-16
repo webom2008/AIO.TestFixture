@@ -416,6 +416,10 @@ void DMA1_Channel3_IRQHandler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken, xResult;
+
+	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
+	xHigherPriorityTaskWoken = pdFALSE;
+    
     DMA_ClearITPendingBit(DMA1_IT_TC2);
     DMA_Cmd(DMA1_Channel2, DISABLE);    // close DMA
     

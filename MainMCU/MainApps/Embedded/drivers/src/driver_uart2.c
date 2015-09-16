@@ -40,8 +40,8 @@ EventGroupHandle_t xUart2RxEventGroup;  // Declare a variable to hold the create
  *----------------------------------------------*/
 static UART_DEVICE_TypeDef uart2_device;
 
-#define UART2_TX_DMA_BUF_LEN        sizeof(DmaUartProtocolPacket)
-#define UART2_RX_DMA_BUF_LEN        sizeof(DmaUartProtocolPacket)
+#define UART2_TX_DMA_BUF_LEN        256
+#define UART2_RX_DMA_BUF_LEN        256
 
 static u8 u8TxDMABuffer[UART2_TX_DMA_BUF_LEN*2];
 static u8 u8RxDMABuffer[UART2_RX_DMA_BUF_LEN*2];
@@ -107,7 +107,7 @@ int Uart2Init(void)
     uart2_device.num            = UART_NUM02;
     uart2_device.mode           = UART_DMA_MODE;
     uart2_device.baudrate       = B230400;
-    uart2_device.ParityType     = PARITY_EVEN; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
+    uart2_device.ParityType     = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart2_device.IRQPriority    = IRQPriority11Uart23;
     uart2_device.pTxDMABuffer   = &uart2_tx_dma_buf;
     uart2_device.pRxDMABuffer   = &uart2_rx_dma_buf;
@@ -176,8 +176,6 @@ int Uart2Open(void)
 int Uart2Read(char *pReadData, const int nDataLen)
 {
     int rLen = 0;
-    DmaUartProtocolPacket *pPacket = (DmaUartProtocolPacket *)pReadData;
-    
     if (!uart2_device.IsDeviceOpen)
     {
         return -1;
@@ -200,17 +198,6 @@ int Uart2Read(char *pReadData, const int nDataLen)
     }
 
     xSemaphoreGive( xSerialRxHandleLock );
-    
-    if (DMA_UART_PACKET_PARITY_ERR == xSerialRxParityFlag)
-    {
-        pPacket->ParityTag = DMA_UART_PACKET_PARITY_ERR;
-        xSerialRxParityFlag = DMA_UART_PACKET_PARITY_OK;
-    }
-    else
-    {
-        pPacket->ParityTag = DMA_UART_PACKET_PARITY_OK;
-    }
-    
     return rLen;
 }
 
@@ -526,6 +513,10 @@ void DMA1_Channel6_IRQHandler(void)
 void DMA1_Channel7_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken, xResult;
+
+	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
+	xHigherPriorityTaskWoken = pdFALSE;
+    
     DMA_ClearITPendingBit(DMA1_IT_TC7);
 //    DMA_ClearITPendingBit(DMA1_IT_TE7);
     DMA_Cmd(DMA1_Channel7, DISABLE);    // close DMA

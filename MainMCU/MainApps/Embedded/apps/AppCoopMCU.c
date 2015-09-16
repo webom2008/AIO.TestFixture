@@ -78,6 +78,7 @@ int AppCoopMcuInit(void)
     
     pCoopMcuRxPktQueue  = xQueueCreate(2, sizeof(DmaUartProtocolPacket));
     ret |= CoopMcuProtocolInit();
+    ret |= AioStmUpdateInit();
     
 	if(NULL == pCoopMcuRxPktQueue)
 	{
@@ -199,24 +200,38 @@ static void CoopMcuExecutePktTask(void *pvParameters)
         if(xQueueReceive(pCoopMcuRxPktQueue, (void *)&rxPacket, DELAY_MAX_WAIT))
         {
             INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
+            
+            if (DMA_UART_PACKET_NACK == rxPacket.ACK) //delete pkt from send buffer
+            {
+                deleteCoopMcuAckPkt(rxPacket.ID);
+            }
+            
             switch (rxPacket.ID)
             {
             case PKT_ID_DRIVER_TEST:
                 break;
             case PKT_ID_AIOSTM_UPDATE_START:
+                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
+                                    PKT_ACK_BIT_AIOSTM_START);
                 break;
             case PKT_ID_AIOSTM_UPDATE_ERROR:
+//                deleteAioStmUpdateTask();
+                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
+                                    PKT_ACK_BIT_AIOSTM_ERROR);
                 break;
             case PKT_ID_AIOSTM_UPDATE_BOOT:
+                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
+                                    PKT_ACK_BIT_AIOSTM_BOOT);
                 break;
             case PKT_ID_AIOSTM_UPDATE_END:
+                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
+                                    PKT_ACK_BIT_AIOSTM_END);
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);
                 break;
             }
         }
-
     }
 }
 

@@ -72,6 +72,7 @@ static int platform_init(void)
     int res = 0;
     res = DriverMoudleInit();
     res |= MyTimerInit();
+    res |= AppCoopMcuInit();
     
     while (res < 0); //error hanppen
     return res;
@@ -80,6 +81,7 @@ static int platform_init(void)
 static int startAllApps(void)
 {
     drivers_test_start();
+    AppCoopMcuStart();
     return 0;
 }
 

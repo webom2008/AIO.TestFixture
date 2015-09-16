@@ -1,22 +1,22 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : drivers.c
+  File Name     : driver_aioboard.c
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/2
+  Created       : 2015/9/16
   Last Modified :
-  Description   : driver top interface
+  Description   : driver for aio board
   Function List :
   History       :
-  1.Date        : 2015/9/2
+  1.Date        : 2015/9/16
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
-#include "drivers.h"
+#include "includes.h"
 
 /*----------------------------------------------*
  * external variables                           *
@@ -49,22 +49,50 @@
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
-int DriverMoudleInit(void)
+
+int AioBoardInit(void)
 {
-    int ret = 0;
-    ret |= Uart1Init();
-    ret |= Uart1Open();
-    ret |= Uart2Init();
-    ret |= Uart2Open();
-    ret |= Uart3Init();
-    ret |= Uart3Open();
-    ret |= Uart4Init();
-    ret |= Uart4Open();
-    ret |= Uart5Init();
-    ret |= Uart5Open();
-    
-    ret |= AioBoardInit();
-    ret |= AioBoardOpen();
-    while (ret < 0); //error hanppen
+    return 0;
+}
+
+int AioBoardOpen(void)
+{
+    return 0;
+}
+
+int AioBoardRead(char *pReadData, const int nDataLen)
+{
+    return 0;
+}
+
+int AioBoardWrite(char *pWriteData, const int nDataLen)
+{
+    return 0;
+}
+
+int AioBoardCtrl(CTRL_CMD_AIOBOARD cmd, void *pData)
+{
+    char *pVal = (char *)pData;
+
+    switch(cmd)
+    {
+    case CTRL_CMD_AIOBOARD_SET_POWER:
+        if (SW_ON == *pVal)
+        {
+
+        }
+        else
+        {
+
+        }
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
+int AioBoardClose(void)
+{
     return 0;
 }

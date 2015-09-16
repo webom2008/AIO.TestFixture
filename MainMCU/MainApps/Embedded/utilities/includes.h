@@ -54,6 +54,7 @@ extern "C"{
 //includes apps headers
 #include "../apps/drivers_test.h"
 #include "../apps/CoopMcuProtocol.h"
+#include "../apps/AioStmUpdate.h"
 #include "../apps/AppCoopMCU.h"
 
 

@@ -65,7 +65,7 @@ static void uart2_driver_task(void *pvParameters)
 {
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
-    DmaUartProtocolPacket txPacket;
+    char txBuf[32];
     
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
@@ -74,22 +74,18 @@ static void uart2_driver_task(void *pvParameters)
     for (;;)
     {
         TEST_UART2_INFO(">>uart2_driver_task :%d",test_count++);
-        DmaUartProtocolPacketInit(&txPacket);
-        txPacket.ID = (u8)PKT_ID_DRIVER_TEST;
-        sprintf((char *)txPacket.Data, "%d", test_count);
-        Uart2Write((char *)&txPacket, sizeof(DmaUartProtocolPacket));
-        TEST_UART2_INFO(">>totoal read count=%d",test_uart2_rx_count);
+        memset(txBuf, 0x00, sizeof(txBuf));
+        sprintf(txBuf, "Uart2Write:%d", test_count);
+        Uart2Write(txBuf, strlen(txBuf));
         vTaskDelay(xTicksToWait);
     }
 }
 
-
 static void uart2_unpack_task(void *pvParameters)
 {
     int rLen = 0;
-    DmaUartProtocolPacket rxPacket;
+    char rxBuf[32];
     EventBits_t uxBits;
-    const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
     
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
@@ -104,12 +100,12 @@ static void uart2_unpack_task(void *pvParameters)
 					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
 					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
 					pdFALSE,		// Don't wait for both bits, either bit will do.
-					xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+					DELAY_MAX_WAIT );	// Wait a maximum of 100ms for either bit to be set.
 
-        memset(&rxPacket, 0x00, sizeof(DmaUartProtocolPacket));
+        memset(rxBuf, 0x00, sizeof(rxBuf));
         if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
 		{
-            rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
+            rLen = Uart2Read(rxBuf, sizeof(rxBuf));
             if (rLen > 0)
             {
                 test_uart2_rx_count += rLen;
@@ -118,7 +114,7 @@ static void uart2_unpack_task(void *pvParameters)
 		}
 		else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
 		{
-            rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
+            rLen = Uart2Read(rxBuf, sizeof(rxBuf));
             if (rLen > 0)
             {
                 test_uart2_rx_count += rLen;
@@ -130,17 +126,6 @@ static void uart2_unpack_task(void *pvParameters)
 		}
 
         if (rLen <= 0) continue;
-        
-        if ((DMA_UART_START_HEADER_TAG == rxPacket.StartHeader ) \
-            && (DMA_UART_END_HEADER_TAG == rxPacket.EndHeader)  \
-            && (DMA_UART_PACKET_PARITY_OK == rxPacket.ParityTag))
-        {
-            TEST_UART2_INFO("PKT_ID=0X%02X, Data=%s",rxPacket.ID ,rxPacket.Data);
-        }
-        else
-        {
-            TEST_UART2_INFO("PKT ERROR");
-        }
     }
 }
 

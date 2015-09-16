@@ -28,6 +28,23 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+
+#define PKT_ACK_BIT_AIOSTM_START    (EventBits_t)(1<<0)
+#define PKT_ACK_BIT_AIOSTM_ERROR    (EventBits_t)(1<<1)
+#define PKT_ACK_BIT_AIOSTM_BOOT     (EventBits_t)(1<<2)
+#define PKT_ACK_BIT_AIOSTM_END      (EventBits_t)(1<<3)
+
+typedef struct _AioStmDev_DEF_
+{
+    EventGroupHandle_t xPktAckEventGroup;
+} AioStmDev_TypeDef;
+
+extern AioStmDev_TypeDef *gpAioStmDev;
+
+int AioStmUpdateInit(void);
+int createAioStmUpdateTask(void);
+int deleteAioStmUpdateTask(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -93,28 +93,6 @@ typedef struct _UART_DEVICE_DEF_
     uint8_t IRQPriority;
 } UART_DEVICE_TypeDef;
 
-
-#define DMA_UART_START_HEADER_TAG       (u8)0xA5
-#define DMA_UART_END_HEADER_TAG         (u8)0x5A
-#define DMA_UART_PACKET_NACK            (u8)0x00
-#define DMA_UART_PACKET_ACK             (u8)0x01
-#define DMA_UART_PACKET_PARITY_OK       (u8)0x00
-#define DMA_UART_PACKET_PARITY_ERR      (u8)0x01
-
-
-typedef struct 
-{ 
-    u8 StartHeader;     //Start Header Tag
-    u8 ID;              //Packet ID
-    u8 DataLen;         //Packet Data Length
-    u8 Data[26];        //Packet Data
-    u8 ACK;             //Tag for ack or nack
-    u8 ParityTag;       //Tage for Parity result OK or Error
-    u8 EndHeader;       //End Header Tag
-} DmaUartProtocolPacket;
-
-int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket);
-
 int UartDeviceDefaultInit(UART_DEVICE_TypeDef *pUartDevice);
 
 int UartCommonInit(const UART_DEVICE_TypeDef *pUartDevice);

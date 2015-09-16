@@ -38,6 +38,8 @@ extern "C"{
 
 #include "i2c_common.h"
 
+#include "driver_aioboard.h"
+
 int DriverMoudleInit(void);
 
 #ifdef __cplusplus

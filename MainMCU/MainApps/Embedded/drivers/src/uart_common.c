@@ -572,14 +572,3 @@ int UartCommonTerminate(const UART_DEVICE_TypeDef *pUartDevice)
     return 0;
 }
 
-
-int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket)
-{
-    pPacket->StartHeader    = DMA_UART_START_HEADER_TAG;
-    pPacket->EndHeader      = DMA_UART_END_HEADER_TAG;
-    pPacket->ID             = (u8)PKT_ID_RESERVED;
-    pPacket->ParityTag      = DMA_UART_PACKET_PARITY_OK;
-    pPacket->ACK            = DMA_UART_PACKET_NACK;
-    memset(pPacket->Data, 0x00, sizeof(pPacket->Data));
-    return 0;
-}

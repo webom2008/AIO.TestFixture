@@ -41,17 +41,35 @@ typedef enum
 } CoopMCUPacketID_DEF;
 
 
+#define DMA_UART_START_HEADER_TAG       (u8)0xA5
+#define DMA_UART_END_HEADER_TAG         (u8)0x5A
+#define DMA_UART_PACKET_NACK            (u8)0x00
+#define DMA_UART_PACKET_ACK             (u8)0x01
+#define DMA_UART_PACKET_PARITY_OK       (u8)0x00
+#define DMA_UART_PACKET_PARITY_ERR      (u8)0x01
+
+
+typedef struct 
+{ 
+    u8 StartHeader;     //Start Header Tag
+    u8 ID;              //Packet ID
+    u8 DataLen;         //Packet Data Length
+    u8 Data[26];        //Packet Data
+    u8 ACK;             //Tag for ack or nack
+    u8 ParityTag;       //Tage for Parity result OK or Error
+    u8 EndHeader;       //End Header Tag
+} DmaUartProtocolPacket;
+
+int DmaUartProtocolPacketInit(DmaUartProtocolPacket *pPacket);
+
 int CoopMcuProtocolInit(void);
 
-int deleteCoopMcuPkt(const u8 ID);
+int deleteCoopMcuAckPkt(const u8 ID);
 
 int checkAndResendCoopMcuACKPkt(void);
 
-int sendCoopMcuPkt(     const u8 ID, 
-                        const u8 *pSendData, 
-                        const u8 DataLen, 
-                        const u8 Ack, 
-                        const u32 timeout_ms);
+int sendCoopMcuPkt(DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
