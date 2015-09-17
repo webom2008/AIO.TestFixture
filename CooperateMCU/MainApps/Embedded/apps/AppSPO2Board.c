@@ -49,3 +49,16 @@
  * routines' implementations                    *
  *----------------------------------------------*/
 
+int AppSPO2BoardInit(void)
+{
+    return 0;
+}
+
+int AppSPO2BoardStart(void)
+{
+    int ret = 0;
+
+    ret |= createSpo2ProtocolTask();
+    while(0 != ret);
+    return 0;
+}

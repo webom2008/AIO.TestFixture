@@ -74,6 +74,7 @@ static int platform_init(void)
     res |= MyTimerInit();
     res |= AppMainMcuInit();
     res |= AppAioStmInit();
+    res |= AppSPO2BoardInit();
     
     while (res < 0); //error hanppen
     return res;
@@ -84,6 +85,7 @@ static int startAllApps(void)
     drivers_test_start();
     AppMainMcuStart();
     AppAioStmStart();
+    AppSPO2BoardStart();
     return 0;
 }
 

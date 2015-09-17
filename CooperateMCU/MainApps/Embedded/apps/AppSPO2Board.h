@@ -28,6 +28,10 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+int AppSPO2BoardInit(void);
+
+int AppSPO2BoardStart(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

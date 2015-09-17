@@ -192,6 +192,6 @@ int createAioBoardTask(void)
                                     NULL,
                                     AIOBOARD_DRIVER_TASK_PRIORITY,
                                     NULL));
-#endif /* CONFIG_DRIVER_TEST_UART3 */
+#endif /* CONFIG_DRIVER_TEST_UART4 */
     return 0;
 }

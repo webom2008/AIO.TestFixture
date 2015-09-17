@@ -734,19 +734,9 @@
               <FilePath>..\Embedded\apps\AppAIOStm32.c</FilePath>
             </File>
             <File>
-              <FileName>AppAmperemeter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Embedded\apps\AppAmperemeter.c</FilePath>
-            </File>
-            <File>
               <FileName>AppMainMCU.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\AppMainMCU.c</FilePath>
-            </File>
-            <File>
-              <FileName>AppManometer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Embedded\apps\AppManometer.c</FilePath>
             </File>
             <File>
               <FileName>AppSPO2Board.c</FileName>
@@ -762,6 +752,11 @@
               <FileName>MainMcuProtocol.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\MainMcuProtocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>Spo2Protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\Spo2Protocol.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -56,9 +56,8 @@ extern "C"{
 #include "../apps/MainMcuProtocol.h"
 #include "../apps/AppMainMCU.h"
 #include "../apps/AppAIOStm32.h"
-#include "../apps/AppManometer.h"
-#include "../apps/AppAmperemeter.h"
 #include "../apps/AppSPO2Board.h"
+#include "../apps/Spo2Protocol.h"
 
 //includes others
 #include "../platform/MyTimer.h"
