@@ -546,6 +546,13 @@ void DMA1_Channel4_IRQHandler(void)
 }
 
 //============================================================
+#ifdef CONFIG_UART1_FOR_DPM2200
+int udprintf(const char* fmt, ...)
+{
+    return 0;
+}
+
+#else
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -566,4 +573,5 @@ int udprintf(const char* fmt, ...)
     Uart1Write(strbuf, nLen);
     return nLen;
 }
+#endif
 

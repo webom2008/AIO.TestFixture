@@ -78,7 +78,7 @@ int Uart1Init(void)
     uart1_device.num        = UART_NUM01;
     uart1_device.mode       = UART_INTERRUPT_MODE;
 //    uart1_device.mode       = UART_DMA_MODE;
-    uart1_device.baudrate   = B230400;
+    uart1_device.baudrate   = B115200;
     uart1_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart1_device.IRQPriority= IRQPriority14Uart145;
         
@@ -159,12 +159,16 @@ int Uart1Read(char *pReadData, const int nDataLen)
         return -2;
     }
     
-    for (i=0; i < nDataLen; i++)
+    for (i=0; i < nDataLen;)
     {
-		if(pdPASS != xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
+		if(pdPASS == xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
 		{
-            break;
+            i++;
 		}
+        else
+        {
+            break;
+        }
     }
     xSemaphoreGive( xReadOpLock );
     return i;
@@ -315,7 +319,12 @@ void USART1_IRQHandler(void)
 	}
 }
 
-#if 1 // user define printf
+#ifdef CONFIG_UART1_FOR_DPM2200
+int udprintf(const char* fmt, ...)
+{
+    return 0;
+}
+#else
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -336,7 +345,8 @@ int udprintf(const char* fmt, ...)
     Uart1Write(strbuf, nLen);
     return nLen;
 }
-#else
+#endif
+#if 0
 int udprintf(const char* fmt, ...)
 {
     return 0;

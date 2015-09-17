@@ -663,6 +663,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\platform\MyTimer.c</FilePath>
             </File>
+            <File>
+              <FileName>crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\utilities\crc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -747,6 +752,21 @@
               <FileName>AppTestedAIO.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\AppTestedAIO.c</FilePath>
+            </File>
+            <File>
+              <FileName>AioDspProtocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AioDspProtocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppPC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppPC.c</FilePath>
+            </File>
+            <File>
+              <FileName>ComputerProtocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\ComputerProtocol.c</FilePath>
             </File>
           </Files>
         </Group>

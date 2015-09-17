@@ -63,6 +63,8 @@ int DriverMoudleInit(void)
     ret |= Uart5Init();
     ret |= Uart5Open();
     
+    ret |= DPM2200Init();
+    ret |= DPM2200Open();
     while (ret < 0); //error hanppen
     return 0;
 }

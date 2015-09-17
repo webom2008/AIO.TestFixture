@@ -40,7 +40,7 @@ extern "C"{
 //#define CONFIG_DRIVER_TEST_UART4
 //#define CONFIG_DRIVER_TEST_UART5
 
-
+//#define CONFIG_UART1_FOR_DPM2200
 
 
 #ifdef __cplusplus

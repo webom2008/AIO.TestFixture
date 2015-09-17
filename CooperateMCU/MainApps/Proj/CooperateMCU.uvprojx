@@ -713,6 +713,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_uart5.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_dpm2200.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_dpm2200.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
