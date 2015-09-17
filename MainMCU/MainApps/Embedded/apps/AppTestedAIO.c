@@ -46,11 +46,23 @@
  * macros                                       *
  *----------------------------------------------*/
 
+//#define _INFO_
+#define _ERROR_
+
+#ifdef _INFO_
+#define INFO(fmt, arg...) udprintf("[MainMCU]Info: "fmt, ##arg)
+#else
+#define INFO(fmt, arg...) do{}while(0)
+#endif
+#ifdef _ERROR_
+#define ERROR(fmt, arg...) udprintf("[MainMCU]Error: "fmt, ##arg)
+#else
+#define ERROR(fmt, arg...) do{}while(0)
+#endif
+
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
-
-
 
 int AppTestedAIOInit(void)
 {
@@ -62,7 +74,8 @@ int AppTestedAIOStart(void)
     int ret = 0;
 
     ret = createAioBoardTask();
-
+    ret |= createAioDspUnpackTask();
     while(0 != ret);
     return 0;
 }
+

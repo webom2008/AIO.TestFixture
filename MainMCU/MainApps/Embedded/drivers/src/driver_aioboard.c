@@ -30,6 +30,9 @@ extern EventGroupHandle_t xUart4RxEventGroup;
 /*----------------------------------------------*
  * internal routine prototypes                  *
  *----------------------------------------------*/
+static QueueHandle_t    xpReceiveQueueHandle = NULL;
+
+
 
 /*----------------------------------------------*
  * project-wide global variables                *
@@ -49,6 +52,10 @@ extern EventGroupHandle_t xUart4RxEventGroup;
 #define PWR_CTL_PIN     GPIO_Pin_11
 #define PWR_CTL_PORT    GPIOA
 #define PWR_CTL_RCC     RCC_APB2Periph_GPIOA
+
+
+#define RECEIVE_QUEUE_LENTGH        256
+
 
 //#define _INFO_
 #define _ERROR_
@@ -82,6 +89,9 @@ static void AioBoardGpioInit(void)
 int AioBoardInit(void)
 {
     AioBoardGpioInit();
+    xpReceiveQueueHandle = xQueueCreate(RECEIVE_QUEUE_LENTGH, sizeof(char));
+
+    do {}while(NULL == xpReceiveQueueHandle);
     return 0;
 }
 
@@ -92,12 +102,21 @@ int AioBoardOpen(void)
 
 int AioBoardRead(char *pReadData, const int nDataLen)
 {
-    return 0;
+    int i;
+    
+    for (i=0; i < nDataLen; i++)
+    {
+		if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
+		{
+            break;
+		}
+    }
+    return i;
 }
 
 int AioBoardWrite(char *pWriteData, const int nDataLen)
 {
-    return 0;
+    return Uart4Read(pWriteData, nDataLen);
 }
 
 int AioBoardCtrl(CTRL_CMD_AIOBOARD cmd, void *pData)
@@ -132,6 +151,7 @@ static void CoopAioBoardReadDriverTask(void *pvParameters)
 {
     int rLen = 0;
     char rxBuf[UART4_RX_DMA_BUF_LEN];
+    char *pChar = NULL;
     EventBits_t uxBits;
     
 	/* Just to stop compiler warnings. */
@@ -154,14 +174,12 @@ static void CoopAioBoardReadDriverTask(void *pvParameters)
             || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
 		{
             rLen = Uart4Read(rxBuf, UART4_RX_DMA_BUF_LEN);
-
-            //Add to Buffer
+            pChar = &rxBuf[0];
+            while(rLen--)
+            {
+                xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
+            }
 		}
-		else
-		{
-            // do nothing.
-		}
-        if (rLen <= 0) continue;
     }
 }
 
