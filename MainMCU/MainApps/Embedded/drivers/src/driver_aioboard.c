@@ -116,7 +116,7 @@ int AioBoardRead(char *pReadData, const int nDataLen)
 
 int AioBoardWrite(char *pWriteData, const int nDataLen)
 {
-    return Uart4Read(pWriteData, nDataLen);
+    return Uart4Write(pWriteData, nDataLen);
 }
 
 int AioBoardCtrl(CTRL_CMD_AIOBOARD cmd, void *pData)
@@ -186,12 +186,12 @@ static void CoopAioBoardReadDriverTask(void *pvParameters)
 int createAioBoardTask(void)
 {
 #ifndef CONFIG_DRIVER_TEST_UART4
-    xTaskCreate(CoopAioBoardReadDriverTask,
-                "CoopAioBoardReadDriverTask",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                AIOBOARD_DRIVER_TASK_PRIORITY,
-                NULL);
+    while (pdPASS != xTaskCreate(   CoopAioBoardReadDriverTask,
+                                    "CoopAioBoardReadDriverTask",
+                                    configMINIMAL_STACK_SIZE,
+                                    NULL,
+                                    AIOBOARD_DRIVER_TASK_PRIORITY,
+                                    NULL));
 #endif /* CONFIG_DRIVER_TEST_UART3 */
     return 0;
 }

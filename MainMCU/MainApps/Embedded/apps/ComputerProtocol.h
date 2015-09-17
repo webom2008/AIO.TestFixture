@@ -1,23 +1,24 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : driver_uart2.h
+  File Name     : ComputerProtocol.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/2
+  Created       : 2015/9/17
   Last Modified :
-  Description   : driver_uart2.c header file
+  Description   : ComputerProtocol.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/2
+  1.Date        : 2015/9/17
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
-#ifndef __DRIVER_UART2_H__
-#define __DRIVER_UART2_H__
+
+#ifndef __COMPUTERPROTOCOL_H__
+#define __COMPUTERPROTOCOL_H__
 
 
 #ifdef __cplusplus
@@ -26,15 +27,11 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define UART2_TX_DMA_BUF_LEN        256
-#define UART2_RX_DMA_BUF_LEN        256
+int initComputerProtocol(void);
 
-int Uart2Init(void);
-int Uart2Open(void);
-int Uart2Read(char *pReadData, const int nDataLen);
-int Uart2Write(char *pWriteData, const int nDataLen);
-int Uart2Ctrl(void);
-int Uart2Close(void);
+int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt);
+
+int createComputerUnpackTask(void);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -43,4 +40,4 @@ int Uart2Close(void);
 #endif /* __cplusplus */
 
 
-#endif /* __DRIVER_UART2_H__ */
+#endif /* __COMPUTERPROTOCOL_H__ */

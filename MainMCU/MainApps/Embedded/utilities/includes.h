@@ -46,6 +46,7 @@ extern "C"{
 
 //includes utilities headers
 #include "fifo.h"
+#include "crc.h"
 
 //includes driver headers
 #include "drivers.h"
@@ -58,6 +59,8 @@ extern "C"{
 #include "../apps/AppCoopMCU.h"
 #include "../apps/AioDspProtocol.h"
 #include "../apps/AppTestedAIO.h"
+#include "../apps/ComputerProtocol.h"
+#include "../apps/AppPC.h"
 
 
 //includes others

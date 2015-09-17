@@ -167,7 +167,9 @@ typedef struct
 
 int createAioDspUnpackTask(void);
 
-int sendAioDspPkt(const UART_PacketID id, char* pData, const u8 lenght, const u8 number);
+int sendAioDspPkt(AioDspProtocolPkt *pAioDspPkt);
+
+int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, const u8 number);
 
 #ifdef __cplusplus
 #if __cplusplus

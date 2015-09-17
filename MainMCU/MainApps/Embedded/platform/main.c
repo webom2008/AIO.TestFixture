@@ -74,6 +74,7 @@ static int platform_init(void)
     res |= MyTimerInit();
     res |= AppCoopMcuInit();
     res |= AppTestedAIOInit();
+    res |= AppPCInit();
     
     while (res < 0); //error hanppen
     return res;
@@ -84,7 +85,7 @@ static int startAllApps(void)
     drivers_test_start();
     AppCoopMcuStart();
     AppTestedAIOStart();
-
+    AppPCStart();
     
     return 0;
 }

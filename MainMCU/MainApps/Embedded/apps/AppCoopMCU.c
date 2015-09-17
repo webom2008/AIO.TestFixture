@@ -92,24 +92,24 @@ int AppCoopMcuInit(void)
 int AppCoopMcuStart(void)
 {
 #ifndef CONFIG_DRIVER_TEST_UART3
-    xTaskCreate(CoopMcuUnpackTask,
-                "CoopMcuUnpackTask",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                COOP_MCU_UNPACK_TASK_PRIORITY,
-                NULL);
-    xTaskCreate(CoopMcuExecutePktTask,
-                "CoopMcuExecutePktTask",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                COOP_MCU_EXE_PKT_TASK_PRIORITY,
-                NULL);
-    xTaskCreate(CoopMcuTimeoutPktTask,
-                "CoopMcuTimeoutPktTask",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                COOP_MCU_TIMEOUT_PKT_TASK_PRIORITY,
-                NULL);
+    while (pdPASS != xTaskCreate(   CoopMcuUnpackTask,
+                                    "CoopMcuUnpackTask",
+                                    configMINIMAL_STACK_SIZE,
+                                    NULL,
+                                    COOP_MCU_UNPACK_TASK_PRIORITY,
+                                    NULL));
+    while (pdPASS != xTaskCreate(   CoopMcuExecutePktTask,
+                                    "CoopMcuExecutePktTask",
+                                    configMINIMAL_STACK_SIZE,
+                                    NULL,
+                                    COOP_MCU_EXE_PKT_TASK_PRIORITY,
+                                    NULL));
+    while (pdPASS != xTaskCreate(   CoopMcuTimeoutPktTask,
+                                    "CoopMcuTimeoutPktTask",
+                                    configMINIMAL_STACK_SIZE,
+                                    NULL,
+                                    COOP_MCU_TIMEOUT_PKT_TASK_PRIORITY,
+                                    NULL));
 #endif /* CONFIG_DRIVER_TEST_UART3 */
 
     return 0;

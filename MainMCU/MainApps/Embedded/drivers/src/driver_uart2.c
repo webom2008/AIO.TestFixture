@@ -40,9 +40,6 @@ EventGroupHandle_t xUart2RxEventGroup;  // Declare a variable to hold the create
  *----------------------------------------------*/
 static UART_DEVICE_TypeDef uart2_device;
 
-#define UART2_TX_DMA_BUF_LEN        256
-#define UART2_RX_DMA_BUF_LEN        256
-
 static u8 u8TxDMABuffer[UART2_TX_DMA_BUF_LEN*2];
 static u8 u8RxDMABuffer[UART2_RX_DMA_BUF_LEN*2];
 static UART_DMA_BUFFER_TypeDef  uart2_tx_dma_buf;

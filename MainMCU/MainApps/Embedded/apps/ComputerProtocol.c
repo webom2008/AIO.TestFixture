@@ -3,12 +3,12 @@
    Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : AioDspProtocol.c
+  File Name     : ComputerProtocol.c
   Version       : Initial Draft
   Author        : qiuweibo
   Created       : 2015/9/17
   Last Modified :
-  Description   : AIO-DSP uart potocol
+  Description   : computer protocol
   Function List :
   History       :
   1.Date        : 2015/9/17
@@ -21,6 +21,7 @@
 /*----------------------------------------------*
  * external variables                           *
  *----------------------------------------------*/
+extern EventGroupHandle_t xUart2RxEventGroup;
 
 /*----------------------------------------------*
  * external routine prototypes                  *
@@ -38,6 +39,8 @@
  * module-wide global variables                 *
  *----------------------------------------------*/
 static AioDspProtocolPkt gCurrentRxPkt;
+static QueueHandle_t    xpReceiveQueueHandle = NULL;
+
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -45,6 +48,9 @@ static AioDspProtocolPkt gCurrentRxPkt;
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+
+#define RECEIVE_QUEUE_LENTGH        256
+
 enum AnalysisStatus{
     WaitDstAddr,
     WaitSrcAddr,
@@ -73,13 +79,65 @@ enum AnalysisStatus{
  *----------------------------------------------*/
 static int exePacket(AioDspProtocolPkt *pPacket);
 
-static u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket)
+
+
+
+static void ComputerReadDriverTask(void *pvParameters)
+{
+    int rLen = 0;
+    char rxBuf[UART2_RX_DMA_BUF_LEN];
+    char *pChar = NULL;
+    EventBits_t uxBits;
+    
+	/* Just to stop compiler warnings. */
+	( void ) pvParameters;
+    
+    INFO("ComputerReadDriverTask running...\n");
+    for (;;)
+    {
+        rLen = 0;
+		uxBits = xEventGroupWaitBits(
+					xUart2RxEventGroup,	// The event group being tested.
+					UART_DMA_RX_COMPLETE_EVENT_BIT \
+					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
+					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+					pdFALSE,		// Don't wait for both bits, either bit will do.
+					DELAY_MAX_WAIT );	// Wait a maximum of 100ms for either bit to be set.
+
+        memset(rxBuf, 0x00, UART2_RX_DMA_BUF_LEN);
+        if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
+            || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
+		{
+            rLen = Uart2Read(rxBuf, UART4_RX_DMA_BUF_LEN);
+            pChar = &rxBuf[0];
+            while(rLen--)
+            {
+                xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
+            }
+		}
+    }
+}
+
+static int ComputerRead(char *pReadData, const int nDataLen)
+{
+    int i;
+    
+    for (i=0; i < nDataLen; i++)
+    {
+		if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
+		{
+            break;
+		}
+    }
+    return i;
+}
+
+static u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket)
 {
     u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
     u8 crc = crc8(&pPacket->PacketNum, len);
     return crc;
 }
-
 
 static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
 {
@@ -171,7 +229,7 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
                 i++;
 
                 mStatus = WaitDstAddr;
-                if(pPacket->DataAndCRC[pPacket->Length] == crc8AioDspPkt(pPacket))
+                if(pPacket->DataAndCRC[pPacket->Length] == crc8ComputerPkt(pPacket))
                 {
                     *pBufLen = *pBufLen - i; 
 
@@ -190,7 +248,7 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
     return 0;
 }
 
-static void AioDspTryUnpackTask(void *pvParameters)
+static void ComputerUnpackTask(void *pvParameters)
 {
     int rLen = 0, rxOffset = 0;
     char rxBuf[256] = {0,};
@@ -199,10 +257,10 @@ static void AioDspTryUnpackTask(void *pvParameters)
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
     
-    INFO("TestedAIOTryUnpackTask running...\n");
+    INFO("ComputerUnpackTask running...\n");
     for (;;)
     {
-        rLen = AioBoardRead(&rxBuf[rxOffset], sizeof(rxBuf)-rxOffset);
+        rLen = ComputerRead(&rxBuf[rxOffset], sizeof(rxBuf)-rxOffset);
         if (rLen > 0)
         {
             rxOffset += rLen;
@@ -220,63 +278,50 @@ static void AioDspTryUnpackTask(void *pvParameters)
     }
 }
 
-static void InitAioDspPkt(AioDspProtocolPkt *pTxPacket)
+int initComputerProtocol(void)
 {
-    memset(pTxPacket, 0, sizeof(AioDspProtocolPkt));
+    xpReceiveQueueHandle = xQueueCreate(RECEIVE_QUEUE_LENTGH, sizeof(char));
 
-    pTxPacket->DR_Addr = AIO_ADDR;
-    pTxPacket->SR_Addr = MPU_ADDR;
-}
-
-
-int sendAioDspPkt(AioDspProtocolPkt *pAioDspPkt)
-{
-    int res = 0;
-    res = AioBoardWrite((char *)pAioDspPkt, pAioDspPkt->Length + PACKET_FIXED_LENGHT);
-    return res;
-}
-
-int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, const u8 number)
-{
-    AioDspProtocolPkt packet;
-    int res = 0;
+    do {}while(NULL == xpReceiveQueueHandle);
     
-    InitAioDspPkt(&packet);
-    packet.PacketID = id;
-    if ((NULL != pData) && (lenght <= PACKET_DATA_LEN_MAX))
-    {
-        packet.Length = lenght;
-        memcpy(packet.DataAndCRC, pData, lenght);
-    }
-    packet.PacketNum = number;
-    packet.DataAndCRC[packet.Length] = crc8AioDspPkt(&packet);
-    
-    res = AioBoardWrite((char *)&packet, packet.Length + PACKET_FIXED_LENGHT);
-    return res;
+    return 0;
 }
 
-int createAioDspUnpackTask(void)
+int createComputerUnpackTask(void)
 {
-    while (pdPASS != xTaskCreate(   AioDspTryUnpackTask,
-                                    "AioDspTryUnpackTask",
+    while (pdPASS != xTaskCreate(   ComputerReadDriverTask,
+                                    "ComputerReadDriverTask",
                                     configMINIMAL_STACK_SIZE,
                                     NULL,
-                                    AIOBOARD_UNPACK_TASK_PRIORITY,
+                                    COMPUTER_DRIVER_TASK_PRIORITY,
+                                    NULL));
+    while (pdPASS != xTaskCreate(   ComputerUnpackTask,
+                                    "ComputerUnpackTask",
+                                    configMINIMAL_STACK_SIZE,
+                                    NULL,
+                                    COMPUTER_UNPACK_TASK_PRIORITY,
                                     NULL));
     return 0;
+}
+
+
+int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt)
+{
+    int res = 0;
+    res = Uart2Write((char *)pAioDspPkt, pAioDspPkt->Length + PACKET_FIXED_LENGHT);
+    return res;
 }
 
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
-    
     if ((SF_SPO2_UPDATE == id) \
         || (SF_AIO_STM_UPDATE == id) \
         || (SF_AIO_DSP_UPDATE == id)\
         || (COM_SOFTWARE_VERSION_ID == id))
     {
-        sendComputerPkt(pPacket);
+        sendAioDspPkt(pPacket);
     }
     else //do nothing...
     {
@@ -284,3 +329,4 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     }
     return 0;
 }
+
