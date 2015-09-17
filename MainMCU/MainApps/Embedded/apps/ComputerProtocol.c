@@ -312,6 +312,23 @@ int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt)
     return res;
 }
 
+
+static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
+{
+    COMPUTER_PKT_CID cid = (COMPUTER_PKT_CID)pPacket->DataAndCRC[0];
+    switch (cid)
+    {
+    case COMP_ID_VERSION:
+    {
+
+    }
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
@@ -322,6 +339,10 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         || (COM_SOFTWARE_VERSION_ID == id))
     {
         sendAioDspPkt(pPacket);
+    }
+    else if (AIO_TEST_FIXTURE_ID == id)
+    {
+        exeAioTestFixturePkt(pPacket);
     }
     else //do nothing...
     {

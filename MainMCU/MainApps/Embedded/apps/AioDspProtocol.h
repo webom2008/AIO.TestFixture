@@ -123,6 +123,8 @@ typedef enum
     COM_PATIENT_TYPE_ID          = 0xE4,
     COM_PM_WORK_MODE_ID          = 0xE5,
     COM_ASK_CONFIGURE_ID         = 0xE6,
+    
+    AIO_TEST_FIXTURE_ID          = 0xEF, // Add for QWB for AIO.test fixture
     /*----------- common Stop ------------*/
     
     /*----------- AIO Stop ------------*/

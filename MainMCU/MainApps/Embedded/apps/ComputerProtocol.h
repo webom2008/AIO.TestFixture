@@ -27,6 +27,13 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+typedef enum
+{
+    COMP_ID_VERSION         = 0,
+
+    COMP_ID_UNVALID,
+} COMPUTER_PKT_CID;
+
 int initComputerProtocol(void);
 
 int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt);
