@@ -718,6 +718,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_dpm2200.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_tdm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_tdm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
