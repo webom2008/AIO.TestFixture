@@ -59,7 +59,7 @@ int Uart4Init(void)
     UartDeviceDefaultInit(&uart4_device);
     uart4_device.num        = UART_NUM04;
     uart4_device.mode       = UART_INTERRUPT_MODE;
-    uart4_device.baudrate   = B230400;
+    uart4_device.baudrate   = B115200;
     uart4_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart4_device.IRQPriority= IRQPriority14Uart145;
         
@@ -110,12 +110,16 @@ int Uart4Read(char *pReadData, const int nDataLen)
         return -2;
     }
     
-    for (i=0; i < nDataLen; i++)
+    for (i=0; i < nDataLen; )
     {
-		if(pdPASS != xQueueReceive(uart4_rx_queue, pReadData++, (TickType_t)10))
+		if(pdPASS == xQueueReceive(uart4_rx_queue, pReadData++, (TickType_t)20))
 		{
-            break;
+            i++;
 		}
+        else
+        {
+            break;
+        }
     }
     xSemaphoreGive( xReadOpLock );
     return i;

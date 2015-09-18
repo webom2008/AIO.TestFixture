@@ -65,6 +65,9 @@ int DriverMoudleInit(void)
     
     ret |= DPM2200Init();
     ret |= DPM2200Open();
+    
+    ret |= TDMxInit();
+    ret |= TDMxOpen();
     while (ret < 0); //error hanppen
     return 0;
 }

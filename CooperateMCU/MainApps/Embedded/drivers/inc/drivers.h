@@ -39,6 +39,7 @@ extern "C"{
 #include "i2c_common.h"
 
 #include "driver_dpm2200.h"
+#include "driver_tdm.h"
 
 int DriverMoudleInit(void);
 
