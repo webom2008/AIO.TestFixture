@@ -70,7 +70,8 @@ static int system_init(void)
 static int platform_init(void)
 {
     int res = 0;
-    res = DriverMoudleInit();
+    res |= AppTaskUtilitiesInit();
+    res |= DriverMoudleInit();
     res |= MyTimerInit();
     res |= AppMainMcuInit();
     res |= AppAioStmInit();
@@ -82,6 +83,7 @@ static int platform_init(void)
 
 static int startAllApps(void)
 {
+    AppTaskUtilitiesStart();
     drivers_test_start();
     AppMainMcuStart();
     AppAioStmStart();

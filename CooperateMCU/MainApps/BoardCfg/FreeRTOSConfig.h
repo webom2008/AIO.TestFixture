@@ -82,6 +82,29 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
+
+
+
+
+
+/*
+ * CONFIG_FOR_DEBUG : for used vTaskList() and vTaskGetRunTimeStats()
+ * NOTE: This function will disable interrupts for its duration. 
+ * It is not intended for normal application runtime use but as a debug aid.
+ */
+//#define CONFIG_FOR_DEBUG
+
+
+
+
+
+
+
+
+
+
+
+
 #define configUSE_PREEMPTION		1
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
@@ -91,7 +114,6 @@
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
 #define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
-#define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
 
@@ -107,7 +129,21 @@
 #define configTIMER_QUEUE_LENGTH                10
 #define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
 
+#ifdef CONFIG_FOR_DEBUG
+//For vTaskList
+#define configUSE_TRACE_FACILITY                1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1
 
+//For vTaskGetRunTimeStats
+extern void initFreeRTOSRunTimer(void);
+extern uint32_t getFreeRTOSRunTimer(void);
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS  initFreeRTOSRunTimer
+#define portGET_RUN_TIME_COUNTER_VALUE          getFreeRTOSRunTimer
+#define configGENERATE_RUN_TIME_STATS           1
+#else
+#define configUSE_TRACE_FACILITY	            0
+
+#endif
 
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -125,7 +161,7 @@ to exclude the API function. */
 #define INCLUDE_xTimerPendFunctionCall          1
 
 
-
+#define INCLUDE_uxTaskGetStackHighWaterMark     1
 
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255

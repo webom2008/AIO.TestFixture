@@ -52,6 +52,7 @@ extern "C"{
 
 
 //includes apps headers
+#include "../apps/AppTaskUtilities.h"
 #include "../apps/drivers_test.h"
 #include "../apps/MainMcuProtocol.h"
 #include "../apps/AppMainMCU.h"

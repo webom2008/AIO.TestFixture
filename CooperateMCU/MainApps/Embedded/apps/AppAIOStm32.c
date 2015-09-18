@@ -107,7 +107,7 @@ int AppAioStmStart(void)
 #ifndef CONFIG_DRIVER_TEST_UART3
     xTaskCreate(AioStmUnpackTask,
                 "AioStmUnpackTask",
-                2*configMINIMAL_STACK_SIZE,
+                configMINIMAL_STACK_SIZE,
                 NULL,
                 AIOSTM_UNPACK_TASK_PRIORITY,
                 NULL);

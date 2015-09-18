@@ -27,10 +27,11 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+#include "sysconfigs.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "sysconfigs.h"
 
 
 
@@ -40,6 +41,7 @@ extern "C"{
 
 //PRIORITY DEFINES
 #define TEST_DRIVERS_TASK_PRIORITY          (tskIDLE_PRIORITY + 1)
+#define RUN_UTILITIES_TASK_PRIORITY         (tskIDLE_PRIORITY + 1)
 #define MAIN_MCU_EXE_PKT_TASK_PRIORITY      (tskIDLE_PRIORITY + 2)
 #define MAIN_MCU_TIMEOUT_PKT_TASK_PRIORITY  (tskIDLE_PRIORITY + 2)
 #define AIOSTM_UPDATE_TASK_PRIORITY         (tskIDLE_PRIORITY + 3)
@@ -74,7 +76,7 @@ extern "C"{
 #define IRQPriority06unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 5) //6
 #define IRQPriority05unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 6) //5
 #define IRQPriority04MyTimer        (KERNEL_INTERRUPT_PRIORITY_BASE - 7) //4
-#define IRQPriority03unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 8) //3
+#define IRQPriority03TIM5           (KERNEL_INTERRUPT_PRIORITY_BASE - 8) //3
 #define IRQPriority02unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 9) //2
 #define IRQPriority01unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 10) //1
 #define IRQPriority00unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE - 11) //0

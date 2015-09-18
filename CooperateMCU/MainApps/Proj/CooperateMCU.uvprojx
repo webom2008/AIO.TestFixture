@@ -763,6 +763,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\Spo2Protocol.c</FilePath>
             </File>
+            <File>
+              <FileName>AppTaskUtilities.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppTaskUtilities.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
