@@ -68,10 +68,10 @@
 
 static volatile uint32_t gFreeRtosRunTimeTick;
 static char *pTaskListBuffer = NULL;
-static const char TaskListInfo1[]   = "Name           State   Priority Stack   Num\r\n";
+static const char TaskListInfo1[]   = "Task           State   Priority Stack   Num\r\n";
 static const char TaskListInfo2[]   = "*******************************************\r\n";
 static const char EndInfo[]         = "*******************************************\r\n\r\n";
-static const char RunTimeStatsInfo1[]   = "Name           RunTimeTick       Percent\r\n";
+static const char RunTimeStatsInfo1[]   = "Task           Abs Time          % Time\r\n";
 static const char RunTimeStatsInfo2[]   = "****************************************\r\n";
 
 extern void initFreeRTOSRunTimer(void)
