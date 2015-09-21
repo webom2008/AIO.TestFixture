@@ -53,6 +53,7 @@ extern "C"{
 
 
 //includes apps headers
+#include "../apps/AppTaskUtilities.h"
 #include "../apps/drivers_test.h"
 #include "../apps/CoopMcuProtocol.h"
 #include "../apps/AioStmUpdate.h"
@@ -61,6 +62,7 @@ extern "C"{
 #include "../apps/AppTestedAIO.h"
 #include "../apps/ComputerProtocol.h"
 #include "../apps/AppPC.h"
+#include "../apps/AppGeneralIO.h"
 
 
 //includes others

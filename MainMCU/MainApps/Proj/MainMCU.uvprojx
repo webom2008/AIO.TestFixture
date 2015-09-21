@@ -723,6 +723,21 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_aioboard.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_keys.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_keys.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_leds.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_leds.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -767,6 +782,16 @@
               <FileName>ComputerProtocol.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\ComputerProtocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppTaskUtilities.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppTaskUtilities.c</FilePath>
+            </File>
+            <File>
+              <FileName>AppGeneralIO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppGeneralIO.c</FilePath>
             </File>
           </Files>
         </Group>

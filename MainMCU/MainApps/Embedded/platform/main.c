@@ -70,11 +70,13 @@ static int system_init(void)
 static int platform_init(void)
 {
     int res = 0;
-    res = DriverMoudleInit();
+    res |= AppTaskUtilitiesInit();
+    res |= DriverMoudleInit();
     res |= MyTimerInit();
     res |= AppCoopMcuInit();
     res |= AppTestedAIOInit();
     res |= AppPCInit();
+    res |= AppGeneralIOInit();
     
     while (res < 0); //error hanppen
     return res;
@@ -82,11 +84,12 @@ static int platform_init(void)
 
 static int startAllApps(void)
 {
+    AppTaskUtilitiesStart();
     drivers_test_start();
     AppCoopMcuStart();
     AppTestedAIOStart();
     AppPCStart();
-    
+    AppGeneralIOStart();
     return 0;
 }
 

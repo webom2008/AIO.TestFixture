@@ -27,6 +27,7 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+// UART devices
 #include "uart_common.h"
 #include "driver_uart1.h"
 #include "driver_uart2.h"
@@ -39,6 +40,11 @@ extern "C"{
 #include "i2c_common.h"
 
 #include "driver_aioboard.h"
+
+// GPIO devices
+#include "driver_leds.h"
+#include "driver_keys.h"
+#include "driver_buzzer.h"
 
 int DriverMoudleInit(void);
 
