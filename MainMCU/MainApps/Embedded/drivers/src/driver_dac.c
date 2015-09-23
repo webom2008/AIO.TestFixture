@@ -200,7 +200,7 @@ static void Dac8568PowerupInit(void)
 
 int Dac8568Open(void)
 {
-    Dac8568PowerupInit();
+//    Dac8568PowerupInit();
     return 0;
 }
 

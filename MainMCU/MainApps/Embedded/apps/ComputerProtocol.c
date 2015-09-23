@@ -132,13 +132,6 @@ static int ComputerRead(char *pReadData, const int nDataLen)
     return i;
 }
 
-static u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket)
-{
-    u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
-    u8 crc = crc8(&pPacket->PacketNum, len);
-    return crc;
-}
-
 static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
 {
     int dataLen, len = *pBufLen, tempLen = 0, i;
@@ -150,7 +143,7 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
         {
             case WaitDstAddr:
             {
-                if (MPU_ADDR == pBuf[i])
+                if (TEST_ADDR == pBuf[i])
                 {
                     pPacket->DR_Addr = pBuf[i];
                     mStatus = WaitSrcAddr;
@@ -160,7 +153,7 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
                 break;
             case WaitSrcAddr:
             {
-                if (AIO_ADDR == pBuf[i])
+                if (PC_ADDR == pBuf[i])
                 {
                     pPacket->SR_Addr = pBuf[i];
                     mStatus = WaitSN;
@@ -304,6 +297,12 @@ int createComputerUnpackTask(void)
     return 0;
 }
 
+u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket)
+{
+    u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
+    u8 crc = crc8(&pPacket->PacketNum, len);
+    return crc;
+}
 
 int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt)
 {
@@ -312,14 +311,26 @@ int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt)
     return res;
 }
 
+void initComputerPkt(AioDspProtocolPkt *pTxPacket)
+{
+    memset(pTxPacket, 0, sizeof(AioDspProtocolPkt));
+
+    pTxPacket->DR_Addr = PC_ADDR;
+    pTxPacket->SR_Addr = TEST_ADDR;
+    pTxPacket->PacketID = AIO_TEST_FIXTURE_ID;
+}
+
 
 static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
 {
     COMPUTER_PKT_CID cid = (COMPUTER_PKT_CID)pPacket->DataAndCRC[0];
     switch (cid)
     {
-    case COMP_ID_VERSION:
-    {
+    case COMP_ID_VERSION:{
+
+    }
+        break;
+    case COMP_ID_PWR_ALARM:{
 
     }
         break;
@@ -338,6 +349,8 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         || (SF_AIO_DSP_UPDATE == id)\
         || (COM_SOFTWARE_VERSION_ID == id))
     {
+        pPacket->DR_Addr = AIO_ADDR;
+        pPacket->SR_Addr = MPU_ADDR;
         sendAioDspPkt(pPacket);
     }
     else if (AIO_TEST_FIXTURE_ID == id)

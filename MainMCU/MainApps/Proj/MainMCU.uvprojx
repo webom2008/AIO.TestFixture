@@ -803,6 +803,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\AppGeneralIO.c</FilePath>
             </File>
+            <File>
+              <FileName>AlarmSystem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AlarmSystem.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

@@ -73,7 +73,7 @@ enum AnalysisStatus{
  *----------------------------------------------*/
 static int exePacket(AioDspProtocolPkt *pPacket);
 
-static u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket)
+u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket)
 {
     u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
     u8 crc = crc8(&pPacket->PacketNum, len);

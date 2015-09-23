@@ -40,7 +40,6 @@ typedef enum
     INTER_ADC_TOTAL
 } INTER_ADC_CH;
 
-
 typedef enum
 {
     INTER_ADC_CMD_START     = 0,
@@ -52,7 +51,7 @@ typedef enum
 
 int InterAdcInit(void);
 int InterAdcOpen(void);
-int InterAdcRead(char *pReadData, const int nDataLen);
+int InterAdcRead(uint32_t *pResultArray, const int totalNums);
 int InterAdcWrite(char *pWriteData, const int nDataLen);
 int InterAdcCtrl(const INTER_ADC_CTRL_CMD cmd, void *parameter);
 int InterAdcClose(void);

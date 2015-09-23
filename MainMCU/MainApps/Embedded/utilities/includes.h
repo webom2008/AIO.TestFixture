@@ -63,6 +63,7 @@ extern "C"{
 #include "../apps/ComputerProtocol.h"
 #include "../apps/AppPC.h"
 #include "../apps/AppGeneralIO.h"
+#include "../apps/AlarmSystem.h"
 
 
 //includes others

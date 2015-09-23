@@ -3,22 +3,22 @@
    Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : ComputerProtocol.h
+  File Name     : AlarmSystem.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/17
+  Created       : 2015/9/23
   Last Modified :
-  Description   : ComputerProtocol.c header file
+  Description   : AlarmSystem.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/17
+  1.Date        : 2015/9/23
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
 
-#ifndef __COMPUTERPROTOCOL_H__
-#define __COMPUTERPROTOCOL_H__
+#ifndef __ALARMSYSTEM_H__
+#define __ALARMSYSTEM_H__
 
 
 #ifdef __cplusplus
@@ -27,23 +27,7 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-typedef enum
-{
-    COMP_ID_VERSION         = 0,
-    COMP_ID_PWR_ALARM,
-
-    COMP_ID_UNVALID,
-} COMPUTER_PKT_CID;
-
-int initComputerProtocol(void);
-
-void initComputerPkt(AioDspProtocolPkt *pTxPacket);
-
-u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket);
-
-int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt);
-
-int createComputerUnpackTask(void);
+void alarmPowerDetect(void);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -52,4 +36,4 @@ int createComputerUnpackTask(void);
 #endif /* __cplusplus */
 
 
-#endif /* __COMPUTERPROTOCOL_H__ */
+#endif /* __ALARMSYSTEM_H__ */

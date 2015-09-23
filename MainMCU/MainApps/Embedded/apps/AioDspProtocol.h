@@ -166,8 +166,13 @@ typedef struct
 #define KEY_ADDR                    0xEF
 #define BCK_ADDR                    0xEE
 #define RECORDER_ADDR               0XBB
+#define SPO2_ADDR                   0xCC
+#define TEST_ADDR                   0x33
+#define PC_ADDR                     0x99
 
 int createAioDspUnpackTask(void);
+
+u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket);
 
 int sendAioDspPkt(AioDspProtocolPkt *pAioDspPkt);
 

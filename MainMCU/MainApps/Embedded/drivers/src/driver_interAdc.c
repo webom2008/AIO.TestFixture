@@ -31,6 +31,7 @@
  *----------------------------------------------*/
 static void InterAdcCfg(void);
 static void InterAdcCfgDMA(void);
+//static void WaitInterAdcDone(void);
 
 /*----------------------------------------------*
  * project-wide global variables                *
@@ -122,7 +123,7 @@ static const AdcChannels_TypeDef InterAdcChannel[INTER_ADC_TOTAL] =
 /*----------------------------------------------*
  * internal variables                           *
  *----------------------------------------------*/
-__IO uint16_t RegularConvData_Tab[INTER_ADC_TOTAL];
+static __IO uint16_t RegularConvData_Tab[INTER_ADC_TOTAL];
 static uint16_t gInterAdcResult[INTER_ADC_TOTAL];
 
 /*----------------------------------------------*
@@ -201,17 +202,26 @@ int InterAdcInit(void)
 
 int InterAdcOpen(void)
 {
+    InterAdcCtrl(INTER_ADC_CMD_START,NULL);
     return 0;
 }
 
-int InterAdcRead(char *pReadData, const int nDataLen)
+int InterAdcRead(uint32_t *pResultArray, const int totalNums)
 {
-    if (sizeof(gInterAdcResult) != nDataLen) return -1;
+    uint32_t *pBuf = pResultArray;
+    uint8_t index;
+    
+    if ((INTER_ADC_TOTAL != totalNums) || (NULL == pBuf)) return -1;
     if( pdTRUE != xSemaphoreTake( xUpdateResultOpLock, ( TickType_t ) 5 ))
     {
-        return -1;
+        return -2;
     }
-    memcpy(pReadData, gInterAdcResult, nDataLen);
+    
+//    WaitInterAdcDone(); //Test
+    for(index = 0; index < INTER_ADC_TOTAL; index++)
+    {
+        pBuf[index] = ((gInterAdcResult[index]* 3300) / 0xFFF); //mv
+    }
     xSemaphoreGive( xUpdateResultOpLock);
     return 0;
 }
@@ -314,9 +324,20 @@ static void InterAdcCfgDMA(void)
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(DMA1_Channel1, &DMA_InitStructure);
 
+    DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
     /* Enable DMA1 channel1 */
     DMA_Cmd(DMA1_Channel1, ENABLE);
 }
+
+
+//static void WaitInterAdcDone(void)
+//{
+//    /* Test DMA1 TC flag */
+//    while((DMA_GetFlagStatus(DMA1_FLAG_TC1)) == RESET );
+//    
+//    /* Clear DMA TC flag */
+//    DMA_ClearFlag(DMA1_FLAG_TC1);
+//}
 
 void DMA1_Channel1_IRQHandler(void)
 {
