@@ -738,6 +738,16 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_leds.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>driver_interAdc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_interAdc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

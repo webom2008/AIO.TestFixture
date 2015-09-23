@@ -72,7 +72,12 @@ int DriverMoudleInit(void)
     ret |= KeysOpen();
     ret |= BuzzerInit();
     ret |= BuzzerOpen();
+
+    ret |= Dac8568Init();
+    ret |= Dac8568Open();
     
+    ret |= InterAdcInit();
+    ret |= InterAdcOpen();
     while (ret < 0); //error hanppen
     return 0;
 }

@@ -36,6 +36,7 @@ extern "C"{
 #include "driver_uart5.h"
 
 #include "spi_common.h"
+#include "driver_dac.h"
 
 #include "i2c_common.h"
 
@@ -45,6 +46,8 @@ extern "C"{
 #include "driver_leds.h"
 #include "driver_keys.h"
 #include "driver_buzzer.h"
+
+#include "driver_interAdc.h"
 
 int DriverMoudleInit(void);
 
