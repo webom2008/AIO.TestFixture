@@ -93,7 +93,7 @@ typedef struct
 #define PWR_BIT_5V_NIBP_MASK    ((uint16_t) (0x0001 << INTER_ADC_5V_NIBP))
 #define PWR_BIT_REF2V5N_MASK    ((uint16_t) (0x0001 << INTER_ADC_REF2V5N))
 
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_

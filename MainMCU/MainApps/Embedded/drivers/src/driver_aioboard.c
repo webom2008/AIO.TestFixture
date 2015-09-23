@@ -121,14 +121,20 @@ int AioBoardWrite(char *pWriteData, const int nDataLen)
 
 int AioBoardCtrl(CTRL_CMD_AIOBOARD cmd, void *pData)
 {
+    Keys_Val keyVal = KEY_IDLE;
     char *pVal = (char *)pData;
 
     switch(cmd)
     {
     case CTRL_CMD_AIOBOARD_SET_POWER:
+        if (NULL == pVal) return -1;
         if (SW_ON == *pVal)
         {
-            GPIO_SetBits(PWR_CTL_PORT, PWR_CTL_PIN);
+            KeysRead(KEY_2, &keyVal);
+            if (KEY_PRESSED == keyVal)
+            {
+                GPIO_SetBits(PWR_CTL_PORT, PWR_CTL_PIN);
+            }
         }
         else
         {

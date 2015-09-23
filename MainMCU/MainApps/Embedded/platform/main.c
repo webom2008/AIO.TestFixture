@@ -100,7 +100,7 @@ int main(void)
     res |= system_init();
     res |= platform_init();
     
-    MAIN_INFO("VERSION:%s\n",APP_VERSION);
+    MAIN_INFO("VERSION:%s\r\n",APP_VERSION);
     if (res)
     {
         MAIN_INFO("System Initialize failed!");

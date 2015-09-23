@@ -67,9 +67,11 @@ EventGroupHandle_t xKeysEventGroup      = NULL;
  *----------------------------------------------*/
 static int exeKeyPressed(const Keys_Type key)
 {
+    char pwr = SW_ON;
     if (KEY_1 == key)
     {
         InterAdcCtrl(INTER_ADC_CMD_START,NULL);
+        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&pwr);
     }
     else if (KEY_2 == key)
     {
@@ -118,9 +120,9 @@ static void GeneralIOTask(void *pvParameters)
             {
                 keyCount[key] = 0;
                 xEventGroupSetBits( xKeysEventGroup, KEYS_EVENT_GROUP_BIT(key));
-                BuzzerCtrl(BUZZER_ON);
-                vTaskDelay(5);
-                BuzzerCtrl(BUZZER_OFF);
+//                BuzzerCtrl(BUZZER_ON);
+//                vTaskDelay(5);
+//                BuzzerCtrl(BUZZER_OFF);
                 INFO("Key%d Pressed!\r\n", key+1);
                 exeKeyPressed(key);
             }

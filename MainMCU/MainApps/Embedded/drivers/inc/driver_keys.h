@@ -36,7 +36,7 @@ extern "C"{
 typedef enum 
 {
     KEY_1         = 0,
-    KEY_2,
+    KEY_2,              //Use for AIO-Board on SLOT test
     KEY_3,
 
     KEYS_TYPE_MAX

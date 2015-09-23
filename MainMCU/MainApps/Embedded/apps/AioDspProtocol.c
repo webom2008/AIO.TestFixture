@@ -199,7 +199,7 @@ static void AioDspTryUnpackTask(void *pvParameters)
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
     
-    INFO("TestedAIOTryUnpackTask running...\n");
+    INFO("TestedAIOTryUnpackTask running...\r\n");
     for (;;)
     {
         rLen = AioBoardRead(&rxBuf[rxOffset], sizeof(rxBuf)-rxOffset);
