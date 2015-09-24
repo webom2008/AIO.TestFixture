@@ -57,16 +57,16 @@ static QueueHandle_t    xpReceiveQueueHandle = NULL;
 #define RECEIVE_QUEUE_LENTGH        256
 
 
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
-#define INFO(fmt, arg...) udprintf("[MainMCU]Info: "fmt, ##arg)
+#define INFO(fmt, arg...) udprintf("[AIO]Info: "fmt, ##arg)
 #else
 #define INFO(fmt, arg...) do{}while(0)
 #endif
 #ifdef _ERROR_
-#define ERROR(fmt, arg...) udprintf("[MainMCU]Error: "fmt, ##arg)
+#define ERROR(fmt, arg...) udprintf("[AIO]Error: "fmt, ##arg)
 #else
 #define ERROR(fmt, arg...) do{}while(0)
 #endif
@@ -153,7 +153,7 @@ int AioBoardClose(void)
 }
 
 
-static void CoopAioBoardReadDriverTask(void *pvParameters)
+static void AioBoardReadDriverTask(void *pvParameters)
 {
     int rLen = 0;
     char rxBuf[UART4_RX_DMA_BUF_LEN];
@@ -163,17 +163,17 @@ static void CoopAioBoardReadDriverTask(void *pvParameters)
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
     
-    INFO("CoopAioBoardReadDriverTask running...\n");
+    INFO("AioBoardReadDriverTask running...\r\n");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart4RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					DELAY_MAX_WAIT );	// Wait a maximum of 100ms for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+                    xUart4RxEventGroup,	                // The event group being tested.
+                    UART_DMA_RX_COMPLETE_EVENT_BIT \
+                    | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+                    pdTRUE,                             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,                            // Don't wait for both bits, either bit will do.
+                    DELAY_MAX_WAIT );                   // Wait a maximum for either bit to be set.
 
         memset(rxBuf, 0x00, UART4_RX_DMA_BUF_LEN);
         if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
@@ -192,8 +192,8 @@ static void CoopAioBoardReadDriverTask(void *pvParameters)
 int createAioBoardTask(void)
 {
 #ifndef CONFIG_DRIVER_TEST_UART4
-    while (pdPASS != xTaskCreate(   CoopAioBoardReadDriverTask,
-                                    "CoopAioBoardReadDriverTask",
+    while (pdPASS != xTaskCreate(   AioBoardReadDriverTask,
+                                    "AioBoardReadDriverTask",
                                     configMINIMAL_STACK_SIZE,
                                     NULL,
                                     AIOBOARD_DRIVER_TASK_PRIORITY,

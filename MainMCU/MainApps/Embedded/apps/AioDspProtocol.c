@@ -55,16 +55,16 @@ enum AnalysisStatus{
     WaitCRC
 };
 
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
-#define INFO(fmt, arg...) udprintf("[MainMCU]Info: "fmt, ##arg)
+#define INFO(fmt, arg...) udprintf("[AioDSP]Info: "fmt, ##arg)
 #else
 #define INFO(fmt, arg...) do{}while(0)
 #endif
 #ifdef _ERROR_
-#define ERROR(fmt, arg...) udprintf("[MainMCU]Error: "fmt, ##arg)
+#define ERROR(fmt, arg...) udprintf("[AioDSP]Error: "fmt, ##arg)
 #else
 #define ERROR(fmt, arg...) do{}while(0)
 #endif
@@ -187,6 +187,12 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
                 break;
         }
     }
+    
+    if ((i == len)&&(mStatus < WaitSrcAddr))
+    {
+        *pBufLen = 0;
+        memset(pBuf, 0x00, len);
+    }
     return 0;
 }
 
@@ -196,8 +202,8 @@ static void AioDspTryUnpackTask(void *pvParameters)
     char rxBuf[256] = {0,};
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("TestedAIOTryUnpackTask running...\r\n");
     for (;;)
@@ -220,7 +226,7 @@ static void AioDspTryUnpackTask(void *pvParameters)
     }
 }
 
-static void InitAioDspPkt(AioDspProtocolPkt *pTxPacket)
+void initAioDspPkt(AioDspProtocolPkt *pTxPacket)
 {
     memset(pTxPacket, 0, sizeof(AioDspProtocolPkt));
 
@@ -241,7 +247,7 @@ int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, cons
     AioDspProtocolPkt packet;
     int res = 0;
     
-    InitAioDspPkt(&packet);
+    initAioDspPkt(&packet);
     packet.PacketID = id;
     if ((NULL != pData) && (lenght <= PACKET_DATA_LEN_MAX))
     {
@@ -278,7 +284,11 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         sendComputerPkt(pPacket);
     }
-    else //do nothing...
+    else if (AIO_TX_ECG_LEAD_INFO_ID == id)//do nothing...
+    {
+        INFO("PktID=0x%02X,PktNum=%d\r\n",id,pPacket->PacketNum); 
+    }
+    else
     {
 
     }

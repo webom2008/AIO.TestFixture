@@ -172,6 +172,8 @@ typedef struct
 
 int createAioDspUnpackTask(void);
 
+void initAioDspPkt(AioDspProtocolPkt *pTxPacket);
+
 u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket);
 
 int sendAioDspPkt(AioDspProtocolPkt *pAioDspPkt);
