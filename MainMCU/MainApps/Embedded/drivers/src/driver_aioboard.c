@@ -159,6 +159,7 @@ static void AioBoardReadDriverTask(void *pvParameters)
     char rxBuf[UART4_RX_DMA_BUF_LEN];
     char *pChar = NULL;
     EventBits_t uxBits;
+    BaseType_t xResult;
     
 	/* Just to stop compiler warnings. */
 	( void ) pvParameters;
@@ -178,14 +179,18 @@ static void AioBoardReadDriverTask(void *pvParameters)
         memset(rxBuf, 0x00, UART4_RX_DMA_BUF_LEN);
         if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
             || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
-		{
+        {
             rLen = Uart4Read(rxBuf, UART4_RX_DMA_BUF_LEN);
             pChar = &rxBuf[0];
             while(rLen--)
             {
-                xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
+                xResult = xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
+                if (errQUEUE_FULL == xResult)
+                {
+//                    udprintf("AioBoardReadDriverTask Queue Full\r\n");
+                }
             }
-		}
+        }
     }
 }
 

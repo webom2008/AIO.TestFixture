@@ -55,7 +55,7 @@ enum AnalysisStatus{
     WaitCRC
 };
 
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -80,143 +80,135 @@ u8 crc8AioDspPkt(const AioDspProtocolPkt *pPacket)
     return crc;
 }
 
-
 static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
 {
-    int dataLen, len = *pBufLen, tempLen = 0, i;
-    static int mStatus = WaitDstAddr;
+    int i = 0, nTempLen = 0, len = *pBufLen;
+    int mStatus = WaitDstAddr;
+    char crc_ok = 0;
     
-    for (i=0; i<len;)
+    memset((char *)pPacket, 0, sizeof(AioDspProtocolPkt));
+    
+    while ((i < len) && (0 == crc_ok))
     {
-        switch(mStatus)
+        switch (mStatus)
         {
-            case WaitDstAddr:
-            {
-                if (MPU_ADDR == pBuf[i])
-                {
-                    pPacket->DR_Addr = pBuf[i];
-                    mStatus = WaitSrcAddr;
-                }
-                i++;
+        case WaitDstAddr:{
+            pPacket->DR_Addr = pBuf[i++];
+            if (MPU_ADDR == pPacket->DR_Addr){
+                mStatus = WaitSrcAddr;
             }
-                break;
-            case WaitSrcAddr:
-            {
-                if (AIO_ADDR == pBuf[i])
-                {
-                    pPacket->SR_Addr = pBuf[i];
-                    mStatus = WaitSN;
-                    i++;
-                }
-                else
-                {
-                    mStatus = WaitDstAddr;
-                }
-            }
-                break;
-            case WaitSN:
-            {
-                pPacket->PacketNum = pBuf[i];
-                mStatus = WaitType;
-                i++;
-            }
-                break;
-            case WaitType:
-            {
-                pPacket->PacketID = pBuf[i];
-                mStatus = WaitLen;
-                i++;
-            }
-                break;
-            case WaitLen:
-            {
-                pPacket->Length = pBuf[i];
-                if(pPacket->Length < PACKET_DATA_LEN_MAX)
-                {
-                    dataLen = 0;
-                    if(pPacket->Length > 0)
-                    {
-                        mStatus = WaitData;
-                    }
-                    else
-                    {
-                        mStatus = WaitCRC;
-                    }
-                    i++;
-                }
-                else
-                {
-                    mStatus = WaitDstAddr;
-                }
-            }
-                break;
-            case WaitData:
-            {
-                if(dataLen < pPacket->Length)
-                {
-                    tempLen = (len-i >= pPacket->Length-dataLen) ? (pPacket->Length-dataLen) : (len-i);
-                    memcpy(pPacket->DataAndCRC+dataLen, pBuf+i, tempLen);
-                    dataLen += tempLen;
-                    i += tempLen;
-                }
-                if(dataLen >= pPacket->Length)
-                {
-                    mStatus = WaitCRC;
-                }
-            }
-                break;
-            case WaitCRC:
-            {
-                pPacket->DataAndCRC[pPacket->Length] = pBuf[i];
-                i++;
-
-                mStatus = WaitDstAddr;
-                if(pPacket->DataAndCRC[pPacket->Length] == crc8AioDspPkt(pPacket))
-                {
-                    *pBufLen = *pBufLen - i; 
-
-                    //del used data
-                    memcpy(pBuf, &pBuf[i], *pBufLen);
-                    memset(&pBuf[i], 0x00, i);
-                    return 1;
-                }
-            }
-                break;
-            default:
-                mStatus = WaitDstAddr;
-                break;
         }
+            break;
+        case WaitSrcAddr:{
+            pPacket->SR_Addr = pBuf[i++];
+            if (AIO_ADDR == pPacket->SR_Addr){
+                mStatus = WaitSN;
+            }else{
+                mStatus = WaitDstAddr;
+            }
+        }
+            break;
+        case WaitSN:{
+            pPacket->PacketNum = pBuf[i++];
+            mStatus = WaitType;
+        }
+            break;
+        case WaitType:{
+            pPacket->PacketID = pBuf[i++];
+            mStatus = WaitLen;
+        }
+            break;
+        case WaitLen:{
+            pPacket->Length = pBuf[i++];
+            if ((pPacket->Length > 0) && (pPacket->Length <= PACKET_DATA_LEN_MAX)){
+                nTempLen = 0;
+                mStatus = WaitData;
+            } else if (pPacket->Length > PACKET_DATA_LEN_MAX){
+                mStatus = WaitDstAddr;
+            }
+            else {
+                mStatus = WaitCRC;
+            }
+        }
+            break;
+        case WaitData:{
+            if (nTempLen < pPacket->Length){
+                pPacket->DataAndCRC[nTempLen++] = pBuf[i++];
+            }else{
+                mStatus = WaitCRC;
+            }
+        }
+            break;
+        case WaitCRC:{
+            pPacket->DataAndCRC[pPacket->Length] = pBuf[i++];
+            mStatus = WaitDstAddr;
+            if (pPacket->DataAndCRC[pPacket->Length] == crc8AioDspPkt(pPacket)){
+                crc_ok = 1;
+            }else{
+                crc_ok = 0;
+            }
+        }
+            break;
+        default:
+            break;
+
+        } // End of switch (mStatus)
+    } // End of while ( && (0 == crc_ok))
+
+    
+    if (crc_ok)
+    {
+        //moving data
+        nTempLen = len - i;
+        memcpy(pBuf, &pBuf[i], nTempLen);
+        memset(&pBuf[nTempLen], 0x00, i);
+        *pBufLen = nTempLen; 
+        return 1;
+    }
+
+    if ((0 == crc_ok) && (i < len))
+    {
+        //moving data
+        nTempLen = len - i;
+        memcpy(pBuf, &pBuf[i], nTempLen);
+        memset(&pBuf[nTempLen], 0x00, i);
+        *pBufLen = nTempLen; 
+        udprintf("AIO-PKT CRC error !\r\n");
+        return 0;
     }
     
-    if ((i == len)&&(mStatus < WaitSrcAddr))
-    {
-        *pBufLen = 0;
-        memset(pBuf, 0x00, len);
+    if ((i == len) &&(WaitDstAddr == mStatus)){
+            memset(pBuf, 0x00, len);
+            *pBufLen = 0;
     }
     return 0;
 }
 
+#define AIO_DSP_RX_BUFF_LEN_MAX         256
+static char AioDspRxBuf[AIO_DSP_RX_BUFF_LEN_MAX] = {0,};
+static int AioDspRxOffset = 0;
+
 static void AioDspTryUnpackTask(void *pvParameters)
 {
-    int rLen = 0, rxOffset = 0;
-    char rxBuf[256] = {0,};
+    int rLen = 0;
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
-    
+    int tryCountinue = 1;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
     INFO("TestedAIOTryUnpackTask running...\r\n");
     for (;;)
     {
-        rLen = AioBoardRead(&rxBuf[rxOffset], sizeof(rxBuf)-rxOffset);
+        rLen = AioBoardRead(&AioDspRxBuf[AioDspRxOffset], AIO_DSP_RX_BUFF_LEN_MAX-AioDspRxOffset);
         if (rLen > 0)
         {
-            rxOffset += rLen;
+            AioDspRxOffset += rLen;
         }
-
-        while (rxOffset > PACKET_FIXED_LENGHT)
+        tryCountinue = 1;
+        while ((AioDspRxOffset > PACKET_FIXED_LENGHT) && (1 == tryCountinue))
         {
-            if (tryUnpack(rxBuf, &rxOffset, &gCurrentRxPkt))
+            tryCountinue = tryUnpack(AioDspRxBuf, &AioDspRxOffset, &gCurrentRxPkt);
+            if (tryCountinue)
             {
                 exePacket(&gCurrentRxPkt);
             }
@@ -286,7 +278,7 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     }
     else if (AIO_TX_ECG_LEAD_INFO_ID == id)//do nothing...
     {
-        INFO("PktID=0x%02X,PktNum=%d\r\n",id,pPacket->PacketNum); 
+        udprintf("PktID=0x%02X,PktNum=%d\r\n",id,pPacket->PacketNum); 
     }
     else
     {
