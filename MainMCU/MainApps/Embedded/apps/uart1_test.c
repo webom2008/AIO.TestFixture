@@ -66,8 +66,8 @@ static void uart1_driver_task(void *pvParameters)
 {
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     udprintf("\r\n[TEST] uart1_driver_task running...");
     for (;;)
@@ -86,9 +86,9 @@ static void uart1_unpack_task(void *pvParameters)
     char rBuf[100];
     const TickType_t xTicksToWait = 4 / portTICK_PERIOD_MS;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart1_unpack_task running...");
     for (;;)
     {
@@ -112,37 +112,37 @@ static void uart1_unpack_task(void *pvParameters)
     char rBuf[64];
     EventBits_t uxBits;
     const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart1_unpack_task running...");
     for (;;)
     {
-//        udprintf("\r\n>>uart1_unpack_task Testing...");
-		uxBits = xEventGroupWaitBits(
-					xUart1RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+        //        udprintf("\r\n>>uart1_unpack_task Testing...");
+        uxBits = xEventGroupWaitBits(
+                                    xUart1RxEventGroup,                 // The event group being tested.
+                                    UART_DMA_RX_COMPLETE_EVENT_BIT \
+                                    | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+                                    pdTRUE,                             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                                    pdFALSE,                            // Don't wait for both bits, either bit will do.
+                                    xTicksToWait );                     // Wait a maximum of 100ms for either bit to be set.
 
-		if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
-		{
+        if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
+        {
             rLen = Uart1Read(rBuf, sizeof(rBuf));
             test_uart1_rx_count += rLen;
             TEST_INFO("Uart1Read COMPLETE rLen=%d",rLen);
-		}
-		else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
-		{
+        }
+        else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
+        {
             rLen = Uart1Read(rBuf, sizeof(rBuf));
             test_uart1_rx_count += rLen;
             TEST_INFO("Uart1Read INCOMPLETE rLen=%d",rLen);
-		}
-		else
-		{
-		}
+        }
+        else
+        {
+        }
     }
 }
 #endif

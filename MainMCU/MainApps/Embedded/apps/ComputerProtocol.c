@@ -88,33 +88,33 @@ static void ComputerReadDriverTask(void *pvParameters)
     char rxBuf[UART2_RX_DMA_BUF_LEN];
     char *pChar = NULL;
     EventBits_t uxBits;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     INFO("ComputerReadDriverTask running...\n");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart2RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					DELAY_MAX_WAIT );	// Wait a maximum of 100ms for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+                                    xUart2RxEventGroup,                 // The event group being tested.
+                                    UART_DMA_RX_COMPLETE_EVENT_BIT \
+                                    | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+                                    pdTRUE,                             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                                    pdFALSE,                            // Don't wait for both bits, either bit will do.
+                                    DELAY_MAX_WAIT );                   // Wait a maximum of 100ms for either bit to be set.
 
         memset(rxBuf, 0x00, UART2_RX_DMA_BUF_LEN);
         if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
-            || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
-		{
+        || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
+        {
             rLen = Uart2Read(rxBuf, UART4_RX_DMA_BUF_LEN);
             pChar = &rxBuf[0];
             while(rLen--)
             {
                 xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
             }
-		}
+        }
     }
 }
 
@@ -124,10 +124,10 @@ static int ComputerRead(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
-		{
+        if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
+        {
             break;
-		}
+        }
     }
     return i;
 }
@@ -246,9 +246,9 @@ static void ComputerUnpackTask(void *pvParameters)
     int rLen = 0, rxOffset = 0;
     char rxBuf[256] = {0,};
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("ComputerUnpackTask running...\n");
     for (;;)

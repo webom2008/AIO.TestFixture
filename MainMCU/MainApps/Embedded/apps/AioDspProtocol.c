@@ -35,16 +35,11 @@
  *----------------------------------------------*/
 
 /*----------------------------------------------*
- * module-wide global variables                 *
- *----------------------------------------------*/
-static AioDspProtocolPkt gCurrentRxPkt;
-/*----------------------------------------------*
- * constants                                    *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+#define AIO_DSP_RX_BUFF_LEN_MAX         256
+
+
 enum AnalysisStatus{
     WaitDstAddr,
     WaitSrcAddr,
@@ -68,6 +63,17 @@ enum AnalysisStatus{
 #else
 #define ERROR(fmt, arg...) do{}while(0)
 #endif
+/*----------------------------------------------*
+ * module-wide global variables                 *
+ *----------------------------------------------*/
+static AioDspProtocolPkt gCurrentRxPkt;
+static char AioDspRxBuf[AIO_DSP_RX_BUFF_LEN_MAX] = {0,};
+static int AioDspRxOffset = 0;
+
+/*----------------------------------------------*
+ * constants                                    *
+ *----------------------------------------------*/
+
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
@@ -154,7 +160,6 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
 
         } // End of switch (mStatus)
     } // End of while ( && (0 == crc_ok))
-
     
     if (crc_ok)
     {
@@ -178,15 +183,11 @@ static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
     }
     
     if ((i == len) &&(WaitDstAddr == mStatus)){
-            memset(pBuf, 0x00, len);
-            *pBufLen = 0;
+        memset(pBuf, 0x00, len);
+        *pBufLen = 0;
     }
     return 0;
 }
-
-#define AIO_DSP_RX_BUFF_LEN_MAX         256
-static char AioDspRxBuf[AIO_DSP_RX_BUFF_LEN_MAX] = {0,};
-static int AioDspRxOffset = 0;
 
 static void AioDspTryUnpackTask(void *pvParameters)
 {
@@ -266,6 +267,7 @@ int createAioDspUnpackTask(void)
 
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
+    static u8 pkt_num;
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
     
@@ -276,11 +278,16 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         sendComputerPkt(pPacket);
     }
-    else if (AIO_TX_ECG_LEAD_INFO_ID == id)//do nothing...
+    else if (AIO_TX_ECG_LEAD_INFO_ID == id)
     {
-        udprintf("PktID=0x%02X,PktNum=%d\r\n",id,pPacket->PacketNum); 
+        if (pkt_num != pPacket->PacketNum)
+        {
+            udprintf("Pkt Lost! ID=0x%02X,PktNum=%d count=%d\r\n",
+                        id,pPacket->PacketNum, pkt_num);
+            pkt_num = pPacket->PacketNum + 1; 
+        }
     }
-    else
+    else //do nothing...
     {
 
     }

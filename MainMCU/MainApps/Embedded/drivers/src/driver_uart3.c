@@ -92,7 +92,7 @@ int Uart3Init(void)
     uart3_device.mode       = UART_DMA_MODE;
     uart3_device.baudrate   = B230400;
     uart3_device.ParityType = PARITY_EVEN; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart3_device.IRQPriority= IRQPriority11Uart23;
+    uart3_device.IRQPriority= IRQPriority12Uart23;
     uart3_device.pTxDMABuffer   = &uart3_tx_dma_buf;
     uart3_device.pRxDMABuffer   = &uart3_rx_dma_buf;
     

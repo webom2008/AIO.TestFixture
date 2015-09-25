@@ -106,10 +106,10 @@ int AioBoardRead(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
-		{
+        if(pdPASS != xQueueReceive(xpReceiveQueueHandle, pReadData++, (TickType_t)10))
+        {
             break;
-		}
+        }
     }
     return i;
 }
@@ -155,21 +155,22 @@ int AioBoardClose(void)
 
 static void AioBoardReadDriverTask(void *pvParameters)
 {
+#ifdef CONFIG_UART4_DMA_MODE
     int rLen = 0;
     char rxBuf[UART4_RX_DMA_BUF_LEN];
     char *pChar = NULL;
     EventBits_t uxBits;
     BaseType_t xResult;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("AioBoardReadDriverTask running...\r\n");
     for (;;)
     {
         rLen = 0;
         uxBits = xEventGroupWaitBits(
-                    xUart4RxEventGroup,	                // The event group being tested.
+                    xUart4RxEventGroup,                 // The event group being tested.
                     UART_DMA_RX_COMPLETE_EVENT_BIT \
                     | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
                     pdTRUE,                             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
@@ -182,16 +183,58 @@ static void AioBoardReadDriverTask(void *pvParameters)
         {
             rLen = Uart4Read(rxBuf, UART4_RX_DMA_BUF_LEN);
             pChar = &rxBuf[0];
+            if (rLen < 0)
+            {
+                udprintf("Uart4Read Error %d\r\n", rLen);
+                continue;
+            }
             while(rLen--)
             {
                 xResult = xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
                 if (errQUEUE_FULL == xResult)
                 {
-//                    udprintf("AioBoardReadDriverTask Queue Full\r\n");
+                    udprintf("AioBoardReadDriverTask Queue Full\r\n");
                 }
             }
         }
     }
+#endif
+#ifdef CONFIG_UART4_INT_MODE
+    int rLen = 0;
+    char rBuf[128];
+    char *pChar = NULL;
+    BaseType_t xResult;
+    const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
+    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
+    INFO("AioBoardReadDriverTask running...\r\n");
+    for (;;)
+    {
+        rLen = 0;
+//        memset(rBuf, 0x00, sizeof(rBuf));
+        rLen = Uart4Read(rBuf, sizeof(rBuf));
+        if (rLen < 0)
+        {
+            udprintf("Uart4Read Error %d\r\n", rLen);
+        }
+        else
+        {
+            pChar = &rBuf[0];
+            while(rLen--)
+            {
+                xResult = xQueueSendToBack(xpReceiveQueueHandle, (void *)pChar++, DELAY_NO_WAIT);
+                if (errQUEUE_FULL == xResult)
+                {
+                    udprintf("AioBoardReadDriverTask Queue Full\r\n");
+                }
+            }
+        }
+        
+        vTaskDelay(xTicksToWait);
+    }
+#endif
 }
 
 int createAioBoardTask(void)

@@ -63,10 +63,10 @@ static void uart4_driver_task(void *pvParameters)
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
     char txBuf[32];
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("[TEST] uart4_driver_task running...\r\n");
     for (;;)
     {
@@ -82,36 +82,61 @@ static void uart4_driver_task(void *pvParameters)
 
 static void uart4_unpack_task(void *pvParameters)
 {
+#ifdef CONFIG_UART4_DMA_MODE
     int rLen = 0;
     char rxBuf[UART4_RX_DMA_BUF_LEN];
     EventBits_t uxBits;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("[TEST] uart4_unpack_task running...\r\n");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart4RxEventGroup,	                // The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			                    // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		                    // Don't wait for both bits, either bit will do.
-					DELAY_MAX_WAIT );	                // Wait a maximum for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+        xUart4RxEventGroup,                 // The event group being tested.
+        UART_DMA_RX_COMPLETE_EVENT_BIT \
+        | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+        pdTRUE,                             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+        pdFALSE,                            // Don't wait for both bits, either bit will do.
+        DELAY_MAX_WAIT );                   // Wait a maximum for either bit to be set.
 
         memset(rxBuf, 0x00, UART4_RX_DMA_BUF_LEN);
         if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
-            || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
-		{
+        || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
+        {
             rLen = Uart4Read(rxBuf, UART4_RX_DMA_BUF_LEN);
             if (rLen > 0)
             {
                 test_uart4_rx_count += rLen;
                 TEST_UART4_INFO(">>uart4_unpack_task rLen:%d\r\n",rLen);
             }
-		}
+        }
     }
+#endif
+#ifdef CONFIG_UART4_INT_MODE
+    int rLen = 0;
+    char rBuf[128];
+    char *pChar = NULL;
+    const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS; // baudrate=230400, 23bits/ms max
+    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
+    udprintf("[TEST] uart4_unpack_task running...\r\n");
+    for (;;)
+    {
+        rLen = 0;
+//        memset(rBuf, 0x00, sizeof(rBuf));
+        rLen = Uart4Read(rBuf, sizeof(rBuf));
+        if (rLen > 0)
+        {
+            test_uart4_rx_count += rLen;
+            TEST_UART4_INFO(">>uart4_unpack_task rLen:%d\r\n",rLen);
+        }
+        vTaskDelay(xTicksToWait);
+    }
+#endif
 }
 

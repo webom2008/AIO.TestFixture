@@ -61,14 +61,14 @@ int Uart5Init(void)
     uart5_device.mode       = UART_INTERRUPT_MODE;
     uart5_device.baudrate   = B230400;
     uart5_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart5_device.IRQPriority= IRQPriority14Uart145;
+    uart5_device.IRQPriority= IRQPriority14Uart15;
         
     uart5_tx_queue  = xQueueCreate( UART5_TX_QUEUE_SIZE, sizeof( char ) );
     uart5_rx_queue  = xQueueCreate( UART5_RX_QUEUE_SIZE, sizeof( char ) );
     xReadOpLock     = xSemaphoreCreateMutex();
     xWriteOpLock    = xSemaphoreCreateMutex();
-    
-	do{} while ((NULL == uart5_tx_queue) \
+
+    do{} while ((NULL == uart5_tx_queue) \
                 ||(NULL == uart5_rx_queue)\
                 ||(NULL == xReadOpLock)\
                 ||(NULL == xWriteOpLock));

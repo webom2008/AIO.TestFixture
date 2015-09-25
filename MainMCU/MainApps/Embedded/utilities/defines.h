@@ -65,10 +65,10 @@ extern "C"{
 
 //lower number, higher priority
 //1.The follow Priority can use OS_API 
-#define IRQPriority11Uart23         (KERNEL_INTERRUPT_PRIORITY_BASE)     //11
-#define IRQPriority12unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE + 1) //12
+#define IRQPriority11Uart4          (KERNEL_INTERRUPT_PRIORITY_BASE)     //11
+#define IRQPriority12Uart23         (KERNEL_INTERRUPT_PRIORITY_BASE + 1) //12
 #define IRQPriority13InterADC       (KERNEL_INTERRUPT_PRIORITY_BASE + 2) //13
-#define IRQPriority14Uart145        (KERNEL_INTERRUPT_PRIORITY_BASE + 3) //14
+#define IRQPriority14Uart15         (KERNEL_INTERRUPT_PRIORITY_BASE + 3) //14
 #define IRQPriority15unDefine       (KERNEL_INTERRUPT_PRIORITY_BASE + 4) //15
 
 //2.The follow Priority can't use OS_API

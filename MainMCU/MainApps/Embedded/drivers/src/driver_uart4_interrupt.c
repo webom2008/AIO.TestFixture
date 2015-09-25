@@ -1,17 +1,17 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : driver_uart1.c
+  File Name     : driver_uart4_interrupt.c
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/2
+  Created       : 2015/9/25
   Last Modified :
-  Description   : uart1 driver
+  Description   : uart4 interrupt mode
   Function List :
   History       :
-  1.Date        : 2015/9/2
+  1.Date        : 2015/9/25
     Author      : qiuweibo
     Modification: Created file
 
@@ -37,9 +37,9 @@
 /*----------------------------------------------*
  * module-wide global variables                 *
  *----------------------------------------------*/
-static UART_DEVICE_TypeDef uart1_device;
-static QueueHandle_t    uart1_tx_queue  = NULL;
-static QueueHandle_t    uart1_rx_queue  = NULL;
+static UART_DEVICE_TypeDef uart4_device;
+static QueueHandle_t    uart4_tx_queue  = NULL;
+static QueueHandle_t    uart4_rx_queue  = NULL;
 static xSemaphoreHandle xReadOpLock     = NULL; //read operate lock
 static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
 
@@ -50,16 +50,16 @@ static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
-#define UART1_TX_QUEUE_SIZE         128
-#define UART1_RX_QUEUE_SIZE         230// 10ms buffer length
+#define UART4_TX_QUEUE_SIZE         128
+#define UART4_RX_QUEUE_SIZE         230// 10ms buffer length
 
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
 
 /*****************************************************************************
- Prototype    : Uart1Init
- Description  : init uart1
+ Prototype    : Uart4Init
+ Description  : init uart4
  Input        : void  
  Output       : None
  Return Value : 
@@ -72,23 +72,23 @@ static xSemaphoreHandle xWriteOpLock    = NULL; //write operate lock
     Modification : Created function
 
 *****************************************************************************/
-int Uart1Init(void)
+int Uart4Init(void)
 {
-    UartDeviceDefaultInit(&uart1_device);
-    uart1_device.num        = UART_NUM01;
-    uart1_device.mode       = UART_INTERRUPT_MODE;
-//    uart1_device.mode       = UART_DMA_MODE;
-    uart1_device.baudrate   = B230400;
-    uart1_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
-    uart1_device.IRQPriority= IRQPriority14Uart15;
+    UartDeviceDefaultInit(&uart4_device);
+    uart4_device.num        = UART_NUM04;
+    uart4_device.mode       = UART_INTERRUPT_MODE;
+//    uart4_device.mode       = UART_DMA_MODE;
+    uart4_device.baudrate   = B230400;
+    uart4_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
+    uart4_device.IRQPriority= IRQPriority11Uart4;
         
-    uart1_tx_queue  = xQueueCreate( UART1_TX_QUEUE_SIZE, sizeof( char ) );
-    uart1_rx_queue  = xQueueCreate( UART1_RX_QUEUE_SIZE, sizeof( char ) );
+    uart4_tx_queue  = xQueueCreate( UART4_TX_QUEUE_SIZE, sizeof( char ) );
+    uart4_rx_queue  = xQueueCreate( UART4_RX_QUEUE_SIZE, sizeof( char ) );
     xReadOpLock     = xSemaphoreCreateMutex();
     xWriteOpLock    = xSemaphoreCreateMutex();
 
-    do{} while ((NULL == uart1_tx_queue) \
-                ||(NULL == uart1_rx_queue)\
+    do{} while ((NULL == uart4_tx_queue) \
+                ||(NULL == uart4_rx_queue)\
                 ||(NULL == xReadOpLock)\
                 ||(NULL == xWriteOpLock));
     
@@ -96,8 +96,8 @@ int Uart1Init(void)
 }
 
 /*****************************************************************************
- Prototype    : Uart1Open
- Description  : open uart1 device
+ Prototype    : Uart4Open
+ Description  : open uart4 device
  Input        : void  
  Output       : None
  Return Value : 
@@ -110,29 +110,29 @@ int Uart1Init(void)
     Modification : Created function
 
 *****************************************************************************/
-int Uart1Open(void)
+int Uart4Open(void)
 {
     int ret = 0;
 
-    if (uart1_device.IsDeviceOpen)
+    if (uart4_device.IsDeviceOpen)
     {
         return ret;
     }
     
-    ret |= UartCommonInit(&uart1_device);
+    ret |= UartCommonInit(&uart4_device);
 
     if(ret < 0)
     {
         return ret;
     }
     
-    uart1_device.IsDeviceOpen = true;
+    uart4_device.IsDeviceOpen = true;
     return 0;
 }
 
 /*****************************************************************************
- Prototype    : Uart1Read
- Description  : read uart1 buffer
+ Prototype    : Uart4Read
+ Description  : read uart4 buffer
  Input        : char *pReadData     
                 const int nDataLen  
  Output       : None
@@ -146,10 +146,10 @@ int Uart1Open(void)
     Modification : Created function
 
 *****************************************************************************/
-int Uart1Read(char *pReadData, const int nDataLen)
+int Uart4Read(char *pReadData, const int nDataLen)
 {
     int i;
-    if (!uart1_device.IsDeviceOpen)
+    if (!uart4_device.IsDeviceOpen)
     {
         return -1;
     }
@@ -161,18 +161,18 @@ int Uart1Read(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
-		{
+        if(pdPASS != xQueueReceive(uart4_rx_queue, pReadData++, (TickType_t)10))
+        {
             break;
-		}
+        }
     }
     xSemaphoreGive( xReadOpLock );
     return i;
 }
 
 /*****************************************************************************
- Prototype    : Uart1Write
- Description  : write date to uart1
+ Prototype    : Uart4Write
+ Description  : write date to uart4
  Input        : const char *pWriteData  
                 const int nDataLen      
  Output       : None
@@ -186,12 +186,12 @@ int Uart1Read(char *pReadData, const int nDataLen)
     Modification : Created function
 
 *****************************************************************************/
-int Uart1Write(char *pWriteData, const int nDataLen)
+int Uart4Write(char *pWriteData, const int nDataLen)
 {
     int i = 0;
     char *pData = pWriteData;
     
-    if (!uart1_device.IsDeviceOpen)
+    if (!uart4_device.IsDeviceOpen)
     {
         return -1;
     }
@@ -202,27 +202,27 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
-		{
+        if(pdPASS != xQueueSendToBack(uart4_tx_queue, (void *)pData++, (TickType_t)3))
+        {
             // Failed to post the message, even after 10 ticks.
-			break;
-		}
+            break;
+        }
     }
     xSemaphoreGive( xWriteOpLock );
-    USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+    USART_ITConfig(UART4, USART_IT_TXE, ENABLE);
     
     return i;
 }
 
-int Uart1Ctrl(void)
+int Uart4Ctrl(void)
 {
 
     return 0;
 }
 
 /*****************************************************************************
- Prototype    : Uart1Close
- Description  : close uart1 device
+ Prototype    : Uart4Close
+ Description  : close uart4 device
  Input        : void  
  Output       : None
  Return Value : 
@@ -235,19 +235,19 @@ int Uart1Ctrl(void)
     Modification : Created function
 
 *****************************************************************************/
-int Uart1Close(void)
+int Uart4Close(void)
 {
-    if (uart1_device.IsDeviceOpen)
+    if (uart4_device.IsDeviceOpen)
     {
-        UartCommonTerminate(&uart1_device);
-        uart1_device.IsDeviceOpen = false;
+        UartCommonTerminate(&uart4_device);
+        uart4_device.IsDeviceOpen = false;
     }
     return 0;
 }
 
 /*****************************************************************************
- Prototype    : USART1_IRQHandler
- Description  : uart1 interrupt hander
+ Prototype    : UART4_IRQHandler
+ Description  : uart4 interrupt hander
  Input        : void  
  Output       : None
  Return Value : 
@@ -260,124 +260,58 @@ int Uart1Close(void)
     Modification : Created function
 
 *****************************************************************************/
-void USART1_IRQHandler(void)
+void UART4_IRQHandler(void)
 {
     volatile char temp = 0;
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// We have not woken a task at the start of the ISR.
-	xHigherPriorityTaskWoken = pdFALSE;
-    
-    if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    // We have not woken a task at the start of the ISR.
+    xHigherPriorityTaskWoken = pdFALSE;
+
+    if(USART_GetITStatus(UART4, USART_IT_RXNE) != RESET)
     {
-        temp = USART_ReceiveData(USART1);
-        xResult = xQueueSendToBackFromISR(uart1_rx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        temp = USART_ReceiveData(UART4);
+        xResult = xQueueSendToBackFromISR(uart4_rx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
         if (errQUEUE_FULL == xResult)
         {
             //TODO: do something.
             __ASM("nop;");
         }
-        if(USART_GetFlagStatus(USART1, USART_FLAG_ORE) != RESET)
+        if(USART_GetFlagStatus(UART4, USART_FLAG_ORE) != RESET)
         {
-            USART_ClearFlag(USART1, USART_FLAG_ORE);
-            USART_ReceiveData(USART1);
+            USART_ClearFlag(UART4, USART_FLAG_ORE);
+            USART_ReceiveData(UART4);
         }
     }
   
-    if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET)
+    if(USART_GetITStatus(UART4, USART_IT_TXE) != RESET)
     {
-        xResult = xQueueReceiveFromISR(uart1_tx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
+        xResult = xQueueReceiveFromISR(uart4_tx_queue, (void *)&temp, &xHigherPriorityTaskWoken);
         if (pdPASS == xResult)
         {
-            USART_SendData(USART1, temp);
+            USART_SendData(UART4, temp);
         }
         else //empty
         {
-            USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
+            USART_ITConfig(UART4, USART_IT_TXE, DISABLE);
         }
     }
     
     // error happen
-    if(USART_GetITStatus(USART1, USART_IT_PE) != RESET)
+    if(USART_GetITStatus(UART4, USART_IT_PE) != RESET)
     {
-        USART_ClearITPendingBit(USART1, USART_IT_PE);
-//        udprintf("\r\n===============Uart1.Parity error");
+        USART_ClearITPendingBit(UART4, USART_IT_PE);
+//        udprintf("\r\n===============Uart4.Parity error");
     }
     
-    if(USART_GetITStatus(USART1, USART_IT_FE | USART_IT_NE) != RESET)
+    if(USART_GetITStatus(UART4, USART_IT_FE | USART_IT_NE) != RESET)
     {
-        USART_ClearITPendingBit(USART1, USART_IT_FE | USART_IT_NE);
+        USART_ClearITPendingBit(UART4, USART_IT_FE | USART_IT_NE);
     }
 
-	if(xHigherPriorityTaskWoken)
-	{
-		taskYIELD ();
-	}
+    if(xHigherPriorityTaskWoken)
+    {
+        taskYIELD ();
+    }
 }
 
-#if 1 // user define printf
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-static char strbuf[80];
-
-int udprintf(const char* fmt, ...)
-{
-    va_list argptr;
-    int nLen = 0;
-    
-    memset(strbuf, 0, sizeof(strbuf));
-    
-    va_start(argptr, fmt);
-    vsnprintf(strbuf, sizeof(strbuf), fmt, argptr);
-    va_end(argptr);
-    
-    nLen = strlen(strbuf);
-    Uart1Write(strbuf, nLen);
-    return nLen;
-}
-#else
-int udprintf(const char* fmt, ...)
-{
-    return 0;
-}
-#include <stdio.h>
-
-#pragma import(__use_no_semihosting) 
-
-_sys_exit(int x) 
-{ 
-  x = x; 
-}
- 
-struct __FILE 
-{ 
-  int handle; 
-}; 
-
-FILE __stdout;
-
-#ifdef __GNUC__
-/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
-
-PUTCHAR_PROTOTYPE
-{
-
-#if 0 //wait mode
-    /* Place your implementation of fputc here */
-    /* e.g. write a character to the USART */
-    USART_SendData(USART1, (uint8_t) ch);
-
-    /* Loop until the end of transmission */
-    while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
-    {}
-#else //interrupt mode
-    xSerialPutChar(ch);
-#endif
-    return ch;
-}
-#endif
