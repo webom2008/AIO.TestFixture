@@ -265,9 +265,9 @@ int createAioDspUnpackTask(void)
     return 0;
 }
 
+static u8 gTestAioRxCheck[256];
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
-    static u8 pkt_num;
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
     
@@ -278,18 +278,14 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         sendComputerPkt(pPacket);
     }
-    else if (AIO_TX_ECG_LEAD_INFO_ID == id)
-    {
-        if (pkt_num != pPacket->PacketNum)
-        {
-            udprintf("Pkt Lost! ID=0x%02X,PktNum=%d count=%d\r\n",
-                        id,pPacket->PacketNum, pkt_num);
-            pkt_num = pPacket->PacketNum + 1; 
-        }
-    }
     else //do nothing...
     {
-
+        if (gTestAioRxCheck[id] != pPacket->PacketNum)
+        {
+            udprintf("Pkt Lost! ID=0x%02X,PktNum=%d count=%d\r\n",
+                        id,pPacket->PacketNum, gTestAioRxCheck[id]);
+        }
+        gTestAioRxCheck[id] = pPacket->PacketNum + 1;
     }
     return 0;
 }

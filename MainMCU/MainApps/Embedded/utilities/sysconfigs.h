@@ -29,11 +29,11 @@ extern "C"{
 
 
 
-#define CONFIG_UART1_DMA_MODE
-//#define CONFIG_UART1_INT_MODE
+//#define CONFIG_UART1_DMA_MODE
+#define CONFIG_UART1_INT_MODE
 
-#define CONFIG_UART4_DMA_MODE
-//#define CONFIG_UART4_INT_MODE
+//#define CONFIG_UART4_DMA_MODE
+#define CONFIG_UART4_INT_MODE
 
 // config for drivers test task 
 //#define CONFIG_DRIVER_TEST_UART1
