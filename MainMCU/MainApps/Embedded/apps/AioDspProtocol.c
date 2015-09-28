@@ -50,7 +50,7 @@ enum AnalysisStatus{
     WaitCRC
 };
 
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -282,7 +282,7 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         if (gTestAioRxCheck[id] != pPacket->PacketNum)
         {
-            udprintf("Pkt Lost! ID=0x%02X,PktNum=%d count=%d\r\n",
+            INFO("Pkt Lost! ID=0x%02X,PktNum=%d count=%d\r\n",
                         id,pPacket->PacketNum, gTestAioRxCheck[id]);
         }
         gTestAioRxCheck[id] = pPacket->PacketNum + 1;

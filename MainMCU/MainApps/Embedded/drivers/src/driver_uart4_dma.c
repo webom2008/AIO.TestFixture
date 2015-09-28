@@ -17,6 +17,7 @@
 
 ******************************************************************************/
 #include "includes.h"
+
 /*----------------------------------------------*
  * external variables                           *
  *----------------------------------------------*/
@@ -55,7 +56,19 @@ static u8 volatile xSerialRxParityFlag = DMA_UART_PACKET_PARITY_OK;
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+#define _INFO_
+#define _ERROR_
 
+#ifdef _INFO_
+#define INFO(fmt, arg...) udprintf("[Uart4]Info: "fmt, ##arg)
+#else
+#define INFO(fmt, arg...) do{}while(0)
+#endif
+#ifdef _ERROR_
+#define ERROR(fmt, arg...) udprintf("[Uart4]Error: "fmt, ##arg)
+#else
+#define ERROR(fmt, arg...) do{}while(0)
+#endif
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
@@ -74,7 +87,7 @@ static void Uart4DmaBufferInit(void)
     uart4_rx_dma_buf.pPingPongBuff2     = &u8RxDMABuffer[UART4_RX_DMA_BUF_LEN];
     uart4_rx_dma_buf.nBuff1MaxLength    = UART4_RX_DMA_BUF_LEN;
     uart4_rx_dma_buf.nBuff2MaxLength    = UART4_RX_DMA_BUF_LEN;
-    uart4_rx_dma_buf.IdleBufferIndex    = 1;
+    uart4_rx_dma_buf.IdleBufferIndex    = 1; /* init for buffer2 idle for received*/
     uart4_rx_dma_buf.nBuff1Offset       = 0;
     uart4_rx_dma_buf.nBuff2Offset       = 0;
     uart4_rx_dma_buf.IsDMAWroking       = 0;
@@ -133,6 +146,7 @@ int Uart4Read(char *pReadData, const int nDataLen)
     
     if( pdTRUE != xSemaphoreTake( xSerialRxHandleLock, ( TickType_t ) 100 ))
     {
+        ERROR("Uart4Read Rx Lock\r\n");
         return -2;
     }
     
@@ -294,7 +308,7 @@ void UART4_IRQHandler(void)
         } // End if pdTRUE == xSemaphoreTakeFromISR
         else
         {
-            udprintf("UART4: xSerialRxHandleLock Take error\r\n");
+            ERROR("IRQ DMA-Rx Lock\r\n");
         }
         DMA_Cmd(DMA2_Channel3, ENABLE);                 //open DMA after handled
         
@@ -346,7 +360,7 @@ void DMA2_Channel3_IRQHandler(void)
 
     if( pdTRUE != xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken))
     {
-        udprintf("UART4: xSerialRxHandleLock Take2 error\r\n");
+        ERROR("DMA-Rx Lock\r\n");
         return;
     }
 

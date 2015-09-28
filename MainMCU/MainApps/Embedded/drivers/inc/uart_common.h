@@ -73,7 +73,7 @@ typedef struct _UART_DMA_BUFFER_DEF_
 {
     uint8_t     *pPingPongBuff1;
     uint8_t     *pPingPongBuff2;
-    uint8_t     IdleBufferIndex;    /* current idle buffer index */
+    uint8_t     IdleBufferIndex;    /* current idle buffer index: 0-buffer1 idle, 1-buffer2 idle*/
     uint8_t     IsDMAWroking;       /* 0: idle , 1: working */
     uint16_t    nBuff1Offset;
     uint16_t    nBuff2Offset;
