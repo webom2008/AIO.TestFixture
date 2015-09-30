@@ -276,7 +276,14 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         || (SF_AIO_DSP_UPDATE == id)\
         || (COM_SOFTWARE_VERSION_ID == id))
     {
+        //change packet header
+        pPacket->DR_Addr = PC_ADDR;
+        pPacket->SR_Addr = TEST_ADDR;
         sendComputerPkt(pPacket);
+        if (COM_SOFTWARE_VERSION_ID == id)
+        {
+            udprintf("AIO-VERSION:%s\r\n",pPacket->DataAndCRC);
+        }
     }
     else //do nothing...
     {
@@ -289,3 +296,4 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     }
     return 0;
 }
+

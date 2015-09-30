@@ -34,7 +34,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
     virtual BOOL OnInitDialog();
-    afx_msg void OnPaint();
 protected:
     afx_msg LRESULT OnPowerAlramMsg(WPARAM wParam, LPARAM lParam);
 };

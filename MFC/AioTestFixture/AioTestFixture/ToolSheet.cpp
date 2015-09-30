@@ -62,6 +62,7 @@ END_MESSAGE_MAP()
 void CToolSheet::initApplication(void)
 {
     m_PageSysCfg.initApplication();
+    m_PageAioUpdate.initApplication();
     m_PageAioTest.initApplication();
 }
 

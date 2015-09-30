@@ -63,6 +63,9 @@
     <ClInclude Include="PageAioTest.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Update.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AioTestFixture.cpp">
@@ -93,6 +96,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PageAioTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Update.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

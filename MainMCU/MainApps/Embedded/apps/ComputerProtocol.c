@@ -28,28 +28,10 @@ extern EventGroupHandle_t xUart2RxEventGroup;
  *----------------------------------------------*/
 
 /*----------------------------------------------*
- * internal routine prototypes                  *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
- * project-wide global variables                *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
- * module-wide global variables                 *
- *----------------------------------------------*/
-static AioDspProtocolPkt gCurrentRxPkt;
-static QueueHandle_t    xpReceiveQueueHandle = NULL;
-
-/*----------------------------------------------*
- * constants                                    *
- *----------------------------------------------*/
-
-/*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
 
-#define RECEIVE_QUEUE_LENTGH        256
+#define PC_RX_BUFF_LEN_MAX        256
 
 enum AnalysisStatus{
     WaitDstAddr,
@@ -74,6 +56,26 @@ enum AnalysisStatus{
 #else
 #define ERROR(fmt, arg...) do{}while(0)
 #endif
+
+/*----------------------------------------------*
+ * internal routine prototypes                  *
+ *----------------------------------------------*/
+
+/*----------------------------------------------*
+ * project-wide global variables                *
+ *----------------------------------------------*/
+
+/*----------------------------------------------*
+ * module-wide global variables                 *
+ *----------------------------------------------*/
+static AioDspProtocolPkt gCurrentRxPkt;
+static QueueHandle_t    xpReceiveQueueHandle = NULL;
+static char PCSerialRxBuf[PC_RX_BUFF_LEN_MAX] = {0,};
+static int PCSerialRxOffset = 0;
+/*----------------------------------------------*
+ * constants                                    *
+ *----------------------------------------------*/
+
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
@@ -106,7 +108,7 @@ static void ComputerReadDriverTask(void *pvParameters)
 
         memset(rxBuf, 0x00, UART2_RX_DMA_BUF_LEN);
         if (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) \
-        || (0 != ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT)))
+        || (0 != ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT)))
         {
             rLen = Uart2Read(rxBuf, UART4_RX_DMA_BUF_LEN);
             pChar = &rxBuf[0];
@@ -132,136 +134,138 @@ static int ComputerRead(char *pReadData, const int nDataLen)
     return i;
 }
 
+u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket)
+{
+    u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
+    u8 crc = crc8(&pPacket->PacketNum, len);
+    return crc;
+}
+
 static int tryUnpack(char *pBuf, int *pBufLen, AioDspProtocolPkt *pPacket)
 {
-    int dataLen, len = *pBufLen, tempLen = 0, i;
-    static int mStatus = WaitDstAddr;
+    int i = 0, nTempLen = 0, len = *pBufLen;
+    int mStatus = WaitDstAddr;
+    char crc_ok = 0;
     
-    for (i=0; i<len;)
+    memset((char *)pPacket, 0, sizeof(AioDspProtocolPkt));
+    
+    while ((i < len) && (0 == crc_ok))
     {
-        switch(mStatus)
+        switch (mStatus)
         {
-            case WaitDstAddr:
-            {
-                if (TEST_ADDR == pBuf[i])
-                {
-                    pPacket->DR_Addr = pBuf[i];
-                    mStatus = WaitSrcAddr;
-                }
-                i++;
+        case WaitDstAddr:{
+            pPacket->DR_Addr = pBuf[i++];
+            if (TEST_ADDR == pPacket->DR_Addr){
+                mStatus = WaitSrcAddr;
             }
-                break;
-            case WaitSrcAddr:
-            {
-                if (PC_ADDR == pBuf[i])
-                {
-                    pPacket->SR_Addr = pBuf[i];
-                    mStatus = WaitSN;
-                    i++;
-                }
-                else
-                {
-                    mStatus = WaitDstAddr;
-                }
-            }
-                break;
-            case WaitSN:
-            {
-                pPacket->PacketNum = pBuf[i];
-                mStatus = WaitType;
-                i++;
-            }
-                break;
-            case WaitType:
-            {
-                pPacket->PacketID = pBuf[i];
-                mStatus = WaitLen;
-                i++;
-            }
-                break;
-            case WaitLen:
-            {
-                pPacket->Length = pBuf[i];
-                if(pPacket->Length < PACKET_DATA_LEN_MAX)
-                {
-                    dataLen = 0;
-                    if(pPacket->Length > 0)
-                    {
-                        mStatus = WaitData;
-                    }
-                    else
-                    {
-                        mStatus = WaitCRC;
-                    }
-                    i++;
-                }
-                else
-                {
-                    mStatus = WaitDstAddr;
-                }
-            }
-                break;
-            case WaitData:
-            {
-                if(dataLen < pPacket->Length)
-                {
-                    tempLen = (len-i >= pPacket->Length-dataLen) ? (pPacket->Length-dataLen) : (len-i);
-                    memcpy(pPacket->DataAndCRC+dataLen, pBuf+i, tempLen);
-                    dataLen += tempLen;
-                    i += tempLen;
-                }
-                if(dataLen >= pPacket->Length)
-                {
-                    mStatus = WaitCRC;
-                }
-            }
-                break;
-            case WaitCRC:
-            {
-                pPacket->DataAndCRC[pPacket->Length] = pBuf[i];
-                i++;
-
-                mStatus = WaitDstAddr;
-                if(pPacket->DataAndCRC[pPacket->Length] == crc8ComputerPkt(pPacket))
-                {
-                    *pBufLen = *pBufLen - i; 
-
-                    //del used data
-                    memcpy(pBuf, &pBuf[i], *pBufLen);
-                    memset(&pBuf[i], 0x00, i);
-                    return 1;
-                }
-            }
-                break;
-            default:
-                mStatus = WaitDstAddr;
-                break;
         }
+            break;
+        case WaitSrcAddr:{
+            pPacket->SR_Addr = pBuf[i++];
+            if (PC_ADDR == pPacket->SR_Addr){
+                mStatus = WaitSN;
+            }else{
+                mStatus = WaitDstAddr;
+            }
+        }
+            break;
+        case WaitSN:{
+            pPacket->PacketNum = pBuf[i++];
+            mStatus = WaitType;
+        }
+            break;
+        case WaitType:{
+            pPacket->PacketID = pBuf[i++];
+            mStatus = WaitLen;
+        }
+            break;
+        case WaitLen:{
+            pPacket->Length = pBuf[i++];
+            if ((pPacket->Length > 0) && (pPacket->Length <= PACKET_DATA_LEN_MAX)){
+                nTempLen = 0;
+                mStatus = WaitData;
+            } else if (pPacket->Length > PACKET_DATA_LEN_MAX){
+                mStatus = WaitDstAddr;
+            }
+            else {
+                mStatus = WaitCRC;
+            }
+        }
+            break;
+        case WaitData:{
+            if (nTempLen < pPacket->Length){
+                pPacket->DataAndCRC[nTempLen++] = pBuf[i++];
+            }else{
+                mStatus = WaitCRC;
+            }
+        }
+            break;
+        case WaitCRC:{
+            pPacket->DataAndCRC[pPacket->Length] = pBuf[i++];
+            mStatus = WaitDstAddr;
+            if (pPacket->DataAndCRC[pPacket->Length] == crc8ComputerPkt(pPacket)){
+                crc_ok = 1;
+            }else{
+                crc_ok = 0;
+            }
+        }
+            break;
+        default:
+            break;
+
+        } // End of switch (mStatus)
+    } // End of while ( && (0 == crc_ok))
+    
+    if (crc_ok)
+    {
+        //moving data
+        nTempLen = len - i;
+        memcpy(pBuf, &pBuf[i], nTempLen);
+        memset(&pBuf[nTempLen], 0x00, i);
+        *pBufLen = nTempLen; 
+        return 1;
+    }
+
+    if ((0 == crc_ok) && (i < len))
+    {
+        //moving data
+        nTempLen = len - i;
+        memcpy(pBuf, &pBuf[i], nTempLen);
+        memset(&pBuf[nTempLen], 0x00, i);
+        *pBufLen = nTempLen; 
+        udprintf("PC-PKT CRC error !\r\n");
+        return 0;
+    }
+    
+    if ((i == len) &&(WaitDstAddr == mStatus)){
+        memset(pBuf, 0x00, len);
+        *pBufLen = 0;
     }
     return 0;
 }
 
 static void ComputerUnpackTask(void *pvParameters)
 {
-    int rLen = 0, rxOffset = 0;
-    char rxBuf[256] = {0,};
+    int rLen = 0;
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
-
+    int tryCountinue = 1;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
     INFO("ComputerUnpackTask running...\n");
     for (;;)
     {
-        rLen = ComputerRead(&rxBuf[rxOffset], sizeof(rxBuf)-rxOffset);
+        rLen = ComputerRead(&PCSerialRxBuf[PCSerialRxOffset],
+                            PC_RX_BUFF_LEN_MAX-PCSerialRxOffset);
         if (rLen > 0)
         {
-            rxOffset += rLen;
+            PCSerialRxOffset += rLen;
         }
-
-        while (rxOffset > PACKET_FIXED_LENGHT)
+        tryCountinue = 1;
+        while ((PCSerialRxOffset > PACKET_FIXED_LENGHT) && (1 == tryCountinue))
         {
-            if (tryUnpack(rxBuf, &rxOffset, &gCurrentRxPkt))
+            tryCountinue = tryUnpack(PCSerialRxBuf, &PCSerialRxOffset, &gCurrentRxPkt);
+            if (tryCountinue)
             {
                 exePacket(&gCurrentRxPkt);
             }
@@ -273,7 +277,7 @@ static void ComputerUnpackTask(void *pvParameters)
 
 int initComputerProtocol(void)
 {
-    xpReceiveQueueHandle = xQueueCreate(RECEIVE_QUEUE_LENTGH, sizeof(char));
+    xpReceiveQueueHandle = xQueueCreate(PC_RX_BUFF_LEN_MAX, sizeof(char));
 
     do {}while(NULL == xpReceiveQueueHandle);
     
@@ -295,13 +299,6 @@ int createComputerUnpackTask(void)
                                     COMPUTER_UNPACK_TASK_PRIORITY,
                                     NULL));
     return 0;
-}
-
-u8 crc8ComputerPkt(const AioDspProtocolPkt *pPacket)
-{
-    u8 len = 3 + (pPacket->Length);//3(PacketNum,PacketID,Length)+Data length
-    u8 crc = crc8(&pPacket->PacketNum, len);
-    return crc;
 }
 
 int sendComputerPkt(AioDspProtocolPkt *pAioDspPkt)

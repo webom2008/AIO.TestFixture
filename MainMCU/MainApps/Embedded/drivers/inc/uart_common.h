@@ -33,7 +33,7 @@ extern "C"{
 
 //defines for DMA MODE
 #define UART_DMA_RX_INCOMPLETE_EVENT_BIT    (1 << 0)
-#define UART_DMA_RX_COMPLETE_EVENT_BIT	    (1 << 1)
+#define UART_DMA_RX_COMPLETE_EVENT_BIT      (1 << 1)
 
 
 typedef enum

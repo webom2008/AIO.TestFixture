@@ -17,7 +17,8 @@
 #include "SerialProtocol.h"
 
 
-#define POWER_ALRAM_MSG                         WM_USER+1 
+#define MSG_POWER_ALRAM                         WM_USER+1 
+#define MSG_AIO_VERSION_UPDATE                  WM_USER+2 
 
 
 // CAioTestFixtureApp:

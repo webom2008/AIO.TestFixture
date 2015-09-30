@@ -69,8 +69,7 @@ void CPageAioTest::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CPageAioTest, CPropertyPage)
-    ON_WM_PAINT()
-    ON_MESSAGE(POWER_ALRAM_MSG, &CPageAioTest::OnPowerAlramMsg)
+    ON_MESSAGE(MSG_POWER_ALRAM, &CPageAioTest::OnPowerAlramMsg)
 END_MESSAGE_MAP()
 
 
@@ -105,9 +104,6 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
     }
     return 0;
 }
-
-
-
 
 
 BOOL CPageAioTest::OnInitDialog()
@@ -209,20 +205,13 @@ void CPageAioTest::refreshPowerAlarmStatus(LPVOID pWnd, void *param)
     HWND hWnd = pDlgTest->GetSafeHwnd(); 
     if (hWnd != NULL)
     {
-        ::SendMessage(hWnd, POWER_ALRAM_MSG, NULL, NULL);
+        ::SendMessage(hWnd, MSG_POWER_ALRAM, NULL, NULL);
     }
 }
 
-void CPageAioTest::OnPaint()
-{
-    CPaintDC dc(this); // device context for painting
-    CPropertyPage::OnPaint();
-}
-
-
 afx_msg LRESULT CPageAioTest::OnPowerAlramMsg(WPARAM wParam, LPARAM lParam)
 {
-//    if (initApplicationDone)
+    if (initApplicationDone)
     {
         m_BtnStatusD3V3E.Invalidate();
         m_BtnStatusD5V6N.Invalidate();
