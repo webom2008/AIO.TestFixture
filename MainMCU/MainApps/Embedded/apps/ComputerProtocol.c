@@ -349,6 +349,7 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         pPacket->DR_Addr = AIO_ADDR;
         pPacket->SR_Addr = MPU_ADDR;
         sendAioDspPkt(pPacket);
+//        udprintf("PC:exePacket ID=0X%02X,CID=0X%02X\r\n",id,pPacket->DataAndCRC[0]);
     }
     else if (AIO_TEST_FIXTURE_ID == id)
     {

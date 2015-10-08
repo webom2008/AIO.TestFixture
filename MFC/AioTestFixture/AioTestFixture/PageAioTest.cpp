@@ -44,6 +44,12 @@ typedef struct
 
 
 
+#ifdef _PAGE_TEST_INFO_
+#define TEST_INFO(format,...)  printf(format, ##__VA_ARGS__)
+#else
+#define TEST_INFO(format,...) do { } while(0)
+#endif
+
 
 
 
@@ -143,7 +149,6 @@ BOOL CPageAioTest::OnInitDialog()
     return TRUE;
 }
 
-
 void CPageAioTest::refreshPowerAlarmStatus(LPVOID pWnd, void *param)
 {
     ALARM_PWR_RESULT *pPwrResult = (ALARM_PWR_RESULT *)param;
@@ -152,52 +157,52 @@ void CPageAioTest::refreshPowerAlarmStatus(LPVOID pWnd, void *param)
     if (NULL == pPwrResult || NULL == pDlgTest) return;
     
     if (pPwrResult->flag){
-        INFO("Power:flag = 0X%04X\r\n",pPwrResult->flag);
+        TEST_INFO("Power:flag = 0X%04X\r\n",pPwrResult->flag);
         if (pPwrResult->flag & PWR_BIT_D3V3E_MASK){
             m_BtnStatusD3V3E.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D3V3E     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3E]);
+            TEST_INFO("========D3V3E     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3E]);
         }else{
             m_BtnStatusD3V3E.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_5V6N_MASK){
             m_BtnStatusD5V6N.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D5V6N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V6N]);
+            TEST_INFO("========D5V6N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V6N]);
         }else{
             m_BtnStatusD5V6N.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_D3V3N_MASK){
             m_BtnStatusD3V3N.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D3V3N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3N]);
+            TEST_INFO("========D3V3N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3N]);
         }else{
             m_BtnStatusD3V3N.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_5VAN_MASK){
             m_BtnStatusD5VAN.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D5VAN     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5VAN]);
+            TEST_INFO("========D5VAN     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5VAN]);
         }else{
             m_BtnStatusD5VAN.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_5V_SPO2_MASK){
             m_BtnStatusD5VSPO2.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D5VSPO2   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_SPO2]);
+            TEST_INFO("========D5VSPO2   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_SPO2]);
         }else{
             m_BtnStatusD5VSPO2.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_5V_NIBP_MASK){
             m_BtnStatusD5VNIBP.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========D5VNIBP   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_NIBP]);
+            TEST_INFO("========D5VNIBP   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_NIBP]);
         }else{
             m_BtnStatusD5VNIBP.LoadBitmaps(IDB_BITMAP_NORMAL);
         }
         
         if (pPwrResult->flag & PWR_BIT_REF2V5N_MASK){
             m_BtnStatusREF2V5N.LoadBitmaps(IDB_BITMAP_RED);
-            INFO("========REF2V5N   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_REF2V5N]);
+            TEST_INFO("========REF2V5N   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_REF2V5N]);
         }else{
             m_BtnStatusREF2V5N.LoadBitmaps(IDB_BITMAP_NORMAL);
         }

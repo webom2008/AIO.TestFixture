@@ -79,11 +79,11 @@ static void AioBoardGpioInit(void)
     GPIO_InitTypeDef GPIO_InitStructure;
     RCC_APB2PeriphClockCmd(PWR_CTL_RCC, ENABLE );
     
-	/* Configure USARTx Rx as input floating */
-	GPIO_InitStructure.GPIO_Pin = PWR_CTL_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(PWR_CTL_PORT, &GPIO_InitStructure );
+    /* Configure USARTx Rx as input floating */
+    GPIO_InitStructure.GPIO_Pin = PWR_CTL_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(PWR_CTL_PORT, &GPIO_InitStructure );
 }
 
 int AioBoardInit(void)

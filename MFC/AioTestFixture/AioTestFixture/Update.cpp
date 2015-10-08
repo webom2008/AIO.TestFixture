@@ -429,6 +429,10 @@ int CUpdate::WaitUpdateWrite2FlashDone(void)
     timeout = GetTickCount()+100;
     while(1)
     {
+        if (SF_AIO_STM_UPDATE == m_BChildID)
+        {
+            return 0; // stm32 needn't to wait
+        }
 		Event = WaitForSingleObject(m_hGetUpdatePacketEvent, 10);
 
         if (WAIT_OBJECT_0 ==  Event)

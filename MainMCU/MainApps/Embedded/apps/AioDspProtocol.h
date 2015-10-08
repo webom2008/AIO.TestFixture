@@ -149,7 +149,7 @@ typedef enum
     
 } SysErrSubID;
 
-#define PACKET_DATA_LEN_MAX     (128)
+#define PACKET_DATA_LEN_MAX         (132)
 typedef struct 
 { 
     u8 DR_Addr;

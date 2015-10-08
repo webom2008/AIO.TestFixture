@@ -280,10 +280,7 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         pPacket->DR_Addr = PC_ADDR;
         pPacket->SR_Addr = TEST_ADDR;
         sendComputerPkt(pPacket);
-        if (COM_SOFTWARE_VERSION_ID == id)
-        {
-            udprintf("AIO-VERSION:%s\r\n",pPacket->DataAndCRC);
-        }
+//        udprintf("AIO:exePacket ID=0X%02X,CID=0X%02X\r\n",id,pPacket->DataAndCRC[0]);
     }
     else //do nothing...
     {
