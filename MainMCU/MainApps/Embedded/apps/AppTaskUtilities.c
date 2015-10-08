@@ -122,20 +122,59 @@ extern uint32_t getFreeRTOSRunTimer(void)
     return gFreeRtosRunTimeTick;
 }
 
+static    int toWriteLen;
+static    int wLen;
+static    int offset;
+
+static void Uart1WriteBigData(const char *pData, const int nLen)
+{
+    
+    toWriteLen = nLen;
+    wLen = 0;
+    offset = 0;
+    
+    while(offset < nLen)
+    {
+        if (toWriteLen > UART1_TX_DMA_BUF_LEN )
+        {
+            wLen = Uart1Write((char *)&pData[offset], UART1_TX_DMA_BUF_LEN);
+        }
+        else
+        {
+            wLen = Uart1Write((char *)&pData[offset], toWriteLen);
+        }
+        
+        if (wLen > 0)
+        {
+            offset += wLen;
+            toWriteLen -= wLen;
+        }
+        else
+        {
+            vTaskDelay(5);
+        }
+    }
+}
 
 
 static void RuningUtilitiesTask(void *pvParameters)
 {
     volatile TickType_t current_tick;
+#ifndef CONFIG_FOR_DEBUG_BUTTON
     const TickType_t xTicksToWait = 5000 / portTICK_PERIOD_MS;
+#endif
     UBaseType_t totalTaskNum;
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("RuningUtilitiesTask start...\r\n");
+#ifndef CONFIG_FOR_DEBUG_BUTTON
     for (;;)
+#endif
     {
+#ifndef CONFIG_FOR_DEBUG_BUTTON
         vTaskDelay(xTicksToWait);
+#endif
         INFO("============== Utilities Start==================\r\n");
         current_tick = xTaskGetTickCount();
         totalTaskNum = uxTaskGetNumberOfTasks();
@@ -151,17 +190,17 @@ static void RuningUtilitiesTask(void *pvParameters)
         {
             memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
             vTaskList(pTaskListBuffer);
-            Uart1Write((char *)TaskListInfo1,strlen(TaskListInfo1));
-            Uart1Write((char *)TaskListInfo2,strlen(TaskListInfo2));
-            Uart1Write(pTaskListBuffer,strlen(pTaskListBuffer));
-            Uart1Write((char *)EndInfo,strlen(EndInfo));
+            Uart1WriteBigData((char *)TaskListInfo1,strlen(TaskListInfo1));
+            Uart1WriteBigData((char *)TaskListInfo2,strlen(TaskListInfo2));
+            Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
+            Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
 
             memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
             vTaskGetRunTimeStats(pTaskListBuffer);
-            Uart1Write((char *)RunTimeStatsInfo1,strlen(RunTimeStatsInfo1));
-            Uart1Write((char *)RunTimeStatsInfo2,strlen(RunTimeStatsInfo2));
-            Uart1Write(pTaskListBuffer,strlen(pTaskListBuffer));
-            Uart1Write((char *)EndInfo,strlen(EndInfo));
+            Uart1WriteBigData((char *)RunTimeStatsInfo1,strlen(RunTimeStatsInfo1));
+            Uart1WriteBigData((char *)RunTimeStatsInfo2,strlen(RunTimeStatsInfo2));
+            Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
+            Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
             
             vPortFree(pTaskListBuffer);
             pTaskListBuffer = NULL;
@@ -169,6 +208,7 @@ static void RuningUtilitiesTask(void *pvParameters)
   #endif /* #ifndef CONFIG_UART1_FOR_DPM2200 */
         INFO("============== Utilities End==================\r\n\r\n");
     }
+    vTaskDelete(NULL);
 }
 
 

@@ -72,6 +72,9 @@ static int exeKeyPressed(const Keys_Type key)
     {
         InterAdcCtrl(INTER_ADC_CMD_START,NULL);
         AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&pwr);
+#ifdef CONFIG_FOR_DEBUG_BUTTON
+        AppTaskUtilitiesStart();
+#endif
     }
     else if (KEY_2 == key)
     {

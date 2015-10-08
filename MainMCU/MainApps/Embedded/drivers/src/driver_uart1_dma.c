@@ -40,9 +40,6 @@ EventGroupHandle_t xUart1RxEventGroup;  // Declare a variable to hold the create
  *----------------------------------------------*/
 static UART_DEVICE_TypeDef uart1_device;
 
-#define UART1_TX_DMA_BUF_LEN        64
-#define UART1_RX_DMA_BUF_LEN        64
-
 static u8 u8TxDMABuffer[UART1_TX_DMA_BUF_LEN*2];
 static u8 u8RxDMABuffer[UART1_RX_DMA_BUF_LEN*2];
 static UART_DMA_BUFFER_TypeDef  uart1_tx_dma_buf;
@@ -220,6 +217,7 @@ int Uart1Read(char *pReadData, const int nDataLen)
 int Uart1Write(char *pWriteData, const int nDataLen)
 {    
     int ready2writeLen = 0;
+    int wLen = nDataLen;
     
     if (!uart1_device.IsDeviceOpen)
     {
@@ -237,6 +235,7 @@ int Uart1Write(char *pWriteData, const int nDataLen)
         if (ready2writeLen > uart1_tx_dma_buf.nBuff2MaxLength)
         {
             //Warnig: Not enugh spare to store.
+            wLen = 0;
         }
         else
         {
@@ -260,6 +259,7 @@ int Uart1Write(char *pWriteData, const int nDataLen)
         if (ready2writeLen > uart1_tx_dma_buf.nBuff1MaxLength)
         {
             //Warnig: Not enugh spare to store.
+            wLen = 0;
         }
         else
         {
@@ -279,7 +279,7 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     }
     
     xSemaphoreGive( xSerialTxHandleLock );
-    return nDataLen;
+    return wLen;
 }
 
 int Uart1Ctrl(void)

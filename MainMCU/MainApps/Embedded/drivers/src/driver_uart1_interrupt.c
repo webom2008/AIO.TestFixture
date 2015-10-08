@@ -202,11 +202,11 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
-		{
+        if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
+        {
             // Failed to post the message, even after 10 ticks.
-			break;
-		}
+            break;
+        }
     }
     xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
