@@ -139,6 +139,7 @@ typedef enum
 {
     COMP_ID_VERSION         = 0,
     COMP_ID_PWR_ALARM,
+    COMP_ID_TASK_UTILITES,
 
     COMP_ID_UNVALID,
 } COMPUTER_PKT_CID;

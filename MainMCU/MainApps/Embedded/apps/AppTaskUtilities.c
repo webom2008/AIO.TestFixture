@@ -160,54 +160,44 @@ static void Uart1WriteBigData(const char *pData, const int nLen)
 static void RuningUtilitiesTask(void *pvParameters)
 {
     volatile TickType_t current_tick;
-#ifndef CONFIG_FOR_DEBUG_BUTTON
-    const TickType_t xTicksToWait = 5000 / portTICK_PERIOD_MS;
-#endif
     UBaseType_t totalTaskNum;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
     INFO("RuningUtilitiesTask start...\r\n");
-#ifndef CONFIG_FOR_DEBUG_BUTTON
-    for (;;)
-#endif
+
+    INFO("============== Utilities Start==================\r\n");
+    current_tick = xTaskGetTickCount();
+    totalTaskNum = uxTaskGetNumberOfTasks();
+    INFO("current_tick      = %d\r\n",current_tick);
+    INFO("MyTimerTick       = %d\r\n",getMyTimerTick());
+    INFO("NumberOfTasks     = %d\r\n",totalTaskNum);
+    INFO("HighWaterMark     = %d\r\n",uxTaskGetStackHighWaterMark(NULL));
+    INFO("FreeHeapSize      = %d\r\n",xPortGetFreeHeapSize());
+
+#ifndef CONFIG_UART1_FOR_DPM2200
+    pTaskListBuffer = pvPortMalloc(40*totalTaskNum);
+    if (NULL != pTaskListBuffer)
     {
-#ifndef CONFIG_FOR_DEBUG_BUTTON
-        vTaskDelay(xTicksToWait);
-#endif
-        INFO("============== Utilities Start==================\r\n");
-        current_tick = xTaskGetTickCount();
-        totalTaskNum = uxTaskGetNumberOfTasks();
-        INFO("current_tick      = %d\r\n",current_tick);
-        INFO("MyTimerTick       = %d\r\n",getMyTimerTick());
-        INFO("NumberOfTasks     = %d\r\n",totalTaskNum);
-        INFO("HighWaterMark     = %d\r\n",uxTaskGetStackHighWaterMark(NULL));
-        INFO("FreeHeapSize      = %d\r\n",xPortGetFreeHeapSize());
+        memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
+        vTaskList(pTaskListBuffer);
+        Uart1WriteBigData((char *)TaskListInfo1,strlen(TaskListInfo1));
+        Uart1WriteBigData((char *)TaskListInfo2,strlen(TaskListInfo2));
+        Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
+        Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
 
-  #ifndef CONFIG_UART1_FOR_DPM2200
-        pTaskListBuffer = pvPortMalloc(40*totalTaskNum);
-        if (NULL != pTaskListBuffer)
-        {
-            memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
-            vTaskList(pTaskListBuffer);
-            Uart1WriteBigData((char *)TaskListInfo1,strlen(TaskListInfo1));
-            Uart1WriteBigData((char *)TaskListInfo2,strlen(TaskListInfo2));
-            Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
-            Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
-
-            memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
-            vTaskGetRunTimeStats(pTaskListBuffer);
-            Uart1WriteBigData((char *)RunTimeStatsInfo1,strlen(RunTimeStatsInfo1));
-            Uart1WriteBigData((char *)RunTimeStatsInfo2,strlen(RunTimeStatsInfo2));
-            Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
-            Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
-            
-            vPortFree(pTaskListBuffer);
-            pTaskListBuffer = NULL;
-        }
-  #endif /* #ifndef CONFIG_UART1_FOR_DPM2200 */
-        INFO("============== Utilities End==================\r\n\r\n");
+        memset(pTaskListBuffer, 0x00, 40*totalTaskNum);
+        vTaskGetRunTimeStats(pTaskListBuffer);
+        Uart1WriteBigData((char *)RunTimeStatsInfo1,strlen(RunTimeStatsInfo1));
+        Uart1WriteBigData((char *)RunTimeStatsInfo2,strlen(RunTimeStatsInfo2));
+        Uart1WriteBigData(pTaskListBuffer, strlen(pTaskListBuffer));
+        Uart1WriteBigData((char *)EndInfo,strlen(EndInfo));
+        
+        vPortFree(pTaskListBuffer);
+        pTaskListBuffer = NULL;
     }
+#endif /* #ifndef CONFIG_UART1_FOR_DPM2200 */
+    INFO("============== Utilities End==================\r\n\r\n");
     vTaskDelete(NULL);
 }
 

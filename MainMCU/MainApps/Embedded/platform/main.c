@@ -84,7 +84,6 @@ static int platform_init(void)
 
 static int startAllApps(void)
 {
-    AppTaskUtilitiesStart();
     drivers_test_start();
     AppCoopMcuStart();
     AppTestedAIOStart();

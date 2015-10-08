@@ -39,6 +39,10 @@ CToolSheet::CToolSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
     m_PageAioTest.m_psp.dwFlags &= ~(PSP_HASHELP);
     AddPage(&m_PageAioTest);
 
+#ifdef CONFIG_DEBUG_PAGE_SHOW
+    m_PageDebug.m_psp.dwFlags &= ~(PSP_HASHELP);
+    AddPage(&m_PageDebug);
+#endif
 //    m_PageDemo.m_psp.dwFlags &= ~(PSP_HASHELP);
 //    AddPage(&m_PageDemo);
 }
@@ -64,6 +68,10 @@ void CToolSheet::initApplication(void)
     m_PageSysCfg.initApplication();
     m_PageAioUpdate.initApplication();
     m_PageAioTest.initApplication();
+    
+#ifdef CONFIG_DEBUG_PAGE_SHOW
+    m_PageDebug.initApplication();
+#endif
 }
 
 void InitConsoleWindow(void)

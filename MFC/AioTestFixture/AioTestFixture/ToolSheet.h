@@ -5,6 +5,7 @@
 #include "PageSysCfg.h"
 #include "PageAioTest.h"
 #include "PageAioUpdate.h"
+#include "PageDebug.h"
 
 // CToolSheet
 
@@ -24,6 +25,7 @@ private:
     CPageSysCfg         m_PageSysCfg;
     CPageAioUpdate      m_PageAioUpdate;
     CPageAioTest        m_PageAioTest;
+    CPageDebug          m_PageDebug;
 
 protected:
 	DECLARE_MESSAGE_MAP()

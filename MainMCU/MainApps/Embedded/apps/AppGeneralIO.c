@@ -72,7 +72,7 @@ static int exeKeyPressed(const Keys_Type key)
     {
         InterAdcCtrl(INTER_ADC_CMD_START,NULL);
         AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&pwr);
-#ifdef CONFIG_FOR_DEBUG_BUTTON
+#ifdef CONFIG_BTN_TASK_UTILITIES
         AppTaskUtilitiesStart();
 #endif
     }
@@ -98,8 +98,8 @@ static void GeneralIOTask(void *pvParameters)
     u8 keyCount[KEYS_TYPE_MAX] = {0,};
     u8 ledcount = 0;
     u32 u32MyTimerNextTick = getMyTimerTick();
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
 
     xLastWakeTime = xTaskGetTickCount();
     

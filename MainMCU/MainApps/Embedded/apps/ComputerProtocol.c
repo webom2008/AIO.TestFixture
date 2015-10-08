@@ -331,6 +331,10 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
 
     }
         break;
+    case COMP_ID_TASK_UTILITES:{
+        AppTaskUtilitiesStart();
+    }
+        break;
     default:
         break;
     }

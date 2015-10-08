@@ -43,7 +43,7 @@ extern "C"{
 //#define CONFIG_DRIVER_TEST_UART5
 
 
-#define CONFIG_FOR_DEBUG_BUTTON
+//#define CONFIG_BTN_TASK_UTILITIES
 
 
 #ifdef __cplusplus

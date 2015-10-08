@@ -110,6 +110,7 @@
     <ClInclude Include="logfile.h" />
     <ClInclude Include="PageAioTest.h" />
     <ClInclude Include="PageAioUpdate.h" />
+    <ClInclude Include="PageDebug.h" />
     <ClInclude Include="PageDemo.h" />
     <ClInclude Include="PageSysCfg.h" />
     <ClInclude Include="Resource.h" />
@@ -125,6 +126,7 @@
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="PageAioTest.cpp" />
     <ClCompile Include="PageAioUpdate.cpp" />
+    <ClCompile Include="PageDebug.cpp" />
     <ClCompile Include="PageDemo.cpp" />
     <ClCompile Include="PageSysCfg.cpp" />
     <ClCompile Include="SerialDrive.cpp" />
