@@ -251,52 +251,48 @@ void UART4_IRQHandler(void)
 {
     volatile u32 tem_reg;
     volatile u16 u16BufferUsedLen = 0;
-    BaseType_t xHigherPriorityTaskWoken, xResult;
-
-    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
-    xHigherPriorityTaskWoken = pdFALSE;
-    
-    // error happen
-    if(USART_GetITStatus(UART4, USART_IT_PE) != RESET)
-    {
-        USART_ClearITPendingBit(UART4, USART_IT_PE);
-        xSerialRxParityFlag = DMA_UART_PACKET_PARITY_ERR;
-    }
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE; // must be initialised to pdFALSE.
+    BaseType_t xResult = pdFAIL;
     
     // uart idle interrupt
     if(USART_GetITStatus(UART4, USART_IT_IDLE) != RESET)
     {
-        USART_ClearITPendingBit(UART4, USART_IT_IDLE);
-        DMA_ClearFlag(DMA2_FLAG_GL3);//clear all interrupt flags     
-        DMA_Cmd(DMA2_Channel3, DISABLE); //close DMA incase receive data while handling
-        
-        xResult = xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken);
-        if( pdTRUE == xResult)
+        if (RESET == DMA_GetFlagStatus(DMA2_FLAG_TC3))
         {
-            if (uart4_rx_dma_buf.IdleBufferIndex) //buf1 busy, buf2 idle
-            {
-                u16BufferUsedLen = uart4_rx_dma_buf.nBuff1MaxLength - DMA_GetCurrDataCounter(DMA2_Channel3); 
+            if (pdTRUE == xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken))
+            { 
+                DMA_Cmd(DMA2_Channel3, DISABLE);    //close DMA must < 43us(1s/23040byte = 43 us/byte)
+                DMA_ClearFlag(DMA2_FLAG_GL3);       //clear all interrupt flags     
+                u16BufferUsedLen = UART4_RX_DMA_BUF_LEN - DMA_GetCurrDataCounter(DMA2_Channel3); 
                 if (u16BufferUsedLen > 0)
                 {
-                    uart4_rx_dma_buf.nBuff1Offset = u16BufferUsedLen;
-                    DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff2;
-                    DMA2_Channel3->CNDTR = uart4_rx_dma_buf.nBuff2MaxLength;
-                    uart4_rx_dma_buf.IdleBufferIndex = 0;
+                    if (uart4_rx_dma_buf.IdleBufferIndex) //buf1 busy, buf2 idle
+                    {
+                        uart4_rx_dma_buf.nBuff1Offset = u16BufferUsedLen;
+                        uart4_rx_dma_buf.IdleBufferIndex = 0;
+                        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff2;
+                    }
+                    else
+                    {
+                        uart4_rx_dma_buf.nBuff2Offset = u16BufferUsedLen;
+                        uart4_rx_dma_buf.IdleBufferIndex = 1;
+                        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff1;
+                    }
+                    DMA2_Channel3->CNDTR = UART4_RX_DMA_BUF_LEN;
                 }
+                
+                if(RESET != USART_GetFlagStatus(UART4, USART_FLAG_RXNE))
+                {
+                    ERROR("UART4_IRQ lost one RXNE!\r\n");
+                }
+                DMA_Cmd(DMA2_Channel3, ENABLE);     //open DMA after handled
+                xResult = xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
             }
             else
             {
-                u16BufferUsedLen = uart4_rx_dma_buf.nBuff2MaxLength - DMA_GetCurrDataCounter(DMA2_Channel3); 
-                if (u16BufferUsedLen > 0)
-                {
-                    uart4_rx_dma_buf.nBuff2Offset = u16BufferUsedLen;
-                    DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff1;
-                    DMA2_Channel3->CNDTR = uart4_rx_dma_buf.nBuff1MaxLength;
-                    uart4_rx_dma_buf.IdleBufferIndex = 1;
-                }
+                ERROR("IRQ DMA-Rx Lock\r\n");
             }
-            xResult = xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
-
+            
             if (u16BufferUsedLen > 0)
             {
                 //boardcast message to handle
@@ -305,25 +301,24 @@ void UART4_IRQHandler(void)
                                                     UART_DMA_RX_INCOMPLETE_EVENT_BIT,   // The bits being set.
                                                     &xHigherPriorityTaskWoken );
             } //End if u16BufferUsedLen > 0
-        } // End if pdTRUE == xSemaphoreTakeFromISR
-        else
-        {
-            ERROR("IRQ DMA-Rx Lock\r\n");
         }
-        DMA_Cmd(DMA2_Channel3, ENABLE);                 //open DMA after handled
         
-        //clear Idle flag by read SR and DR
-        tem_reg = UART4->SR;
-        tem_reg = UART4->DR;
-        tem_reg = tem_reg; // slove warning 
+        USART_ReceiveData(UART4); // Clear IDLE interrupt flag bit
     }// End if USART_IT_IDLE
     
-    if(USART_GetITStatus(UART4, USART_IT_FE | USART_IT_NE) != RESET)
-    {
-        USART_ClearITPendingBit(UART4, USART_IT_FE | USART_IT_NE);
-    }
+    // error happen
+//    if(USART_GetITStatus(UART4, USART_IT_PE) != RESET)
+//    {
+//        USART_ClearITPendingBit(UART4, USART_IT_PE);
+//        xSerialRxParityFlag = DMA_UART_PACKET_PARITY_ERR;
+//    }
+//    
+//    if(USART_GetITStatus(UART4, USART_IT_FE | USART_IT_NE) != RESET)
+//    {
+//        USART_ClearITPendingBit(UART4, USART_IT_FE | USART_IT_NE);
+//    }
 
-    if( xResult == pdPASS )
+    if( pdPASS == xResult )
     {
         // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
         // switch should be requested.  The macro used is port specific and 
@@ -350,41 +345,37 @@ void UART4_IRQHandler(void)
 *****************************************************************************/
 void DMA2_Channel3_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken, xResult;
-
-    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
-    xHigherPriorityTaskWoken = pdFALSE;
-
-    DMA_ClearITPendingBit(DMA2_IT_TC3);
-    DMA_Cmd(DMA2_Channel3, DISABLE);            //close DMA incase receive data while handling
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE; // must be initialised to pdFALSE.
+    BaseType_t xResult = pdFAIL;
 
     if( pdTRUE != xSemaphoreTakeFromISR( xSerialRxHandleLock, &xHigherPriorityTaskWoken))
     {
         ERROR("DMA-Rx Lock\r\n");
         return;
     }
-
+    
+    //close DMA must < 43us(1s/23040byte = 43 us/byte)
+    //close DMA incase receive data while handling
+    DMA_Cmd(DMA2_Channel3, DISABLE); 
+    DMA2_Channel3->CNDTR = UART4_RX_DMA_BUF_LEN;
     if (uart4_rx_dma_buf.IdleBufferIndex) //buf1 busy, buf2 idle
     {
         //buffer1 finished recevied mission (full), switch to buffer2
-        uart4_rx_dma_buf.nBuff1Offset = uart4_rx_dma_buf.nBuff1MaxLength;
-        
-        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff2;
-        DMA2_Channel3->CNDTR = uart4_rx_dma_buf.nBuff2MaxLength;
+        uart4_rx_dma_buf.nBuff1Offset = UART4_RX_DMA_BUF_LEN;
         uart4_rx_dma_buf.IdleBufferIndex = 0;
+        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff2;
     }
     else //buf2 busy, buf1 idle
     {
         //buffer2 finished recevied mission (full), switch to buffer1
-        uart4_rx_dma_buf.nBuff2Offset = uart4_rx_dma_buf.nBuff2MaxLength;
-        
-        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff1;
-        DMA2_Channel3->CNDTR = uart4_rx_dma_buf.nBuff1MaxLength;
+        uart4_rx_dma_buf.nBuff2Offset = UART4_RX_DMA_BUF_LEN;
         uart4_rx_dma_buf.IdleBufferIndex = 1;
+        DMA2_Channel3->CMAR = (uint32_t)uart4_rx_dma_buf.pPingPongBuff1;
     }
-    xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
     DMA_Cmd(DMA2_Channel3, ENABLE);             //open DMA after handled
-
+    xSemaphoreGiveFromISR( xSerialRxHandleLock ,&xHigherPriorityTaskWoken);
+    DMA_ClearITPendingBit(DMA2_IT_TC3);
+    
     //boardcast message to handle
     xResult = xEventGroupSetBitsFromISR(
                                         xUart4RxEventGroup,             // The event group being updated.
@@ -392,7 +383,7 @@ void DMA2_Channel3_IRQHandler(void)
                                         &xHigherPriorityTaskWoken );
 
     // Was the message posted successfully?
-    if( xResult == pdPASS )
+    if( pdPASS == xResult )
     {
         // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
         // switch should be requested.  The macro used is port specific and 
@@ -419,10 +410,8 @@ void DMA2_Channel3_IRQHandler(void)
 *****************************************************************************/
 void DMA2_Channel4_5_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken, xResult;
-
-    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
-    xHigherPriorityTaskWoken = pdFALSE;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE; // must be initialised to pdFALSE.
+    BaseType_t xResult = pdFAIL;
 
     if(RESET != DMA_GetITStatus(DMA2_IT_TC5))
     {

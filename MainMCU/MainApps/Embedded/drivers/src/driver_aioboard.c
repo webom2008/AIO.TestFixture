@@ -54,7 +54,7 @@ static QueueHandle_t    xpReceiveQueueHandle = NULL;
 #define PWR_CTL_RCC     RCC_APB2Periph_GPIOA
 
 
-#define RECEIVE_QUEUE_LENTGH        256
+#define RECEIVE_QUEUE_LENTGH        512
 
 
 #define _INFO_
@@ -201,7 +201,7 @@ static void AioBoardReadDriverTask(void *pvParameters)
 #endif
 #ifdef CONFIG_UART4_INT_MODE
     int rLen = 0;
-    char rBuf[128];
+    char rBuf[UART4_RX_DMA_BUF_LEN];
     char *pChar = NULL;
     BaseType_t xResult;
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;

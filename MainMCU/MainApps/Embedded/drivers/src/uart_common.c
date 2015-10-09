@@ -357,9 +357,10 @@ static int UartCommonDMAConfig(const UART_DEVICE_TypeDef *pUartDevice)
     DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
     DMA_InitStruct.DMA_Mode = DMA_Mode_Normal;//send once  //DMA_Mode_Normal, DMA_Mode_Circular
-    DMA_InitStruct.DMA_Priority = DMA_Priority_High;
+    DMA_InitStruct.DMA_Priority = DMA_Priority_VeryHigh;
     DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(UARTx_Tx_DMA, &DMA_InitStruct);
+    
     DMA_ITConfig(UARTx_Tx_DMA, DMA_IT_TC, ENABLE);
 //    DMA_ITConfig(UARTx_Tx_DMA, DMA_IT_TE, ENABLE);
     
@@ -378,7 +379,7 @@ static int UartCommonDMAConfig(const UART_DEVICE_TypeDef *pUartDevice)
     DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
     DMA_InitStruct.DMA_Mode = DMA_Mode_Normal;//received once  //DMA_Mode_Normal, DMA_Mode_Circular
-    DMA_InitStruct.DMA_Priority = DMA_Priority_High;
+    DMA_InitStruct.DMA_Priority = DMA_Priority_VeryHigh;
     DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(UARTx_Rx_DMA, &DMA_InitStruct);
     DMA_ITConfig(UARTx_Rx_DMA, DMA_IT_TC, ENABLE);
