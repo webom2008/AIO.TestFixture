@@ -748,6 +748,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_interAdc.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_dpy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_dpy.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -70,20 +70,20 @@ static int spi_write_byte(const u8 byte);
 #define DAC_CTRL_SF_RESET               ((uint8_t) 0x07)
 
 #ifdef _DAC7568_
-#define DAC_VAL_MAX 			        ((uint16_t) 0x0FFF)
+#define DAC_VAL_MAX                     ((uint16_t) 0x0FFF)
 #define DAC_FRAME_DATA_OFFSET           ((uint8_t) 8)
 #endif
 #ifdef _DAC8168_
-#define DAC_VAL_MAX 			        ((uint16_t) 0x3FFF)
+#define DAC_VAL_MAX                     ((uint16_t) 0x3FFF)
 #define DAC_FRAME_DATA_OFFSET           ((uint8_t) 6)
 #endif
 #ifdef _DAC8568_
-#define DAC_VAL_MAX 			        ((uint16_t) 0xFFFF)
+#define DAC_VAL_MAX                     ((uint16_t) 0xFFFF)
 #define DAC_FRAME_DATA_OFFSET           ((uint8_t) 4)
 #endif  
 
-#define DAC_VAL_MID			            ((uint16_t) (DAC_VAL_MAX / 2))
-#define DAC_VAL_MIN			            ((uint16_t) 0)
+#define DAC_VAL_MID                     ((uint16_t) (DAC_VAL_MAX / 2))
+#define DAC_VAL_MIN                     ((uint16_t) 0)
 
 //SPI1 interrfaces
 #define DAC_8568_SPIx           SPI1
@@ -121,7 +121,7 @@ static void SPIx_ConfigureInit(void)
 {
     SPI_InitTypeDef  SPI_InitStructure;
     
-    SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Tx;
+    SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Tx; 
     SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
     SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
@@ -134,38 +134,40 @@ static void SPIx_ConfigureInit(void)
     
     /* Enable SPI_MASTER */
     SPI_Cmd(DAC_8568_SPIx, ENABLE);
+
+    DAC_8568_SYNC_HIGH();
 }
 
 int Dac8568Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     // GPIO Init
-	RCC_APB2PeriphClockCmd( DAC_8568_CLR_RCC \
-	                        | DAC_8568_LDAC_RCC \
-	                        | DAC_8568_SYNC_RCC, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = DAC_8568_CLR_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 
-	GPIO_Init(DAC_8568_CLR_PORT, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = DAC_8568_LDAC_PIN;
-	GPIO_Init(DAC_8568_LDAC_PORT, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = DAC_8568_SYNC_PIN;
-	GPIO_Init(DAC_8568_SYNC_PORT, &GPIO_InitStructure);
+    RCC_APB2PeriphClockCmd( DAC_8568_CLR_RCC \
+                            | DAC_8568_LDAC_RCC \
+                            | DAC_8568_SYNC_RCC, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = DAC_8568_CLR_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 
+    GPIO_Init(DAC_8568_CLR_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = DAC_8568_LDAC_PIN;
+    GPIO_Init(DAC_8568_LDAC_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = DAC_8568_SYNC_PIN;
+    GPIO_Init(DAC_8568_SYNC_PORT, &GPIO_InitStructure);
 
     //SPI1 IO Init
-	RCC_APB2PeriphClockCmd( DAC_8568_SPIx_RCC, ENABLE);
-	RCC_APB2PeriphClockCmd( DAC_8568_SCLK_RCC \
-	                        | DAC_8568_MOSI_RCC \
-	                        | RCC_APB2Periph_AFIO, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = DAC_8568_SCLK_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 
-	GPIO_Init(DAC_8568_SCLK_PORT, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = DAC_8568_MOSI_PIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 
-	GPIO_Init(DAC_8568_MOSI_PORT, &GPIO_InitStructure);
+    RCC_APB2PeriphClockCmd( DAC_8568_SPIx_RCC, ENABLE);
+    RCC_APB2PeriphClockCmd( DAC_8568_SCLK_RCC \
+                            | DAC_8568_MOSI_RCC \
+                            | RCC_APB2Periph_AFIO, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = DAC_8568_SCLK_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 
+    GPIO_Init(DAC_8568_SCLK_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = DAC_8568_MOSI_PIN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 
+    GPIO_Init(DAC_8568_MOSI_PORT, &GPIO_InitStructure);
 
     SPIx_ConfigureInit();
     
@@ -177,11 +179,11 @@ static void Dac8568PowerupInit(void)
     uint32_t val = 0;
     OpDacRegister_TypeDef OpDacReg;
 
-	DAC_8568_LDAC_HIGH();
-	DAC_8568_CLR_HIGH();
+    DAC_8568_LDAC_HIGH();
+    DAC_8568_CLR_HIGH();
     Dac8568Ctrl(DAC_CTRL_CLR_PULSE, NULL);
-//	Dac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
-//	Dac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
+//  ac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
+//  ac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
 
     OpDacReg.channel = DAC_CH_ALL;
     OpDacReg.val = PWRDOWN_CMD_UP;
@@ -189,9 +191,9 @@ static void Dac8568PowerupInit(void)
 
     val = RefPowerUpDAC_StaticMode;
     Dac8568Ctrl(DAC_CTRL_W_INT_REF, &val);//DAC reference enable
-	
-//	Dac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_IGNORE_PIN);
-//	Dac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_TO_MID);
+
+//  ac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_IGNORE_PIN);
+//  ac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_TO_MID);
 
     OpDacReg.channel = DAC_CH_ALL;
     OpDacReg.val = DAC_VAL_MID;
@@ -200,7 +202,7 @@ static void Dac8568PowerupInit(void)
 
 int Dac8568Open(void)
 {
-//    Dac8568PowerupInit();
+    Dac8568PowerupInit();
     return 0;
 }
 
@@ -217,15 +219,15 @@ static __INLINE void delay_ns(const u32 ns)
 
 static int Dac8568Write(const uint32_t oneFrame)
 {
-	DAC_8568_SYNC_LOW();
-	delay_ns(13);           //t5 at least 13ns
-	spi_write_byte((u8)((oneFrame>>24)&0xFF));	
-	spi_write_byte((u8)((oneFrame>>16)&0xFF));	
-	spi_write_byte((u8)((oneFrame>>8)&0xFF));	
-	spi_write_byte((u8)(oneFrame&0xFF));	
-	delay_ns(10);           //t8 at least 10ns 
-	DAC_8568_SYNC_HIGH();
-	delay_ns(80);           // Minimum SYNC HIGH time at least 80ns 
+    DAC_8568_SYNC_LOW();
+    delay_ns(13);           //t5 at least 13ns
+    spi_write_byte((u8)((oneFrame>>24)&0xFF));
+    spi_write_byte((u8)((oneFrame>>16)&0xFF));
+    spi_write_byte((u8)((oneFrame>>8)&0xFF));
+    spi_write_byte((u8)(oneFrame&0xFF));
+    delay_ns(10);           //t8 at least 10ns 
+    DAC_8568_SYNC_HIGH();
+    delay_ns(80);           // Minimum SYNC HIGH time at least 80ns 
     return 0;
 }
 
@@ -254,9 +256,9 @@ int Dac8568Ctrl(const DacCtrlCmd_TypeDef cmd, void *paramter)
         oneFrame |= (uint32_t)(pOpDacReg->channel << DAC_FRAME_ADDR_OFFSET);
         oneFrame |= (uint32_t)(pOpDacReg->val << DAC_FRAME_DATA_OFFSET);
         Dac8568Write(oneFrame);
-    	DAC_8568_LDAC_LOW();
-    	delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
-    	DAC_8568_LDAC_HIGH();
+        DAC_8568_LDAC_LOW();
+        delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
+        DAC_8568_LDAC_HIGH();
     }
         break;
     case DAC_CTRL_W_CLEAR_CODE_REG:{
@@ -306,9 +308,9 @@ int Dac8568Ctrl(const DacCtrlCmd_TypeDef cmd, void *paramter)
     }
         break;
     case DAC_CTRL_CLR_PULSE:{
-    	DAC_8568_CLR_LOW();
-    	delay_ns(80);           //CLR pulse width LOW time,t15 at least 80ns 
-    	DAC_8568_CLR_HIGH();
+        DAC_8568_CLR_LOW();
+        delay_ns(80);           //CLR pulse width LOW time,t15 at least 80ns 
+        DAC_8568_CLR_HIGH();
     }
         break;
     default:
@@ -335,10 +337,12 @@ static int spi_write_byte(const u8 byte)
     /*!< Send byte through the SPI2 peripheral */
     SPI_I2S_SendData(DAC_8568_SPIx, byte);
 
+    return 0;
+    //SPI_Direction_1Line_Tx not need to receive
     /*!< Wait to receive a byte */
-    while (RESET == SPI_I2S_GetFlagStatus(DAC_8568_SPIx, SPI_I2S_FLAG_RXNE));
+//    while (RESET == SPI_I2S_GetFlagStatus(DAC_8568_SPIx, SPI_I2S_FLAG_RXNE));
 
     /*!< Return the byte read from the SPI bus */
-    return SPI_I2S_ReceiveData(DAC_8568_SPIx);
+//    return SPI_I2S_ReceiveData(DAC_8568_SPIx);
 }
 

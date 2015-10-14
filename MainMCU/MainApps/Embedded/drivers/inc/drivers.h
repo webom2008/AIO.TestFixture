@@ -46,8 +46,8 @@ extern "C"{
 #include "driver_leds.h"
 #include "driver_keys.h"
 #include "driver_buzzer.h"
-
 #include "driver_interAdc.h"
+#include "driver_dpy.h"
 
 int DriverMoudleInit(void);
 

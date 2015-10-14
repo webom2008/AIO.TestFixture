@@ -78,6 +78,9 @@ int DriverMoudleInit(void)
     
     ret |= InterAdcInit();
     ret |= InterAdcOpen();
+
+    ret |= LedsDisplayInit();
+    ret |= LedsDisplayOpen();
     while (ret < 0); //error hanppen
     return 0;
 }
