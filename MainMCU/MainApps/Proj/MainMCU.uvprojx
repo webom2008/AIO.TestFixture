@@ -753,6 +753,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_dpy.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_secur.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_secur.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

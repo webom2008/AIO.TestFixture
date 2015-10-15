@@ -30,6 +30,9 @@ void CPageDebug::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CPageDebug, CPropertyPage)
     ON_BN_CLICKED(IDC_BTN_GET_TASK_UTILITES, &CPageDebug::OnBnClickedBtnGetTaskUtilites)
+    ON_BN_CLICKED(IDC_BTN_RESET_DL_CNT, &CPageDebug::OnBnClickedBtnResetDlCnt)
+    ON_BN_CLICKED(IDC_BTN_DEC_DL_CNT, &CPageDebug::OnBnClickedBtnDecDlCnt)
+    ON_BN_CLICKED(IDC_BTN_RESET_FLASH, &CPageDebug::OnBnClickedBtnResetFlash)
 END_MESSAGE_MAP()
 
 
@@ -52,6 +55,60 @@ void CPageDebug::OnBnClickedBtnGetTaskUtilites()
     if (g_pSerialProtocol->isSerialOpen())
     {
         g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 1);
+    }
+    else
+    {
+        MSG("请确保正确配置串口\r\n");
+    }
+}
+
+void CPageDebug::OnBnClickedBtnResetDlCnt()
+{
+    BYTE id;
+    BYTE pBuf[2];
+
+    id = AIO_TEST_FIXTURE_ID;
+    pBuf[0] = (BYTE)COMP_ID_DOWNLOAD_CNT;
+    pBuf[1] = 0x01; //SECUR_CTRL_W_RESET_DOWNLOAD_CNT
+    if (g_pSerialProtocol->isSerialOpen())
+    {
+        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, sizeof(pBuf));
+    }
+    else
+    {
+        MSG("请确保正确配置串口\r\n");
+    }
+}
+
+void CPageDebug::OnBnClickedBtnDecDlCnt()
+{
+    BYTE id;
+    BYTE pBuf[2];
+
+    id = AIO_TEST_FIXTURE_ID;
+    pBuf[0] = (BYTE)COMP_ID_DOWNLOAD_CNT;
+    pBuf[1] = 0x02; //SECUR_CTRL_W_DEC_DOWNLOAD_CNT
+    if (g_pSerialProtocol->isSerialOpen())
+    {
+        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, sizeof(pBuf));
+    }
+    else
+    {
+        MSG("请确保正确配置串口\r\n");
+    }
+}
+
+void CPageDebug::OnBnClickedBtnResetFlash()
+{
+    BYTE id;
+    BYTE pBuf[2];
+
+    id = AIO_TEST_FIXTURE_ID;
+    pBuf[0] = (BYTE)COMP_ID_DOWNLOAD_CNT;
+    pBuf[1] = 0x00; //SECUR_CTRL_W_RESET_ALL
+    if (g_pSerialProtocol->isSerialOpen())
+    {
+        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, sizeof(pBuf));
     }
     else
     {

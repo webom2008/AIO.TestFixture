@@ -21,4 +21,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
     afx_msg void OnBnClickedBtnGetTaskUtilites();
+    afx_msg void OnBnClickedBtnResetDlCnt();
+    afx_msg void OnBnClickedBtnDecDlCnt();
+    afx_msg void OnBnClickedBtnResetFlash();
 };

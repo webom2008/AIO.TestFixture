@@ -65,22 +65,20 @@ int DriverMoudleInit(void)
     
     ret |= AioBoardInit();
     ret |= AioBoardOpen();
-    
     ret |= LedsInit();
     ret |= LedsOpen();
     ret |= KeysInit();
     ret |= KeysOpen();
     ret |= BuzzerInit();
     ret |= BuzzerOpen();
-
     ret |= Dac8568Init();
     ret |= Dac8568Open();
-    
     ret |= InterAdcInit();
     ret |= InterAdcOpen();
-
     ret |= LedsDisplayInit();
     ret |= LedsDisplayOpen();
+    ret |= SecurFlashInit();
+    ret |= SecurFlashOpen();
     while (ret < 0); //error hanppen
     return 0;
 }

@@ -48,6 +48,7 @@ extern "C"{
 #include "driver_buzzer.h"
 #include "driver_interAdc.h"
 #include "driver_dpy.h"
+#include "driver_secur.h"
 
 int DriverMoudleInit(void);
 

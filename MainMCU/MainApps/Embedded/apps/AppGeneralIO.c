@@ -98,6 +98,7 @@ static void GeneralIOTask(void *pvParameters)
     u8 keyCount[KEYS_TYPE_MAX] = {0,};
     u8 ledcount = 0;
     u32 u32MyTimerNextTick = getMyTimerTick();
+    int val;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
 
@@ -144,6 +145,7 @@ static void GeneralIOTask(void *pvParameters)
         {
             u32MyTimerNextTick += (1000 / MY_TIM_TICK_PERIOD_MS);
             alarmPowerDetect();
+            SecurFlashCtrl(SECUR_CTRL_R_DOWNLOAD_CNT, &val);
         }
         vTaskDelayUntil(&xLastWakeTime, xTicksToWait);
     }

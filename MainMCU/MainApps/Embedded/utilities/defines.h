@@ -98,6 +98,11 @@ extern "C"{
 #define SW_ON                       (char)0x01
 #define PIN_LOW                     (char)0x00
 #define PIN_HIGH                    (char)0x01
+#define U8_FLAG_FALT                ((u8)0x00)
+#define U8_FLAG_TRUE                ((u8)0x01)
+#define S32_FLAG_FALT               ((int)0x00)
+#define S32_FLAG_TRUE               ((int)0x01)
+
 
 #ifdef __cplusplus
 #if __cplusplus

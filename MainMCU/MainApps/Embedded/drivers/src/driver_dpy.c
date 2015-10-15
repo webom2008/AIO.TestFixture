@@ -167,7 +167,7 @@ int LedsDisplayRead(void)
 }
 
 int LedsDisplayWrite(int data)
-{
+{    
     Send_Start();
     Send_Byte(DIS_DATA_CMD);    //command1
     Send_Byte(LIGHT_LEVEL(1)| DIS_TYPE(0) | DIS_ENABLE(1));   //command2

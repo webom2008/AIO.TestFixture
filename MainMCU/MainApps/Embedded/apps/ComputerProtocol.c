@@ -335,6 +335,10 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
         AppTaskUtilitiesStart();
     }
         break;
+    case COMP_ID_DOWNLOAD_CNT:{
+        exeSecurFlashPkt(pPacket);
+    }
+        break;
     default:
         break;
     }
