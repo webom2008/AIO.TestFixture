@@ -68,11 +68,11 @@ int Uart4Init(void)
     xReadOpLock     = xSemaphoreCreateMutex();
     xWriteOpLock    = xSemaphoreCreateMutex();
     
-	do{} while ((NULL == uart4_tx_queue) \
+    do{} while ((NULL == uart4_tx_queue) \
                 ||(NULL == uart4_rx_queue)\
                 ||(NULL == xReadOpLock)\
                 ||(NULL == xWriteOpLock));
-    
+
     return 0;
 }
 
@@ -112,10 +112,10 @@ int Uart4Read(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; )
     {
-		if(pdPASS == xQueueReceive(uart4_rx_queue, pReadData++, (TickType_t)20))
-		{
+        if(pdPASS == xQueueReceive(uart4_rx_queue, pReadData++, (TickType_t)20))
+        {
             i++;
-		}
+        }
         else
         {
             break;
@@ -142,11 +142,11 @@ int Uart4Write(char *pWriteData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueSendToBack(uart4_tx_queue, (void *)pData++, (TickType_t)3))
-		{
+        if(pdPASS != xQueueSendToBack(uart4_tx_queue, (void *)pData++, (TickType_t)3))
+        {
             // Failed to post the message, even after 10 ticks.
-			break;
-		}
+            break;
+        }
     }
     xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(UART4, USART_IT_TXE, ENABLE);

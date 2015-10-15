@@ -26,8 +26,6 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define TDMX_UART_CMD_VALUE_MAX         20
-
 #define TDMX_UART_PKT_HEADER1           0xAA
 #define TDMX_UART_PKT_HEADER2           0x55
 
@@ -37,7 +35,7 @@ typedef struct _TDMXUARTPKT_
     u8 header2;
     u8 cmd_len;
     u8 cmd;
-    u8 cmd_val_checksum[TDMX_UART_CMD_VALUE_MAX + 2]; //date + 2bytes checksum
+    u8 cmd_val_checksum[8]; //date + 2bytes checksum
 } TDMxUartPkt;
 
 
@@ -136,11 +134,23 @@ typedef struct _TDMXUARTPKT_
 #define CLASS_AC_FOUR_HALF  0x21 /* 交流四位半表头 */
 #define CLASS_AC_THREE_HALF 0x22 /* 交流三位半表头 */
 
+
+
+typedef enum
+{
+    TDMxCTRL_GET_DATA   = 0,
+
+    TDMxCTRL_RESERVED             //Reserved 
+} TDMxCtrlCmd_TypeDef;
+
+
+
+
+
 int TDMxInit(void);
 int TDMxOpen(void);
-int TDMxRead(u8 *pCmdVal2Read, u8 *pCmdValLen);
 int TDMxWrite(const u8 cmd, const u8 *pCmdVal2Write, const u8 nCmdValLen);
-int TDMxCtrl(void);
+int TDMxCtrl(const TDMxCtrlCmd_TypeDef cmd, void *arg);
 int TDMxClose(void);
 
 #ifdef __cplusplus

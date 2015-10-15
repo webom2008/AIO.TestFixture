@@ -87,7 +87,7 @@ int Uart1Init(void)
     xReadOpLock     = xSemaphoreCreateMutex();
     xWriteOpLock    = xSemaphoreCreateMutex();
     
-	do{} while ((NULL == uart1_tx_queue) \
+    do{} while ((NULL == uart1_tx_queue) \
                 ||(NULL == uart1_rx_queue)\
                 ||(NULL == xReadOpLock)\
                 ||(NULL == xWriteOpLock));
@@ -161,10 +161,10 @@ int Uart1Read(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen;)
     {
-		if(pdPASS == xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
-		{
+        if(pdPASS == xQueueReceive(uart1_rx_queue, pReadData++, (TickType_t)10))
+        {
             i++;
-		}
+        }
         else
         {
             break;
@@ -206,11 +206,11 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
-		{
+        if(pdPASS != xQueueSendToBack(uart1_tx_queue, (void *)pData++, (TickType_t)3))
+        {
             // Failed to post the message, even after 10 ticks.
-			break;
-		}
+            break;
+        }
     }
     xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
@@ -269,9 +269,9 @@ void USART1_IRQHandler(void)
     volatile char temp = 0;
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// We have not woken a task at the start of the ISR.
-	xHigherPriorityTaskWoken = pdFALSE;
-    
+    // We have not woken a task at the start of the ISR.
+    xHigherPriorityTaskWoken = pdFALSE;
+
     if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
     {
         temp = USART_ReceiveData(USART1);
@@ -313,10 +313,10 @@ void USART1_IRQHandler(void)
         USART_ClearITPendingBit(USART1, USART_IT_FE | USART_IT_NE);
     }
 
-	if(xHigherPriorityTaskWoken)
-	{
-		taskYIELD ();
-	}
+    if(xHigherPriorityTaskWoken)
+    {
+        taskYIELD ();
+    }
 }
 
 #ifdef CONFIG_UART1_FOR_DPM2200

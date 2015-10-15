@@ -66,14 +66,36 @@ static QueueHandle_t    pMainMcuRxPktQueue  = NULL;
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
+static void testMainMcuAndMyself(DmaUartProtocolPacket *pPkt)
+{
+    //packet loop back
+    sendMainMcuPkt(pPkt, 0);
+}
+
+static void getTDMxResult(DmaUartProtocolPacket *pPkt)
+{
+    int val = 0;
+    
+    if (0 == TDMxCtrl(TDMxCTRL_GET_DATA, &val))
+    {
+        memset(pPkt->Data, 0x00, sizeof(pPkt->Data));
+        pPkt->Data[0] = (u8)((val >> 24)&0xFF);
+        pPkt->Data[1] = (u8)((val >> 16)&0xFF);
+        pPkt->Data[2] = (u8)((val >> 8)&0xFF);
+        pPkt->Data[3] = (u8)(val&0xFF);
+        pPkt->DataLen = 4;
+        sendMainMcuPkt(pPkt, 0);
+    }
+}
+
 
 static void MainMcuExecutePktTask(void *pvParameters)
 {
     DmaUartProtocolPacket rxPacket;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     INFO("MainMcuExecutePktTask running...\n");
     for (;;)
     {
@@ -83,6 +105,7 @@ static void MainMcuExecutePktTask(void *pvParameters)
             switch (rxPacket.ID)
             {
             case PKT_ID_DRIVER_TEST:
+                testMainMcuAndMyself(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_START:
                 xSemaphoreGive(gpAioStmDev->pStartUpdateSemaphore);
@@ -93,6 +116,10 @@ static void MainMcuExecutePktTask(void *pvParameters)
                 AioStmCtrl(AIO_STM_CTRL_CMD_SET_BOOT0, rxPacket.Data);
                 break;
             case PKT_ID_AIOSTM_UPDATE_END:
+                break;
+            case PKT_ID_TDM_RESULT:{
+                getTDMxResult(&rxPacket);
+            }
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);
@@ -107,10 +134,10 @@ static void MainMcuExecutePktTask(void *pvParameters)
 static void MainMcuTimeoutPktTask(void *pvParameters)
 {
     const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     INFO("MainMcuTimeoutPktTask running...\n");
     for (;;)
     {
@@ -130,35 +157,35 @@ static void MainMcuUnpackTask(void *pvParameters)
 #ifdef _SEND_DEMO_PKT_
     int test_count = 0;
 #endif
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("MainMcuUnpackTask running...\n");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart2RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+                        xUart2RxEventGroup, // The event group being tested.
+                        UART_DMA_RX_COMPLETE_EVENT_BIT \
+                        | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+                        pdTRUE,             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                        pdFALSE,            // Don't wait for both bits, either bit will do.
+                        xTicksToWait );     // Wait a maximum of 100ms for either bit to be set.
 
         memset(&rxPacket, 0x00, sizeof(DmaUartProtocolPacket));
         if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
-		{
+        {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             INFO("Uart2Read COMPLETE rLen=%d\n",rLen);
-		}
-		else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
-		{
+        }
+        else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
+        {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             INFO("Uart2Read INCOMPLETE rLen=%d\n",rLen);
-		}
-		else
-		{
+        }
+        else
+        {
 #ifdef _SEND_DEMO_PKT_ // For Create Tx Test Packet
             DmaUartProtocolPacketInit(&rxPacket);
             rxPacket.ID = (u8)PKT_ID_DRIVER_TEST;
@@ -167,7 +194,7 @@ static void MainMcuUnpackTask(void *pvParameters)
             continue;
 #endif
             // do nothing.
-		}
+        }
 
         if (rLen <= 0) continue;
         
@@ -176,7 +203,7 @@ static void MainMcuUnpackTask(void *pvParameters)
             && (DMA_UART_PACKET_PARITY_OK == rxPacket.ParityTag))
         {
 //            INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
-    		xQueueSendToBack(pMainMcuRxPktQueue, (void *)&rxPacket, DELAY_NO_WAIT);
+            xQueueSendToBack(pMainMcuRxPktQueue, (void *)&rxPacket, DELAY_NO_WAIT);
         }
         else
         {
@@ -193,8 +220,8 @@ int AppMainMcuInit(void)
     pMainMcuRxPktQueue  = xQueueCreate(2, sizeof(DmaUartProtocolPacket));
     ret |= MainMcuProtocolInit();
     
-	if(NULL == pMainMcuRxPktQueue)
-	{
+    if(NULL == pMainMcuRxPktQueue)
+    {
         ERROR("Create pMainMcuRxPktQueue Failed!");
         ret = -1;
     }

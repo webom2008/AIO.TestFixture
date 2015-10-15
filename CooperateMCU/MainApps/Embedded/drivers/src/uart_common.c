@@ -155,30 +155,30 @@ static int UartCommonGPIOInit(const UART_NUM_DEF uart_num)
         return -1;
     }
     
-	/* Enable USARTx clock */
+    /* Enable USARTx clock */
     if (UART_NUM01 == uart_num)
     {
-    	RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx,ENABLE );
+        RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx,ENABLE );
     }
     else
     {
         RCC_APB1PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx,ENABLE );
     }
-	RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx_Tx \
-	                        | UART_GPIO[uart_num].RCC_Periph_UARTx_Rx \
-	                        | UART_GPIO[uart_num].RCC_Periph_UARTx_AFIO,
-	                        ENABLE );	
+    RCC_APB2PeriphClockCmd( UART_GPIO[uart_num].RCC_Periph_UARTx_Tx \
+                            | UART_GPIO[uart_num].RCC_Periph_UARTx_Rx \
+                            | UART_GPIO[uart_num].RCC_Periph_UARTx_AFIO,
+                            ENABLE );	
 
-	/* Configure USARTx Rx as input floating */
-	GPIO_InitStructure.GPIO_Pin = UART_GPIO[uart_num].PIN_UARTx_Rx;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_Init( UART_GPIO[uart_num].PORT_UARTx_Rx, &GPIO_InitStructure );
-	
-	/* Configure USARTx Tx s alternate function push-pull */
-	GPIO_InitStructure.GPIO_Pin = UART_GPIO[uart_num].PIN_UARTx_Tx;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init( UART_GPIO[uart_num].PORT_UARTx_Tx, &GPIO_InitStructure );
+    /* Configure USARTx Rx as input floating */
+    GPIO_InitStructure.GPIO_Pin = UART_GPIO[uart_num].PIN_UARTx_Rx;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init( UART_GPIO[uart_num].PORT_UARTx_Rx, &GPIO_InitStructure );
+
+    /* Configure USARTx Tx s alternate function push-pull */
+    GPIO_InitStructure.GPIO_Pin = UART_GPIO[uart_num].PIN_UARTx_Tx;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_Init( UART_GPIO[uart_num].PORT_UARTx_Tx, &GPIO_InitStructure );
     return 0;
 }
 
@@ -191,28 +191,28 @@ static int UartCommonConfig(const UART_DEVICE_TypeDef *pUartDevice)
     {
         return -1;
     }
-    
-	USART_InitStructure.USART_BaudRate = pUartDevice->baudrate;
+
+    USART_InitStructure.USART_BaudRate = pUartDevice->baudrate;
     if (PARITY_EVEN == pUartDevice->ParityType)
     {
-    	USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-    	USART_InitStructure.USART_Parity = USART_Parity_Even;
+        USART_InitStructure.USART_WordLength = USART_WordLength_9b;
+        USART_InitStructure.USART_Parity = USART_Parity_Even;
     }
     else if (PARITY_ODD == pUartDevice->ParityType)
     {
-    	USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-    	USART_InitStructure.USART_Parity = USART_Parity_Odd;
+        USART_InitStructure.USART_WordLength = USART_WordLength_9b;
+        USART_InitStructure.USART_Parity = USART_Parity_Odd;
     }
     else
     {
-    	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    	USART_InitStructure.USART_Parity = USART_Parity_No;
+        USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART_InitStructure.USART_Parity = USART_Parity_No;
     }
-	USART_InitStructure.USART_StopBits = USART_StopBits_1;
-	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	
-	USART_Init(UART_GPIO[pUartDevice->num].UARTx, &USART_InitStructure );
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+
+    USART_Init(UART_GPIO[pUartDevice->num].UARTx, &USART_InitStructure );
 
     if (PARITY_NONE != pUartDevice->ParityType)
     {

@@ -58,8 +58,8 @@ int DriverMoudleInit(void)
     ret |= Uart2Open();
     ret |= Uart3Init();
     ret |= Uart3Open();
-    ret |= Uart4Init();
-    ret |= Uart4Open();
+//    ret |= Uart4Init(); //delete for TDMx
+//    ret |= Uart4Open(); //delete for TDMx
     ret |= Uart5Init();
     ret |= Uart5Open();
     

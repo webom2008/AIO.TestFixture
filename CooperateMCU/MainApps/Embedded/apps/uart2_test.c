@@ -66,9 +66,9 @@ static void uart2_driver_task(void *pvParameters)
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
     DmaUartProtocolPacket txPacket;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     udprintf("\r\n[TEST] uart2_driver_task running...");
     for (;;)
@@ -91,43 +91,43 @@ static void uart2_unpack_task(void *pvParameters)
     EventBits_t uxBits;
     const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart2_unpack_task running...");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart2RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+                    xUart2RxEventGroup, // The event group being tested.
+                    UART_DMA_RX_COMPLETE_EVENT_BIT \
+                    | UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
+                    pdTRUE,         // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,        // Don't wait for both bits, either bit will do.
+                    xTicksToWait ); // Wait a maximum of 100ms for either bit to be set.
 
         memset(&rxPacket, 0x00, sizeof(DmaUartProtocolPacket));
         if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
-		{
+        {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             if (rLen > 0)
             {
                 test_uart2_rx_count += rLen;
             }
             TEST_UART2_INFO("Uart2Read COMPLETE rLen=%d",rLen);
-		}
-		else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
-		{
+        }
+        else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
+        {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             if (rLen > 0)
             {
                 test_uart2_rx_count += rLen;
             }
             TEST_UART2_INFO("Uart2Read INCOMPLETE rLen=%d",rLen);
-		}
-		else
-		{
-		}
+        }
+        else
+        {
+        }
 
         if (rLen <= 0) continue;
         

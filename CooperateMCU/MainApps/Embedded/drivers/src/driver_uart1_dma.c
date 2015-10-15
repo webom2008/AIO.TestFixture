@@ -114,8 +114,8 @@ int Uart1Init(void)
     
     xSerialTxHandleLock = xSemaphoreCreateMutex();
     xSerialRxHandleLock = xSemaphoreCreateMutex();
-	xUart1RxEventGroup  = xEventGroupCreate();
-	do{} while ((NULL == xSerialTxHandleLock) \
+    xUart1RxEventGroup  = xEventGroupCreate();
+    do{} while ((NULL == xSerialTxHandleLock) \
         ||(NULL == xSerialRxHandleLock)\
         ||(NULL == xUart1RxEventGroup));
     
@@ -319,9 +319,9 @@ void USART1_IRQHandler(void)
     volatile u16 u16BufferUsedLen = 0;
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
-	xHigherPriorityTaskWoken = pdFALSE;
-    
+    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
+    xHigherPriorityTaskWoken = pdFALSE;
+
     // uart idle interrupt
     if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)
     {
@@ -359,10 +359,10 @@ void USART1_IRQHandler(void)
             if (u16BufferUsedLen > 0)
             {
                 //boardcast message to handle
-            	xResult = xEventGroupSetBitsFromISR(
-            						xUart1RxEventGroup,	// The event group being updated.
-            						UART_DMA_RX_INCOMPLETE_EVENT_BIT,// The bits being set.
-            						&xHigherPriorityTaskWoken );
+                xResult = xEventGroupSetBitsFromISR(
+                    xUart1RxEventGroup,	// The event group being updated.
+                    UART_DMA_RX_INCOMPLETE_EVENT_BIT,// The bits being set.
+                    &xHigherPriorityTaskWoken );
             } //End if u16BufferUsedLen > 0
         }// End if pdTRUE == xSemaphoreTakeFromISR
         DMA_Cmd(DMA1_Channel5, ENABLE);                 //open DMA after handled
@@ -384,15 +384,15 @@ void USART1_IRQHandler(void)
     {
         USART_ClearITPendingBit(USART1, USART_IT_FE | USART_IT_NE);
     }
-    
-	if( xResult == pdPASS )
-	{
-		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		// switch should be requested.  The macro used is port specific and 
-		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-		// refer to the documentation page for the port being used.
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-	}
+
+    if( xResult == pdPASS )
+    {
+        // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+        // switch should be requested.  The macro used is port specific and 
+        // will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+        // refer to the documentation page for the port being used.
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
 }
 
 /*****************************************************************************
@@ -414,9 +414,9 @@ void DMA1_Channel5_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
-	xHigherPriorityTaskWoken = pdFALSE;
-    
+    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
+    xHigherPriorityTaskWoken = pdFALSE;
+
     DMA_ClearITPendingBit(DMA1_IT_TC5); 
 //    DMA_ClearITPendingBit(DMA1_IT_TE5);
     DMA_Cmd(DMA1_Channel5, DISABLE);            //close DMA incase receive data while handling
@@ -448,20 +448,20 @@ void DMA1_Channel5_IRQHandler(void)
     DMA_Cmd(DMA1_Channel5, ENABLE);             //open DMA after handled
 
     //boardcast message to handle
-	xResult = xEventGroupSetBitsFromISR(
-						xUart1RxEventGroup,	// The event group being updated.
-						UART_DMA_RX_COMPLETE_EVENT_BIT,// The bits being set.
-						&xHigherPriorityTaskWoken );
+    xResult = xEventGroupSetBitsFromISR(
+        xUart1RxEventGroup,	// The event group being updated.
+        UART_DMA_RX_COMPLETE_EVENT_BIT,// The bits being set.
+        &xHigherPriorityTaskWoken );
 
-	// Was the message posted successfully?
-	if( xResult == pdPASS )
-	{
-		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		// switch should be requested.  The macro used is port specific and 
-		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-		// refer to the documentation page for the port being used.
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-	}
+    // Was the message posted successfully?
+    if( xResult == pdPASS )
+    {
+        // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+        // switch should be requested.  The macro used is port specific and 
+        // will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+        // refer to the documentation page for the port being used.
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
 }
 
 /*****************************************************************************
@@ -483,9 +483,9 @@ void DMA1_Channel4_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
-	xHigherPriorityTaskWoken = pdFALSE;
-    
+    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
+    xHigherPriorityTaskWoken = pdFALSE;
+
     DMA_ClearITPendingBit(DMA1_IT_TC4);
 //    DMA_ClearITPendingBit(DMA1_IT_TE4);
     DMA_Cmd(DMA1_Channel4, DISABLE);    // close DMA
@@ -535,14 +535,14 @@ void DMA1_Channel4_IRQHandler(void)
     }
     
     xResult = xSemaphoreGiveFromISR( xSerialTxHandleLock , &xHigherPriorityTaskWoken);
-	if( xResult == pdPASS )
-	{
-		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		// switch should be requested.  The macro used is port specific and 
-		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-		// refer to the documentation page for the port being used.
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-	}
+    if( xResult == pdPASS )
+    {
+        // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+        // switch should be requested.  The macro used is port specific and 
+        // will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+        // refer to the documentation page for the port being used.
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
 }
 
 //============================================================
