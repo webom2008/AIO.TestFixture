@@ -79,8 +79,8 @@ int AppCoopMcuInit(void)
     ret |= CoopMcuProtocolInit();
     ret |= AioStmUpdateInit();
     
-	if(NULL == pCoopMcuRxPktQueue)
-	{
+    if(NULL == pCoopMcuRxPktQueue)
+    {
         ERROR("Create pCoopMcuRxPktQueue Failed!");
         ret = -1;
     }
@@ -119,8 +119,8 @@ static void CoopMcuTimeoutPktTask(void *pvParameters)
 {
     const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("CoopMcuTimeoutPktTask running...\n");
     for (;;)
@@ -138,37 +138,37 @@ static void CoopMcuUnpackTask(void *pvParameters)
     DmaUartProtocolPacket rxPacket;
     EventBits_t uxBits;
     const TickType_t xTicksToWait = 100 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     INFO("MainMcuUnpackTask running...\n");
     for (;;)
     {
         rLen = 0;
-		uxBits = xEventGroupWaitBits(
-					xUart3RxEventGroup,	// The event group being tested.
-					UART_DMA_RX_COMPLETE_EVENT_BIT \
-					| UART_DMA_RX_INCOMPLETE_EVENT_BIT,	// The bits within the event group to wait for.
-					pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-					pdFALSE,		// Don't wait for both bits, either bit will do.
-					xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+        uxBits = xEventGroupWaitBits(
+                    xUart3RxEventGroup,     // The event group being tested.
+                    UART_DMA_RX_COMPLETE_EVENT_BIT \
+                    | UART_DMA_RX_INCOMPLETE_EVENT_BIT, // The bits within the event group to wait for.
+                    pdTRUE,         // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,        // Don't wait for both bits, either bit will do.
+                    xTicksToWait ); // Wait a maximum of 100ms for either bit to be set.
 
         memset(&rxPacket, 0x00, sizeof(DmaUartProtocolPacket));
         if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
-		{
+        {
             rLen = Uart3Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             INFO("Uart3Read COMPLETE rLen=%d\n",rLen);
-		}
-		else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
-		{
+        }
+        else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
+        {
             rLen = Uart3Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
             INFO("Uart3Read INCOMPLETE rLen=%d\n",rLen);
-		}
-		else
-		{
+        }
+        else
+        {
             // do nothing.
-		}
+        }
 
         if (rLen <= 0) continue;
         
@@ -177,7 +177,7 @@ static void CoopMcuUnpackTask(void *pvParameters)
             && (DMA_UART_PACKET_PARITY_OK == rxPacket.ParityTag))
         {
 //            INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
-    		xQueueSendToBack(pCoopMcuRxPktQueue, (void *)&rxPacket, DELAY_NO_WAIT);
+            xQueueSendToBack(pCoopMcuRxPktQueue, (void *)&rxPacket, DELAY_NO_WAIT);
         }
         else
         {
@@ -186,12 +186,23 @@ static void CoopMcuUnpackTask(void *pvParameters)
     }
 }
 
+static void testCoopMcuAndMyself(DmaUartProtocolPacket *pPkt)
+{
+    udprintf("PKT_ID=0X%02X, Data=%s\r\n",pPkt->ID ,pPkt->Data);
+}
+
+static void getTDMxResult(DmaUartProtocolPacket *pPkt)
+{
+    int val = (pPkt->Data[0]<<24) | (pPkt->Data[1]<<16)| (pPkt->Data[2]<<8)| pPkt->Data[3];
+    udprintf("TDM = %d\r\n",val);
+}
+
 static void CoopMcuExecutePktTask(void *pvParameters)
 {
     DmaUartProtocolPacket rxPacket;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("MainMcuExecutePktTask running...\n");
     for (;;)
@@ -208,6 +219,7 @@ static void CoopMcuExecutePktTask(void *pvParameters)
             switch (rxPacket.ID)
             {
             case PKT_ID_DRIVER_TEST:
+                testCoopMcuAndMyself(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_START:
                 xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
@@ -225,6 +237,9 @@ static void CoopMcuExecutePktTask(void *pvParameters)
             case PKT_ID_AIOSTM_UPDATE_END:
                 xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
                                     PKT_ACK_BIT_AIOSTM_END);
+                break;
+            case PKT_ID_TDM_RESULT:
+                getTDMxResult(&rxPacket);
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);

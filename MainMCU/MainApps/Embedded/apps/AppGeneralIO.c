@@ -99,6 +99,8 @@ static void GeneralIOTask(void *pvParameters)
     u8 ledcount = 0;
     u32 u32MyTimerNextTick = getMyTimerTick();
     int val;
+    DmaUartProtocolPacket txPacket;
+    
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
 
@@ -146,6 +148,13 @@ static void GeneralIOTask(void *pvParameters)
             u32MyTimerNextTick += (1000 / MY_TIM_TICK_PERIOD_MS);
             alarmPowerDetect();
             SecurFlashCtrl(SECUR_CTRL_R_DOWNLOAD_CNT, &val);
+
+            //test
+            DmaUartProtocolPacketInit(&txPacket);
+            txPacket.ID = (u8)PKT_ID_TDM_RESULT;
+//            txPacket.ID = (u8)PKT_ID_DRIVER_TEST;
+//            sprintf((char *)txPacket.Data, "DRIVER_TEST=%d",u32MyTimerNextTick);
+            sendCoopMcuPkt(&txPacket, 0);
         }
         vTaskDelayUntil(&xLastWakeTime, xTicksToWait);
     }
@@ -155,9 +164,9 @@ static void GeneralIOTask(void *pvParameters)
 
 int AppGeneralIOInit(void)
 {
-	xKeysEventGroup  = xEventGroupCreate();
-	do{} while (NULL == xKeysEventGroup);
-    
+    xKeysEventGroup  = xEventGroupCreate();
+    do{} while (NULL == xKeysEventGroup);
+
     return 0;
 }
 

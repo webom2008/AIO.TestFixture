@@ -663,6 +663,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\platform\MyTimer.c</FilePath>
             </File>
+            <File>
+              <FileName>printf-stdarg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\utilities\printf-stdarg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -702,11 +707,6 @@
               <FileName>driver_uart3.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_uart3.c</FilePath>
-            </File>
-            <File>
-              <FileName>driver_uart4.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Embedded\drivers\src\driver_uart4.c</FilePath>
             </File>
             <File>
               <FileName>driver_uart5.c</FileName>

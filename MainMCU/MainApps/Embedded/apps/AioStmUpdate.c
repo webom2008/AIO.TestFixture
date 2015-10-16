@@ -71,8 +71,8 @@ static void AioStmUpdateTask(void *pvParameters);
 
 int AioStmUpdateInit(void)
 {
-	gpAioStmDev->xPktAckEventGroup = xEventGroupCreate();
-	do{} while (NULL == gpAioStmDev->xPktAckEventGroup);
+    gpAioStmDev->xPktAckEventGroup = xEventGroupCreate();
+    do{} while (NULL == gpAioStmDev->xPktAckEventGroup);
     return 0;
 }
 
@@ -123,13 +123,13 @@ static int setAioStmBoot0State(char pin_level)
     sendCoopMcuPkt(&txPacket, MY_TIM_DEFAULT_TIMEOUT_MS);
 
     //wait ack signal
-	uxBits = xEventGroupWaitBits(
-				gpAioStmDev->xPktAckEventGroup,	// The event group being tested.
-				PKT_ACK_BIT_AIOSTM_BOOT \
-				| PKT_ACK_BIT_AIOSTM_ERROR,	// The bits within the event group to wait for.
-				pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-				pdFALSE,		// Don't wait for both bits, either bit will do.
-				xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+    uxBits = xEventGroupWaitBits(
+            gpAioStmDev->xPktAckEventGroup, // The event group being tested.
+            PKT_ACK_BIT_AIOSTM_BOOT \
+            | PKT_ACK_BIT_AIOSTM_ERROR, // The bits within the event group to wait for.
+            pdTRUE,         // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,        // Don't wait for both bits, either bit will do.
+            xTicksToWait ); // Wait a maximum of 100ms for either bit to be set.
 
     if(0 != (uxBits & PKT_ACK_BIT_AIOSTM_BOOT))
     {
@@ -160,13 +160,13 @@ static int sendAioStmUpdateStart(void)
     sendCoopMcuPkt(&txPacket, MY_TIM_DEFAULT_TIMEOUT_MS);
 
     //wait ack signal
-	uxBits = xEventGroupWaitBits(
-				gpAioStmDev->xPktAckEventGroup,	// The event group being tested.
-				PKT_ACK_BIT_AIOSTM_START \
-				| PKT_ACK_BIT_AIOSTM_ERROR,	// The bits within the event group to wait for.
-				pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-				pdFALSE,		// Don't wait for both bits, either bit will do.
-				xTicksToWait );	// Wait a maximum of 100ms for either bit to be set.
+    uxBits = xEventGroupWaitBits(
+            gpAioStmDev->xPktAckEventGroup, // The event group being tested.
+            PKT_ACK_BIT_AIOSTM_START \
+            | PKT_ACK_BIT_AIOSTM_ERROR, // The bits within the event group to wait for.
+            pdTRUE,         // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,        // Don't wait for both bits, either bit will do.
+            xTicksToWait ); // Wait a maximum of 100ms for either bit to be set.
 
     if(0 != (uxBits & PKT_ACK_BIT_AIOSTM_START))
     {
@@ -187,13 +187,13 @@ static int waitAioStmUpdateEnd(void)
 {
     EventBits_t uxBits = 0;
     
-	uxBits = xEventGroupWaitBits(
-				gpAioStmDev->xPktAckEventGroup,	// The event group being tested.
-				PKT_ACK_BIT_AIOSTM_END \
-				| PKT_ACK_BIT_AIOSTM_ERROR,	// The bits within the event group to wait for.
-				pdTRUE,			// BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-				pdFALSE,		// Don't wait for both bits, either bit will do.
-				DELAY_MAX_WAIT );	// Wait a maximum of 100ms for either bit to be set.
+    uxBits = xEventGroupWaitBits(
+            gpAioStmDev->xPktAckEventGroup, // The event group being tested.
+            PKT_ACK_BIT_AIOSTM_END \
+            | PKT_ACK_BIT_AIOSTM_ERROR, // The bits within the event group to wait for.
+            pdTRUE,             // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,            // Don't wait for both bits, either bit will do.
+            DELAY_MAX_WAIT );   // Wait a maximum of 100ms for either bit to be set.
 
     if(0 != (uxBits & PKT_ACK_BIT_AIOSTM_END))
     {
@@ -213,8 +213,8 @@ static void AioStmUpdateTask(void *pvParameters)
     char err_flag = 1;
     char sw = SW_OFF;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
     
     INFO("AioStmUpdateTask running...\n");
     for (;;)
