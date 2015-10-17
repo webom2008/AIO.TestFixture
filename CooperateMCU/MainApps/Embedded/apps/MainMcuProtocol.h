@@ -51,6 +51,8 @@ int checkAndResendMainMcuACKPkt(void);
 
 int sendMainMcuPkt( DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms);
 
+int deleteMainMcuAckPkt(const u8 ID);
+
 
 #ifdef __cplusplus
 #if __cplusplus

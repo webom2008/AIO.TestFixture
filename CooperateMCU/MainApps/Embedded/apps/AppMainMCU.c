@@ -84,6 +84,7 @@ static void getTDMxResult(DmaUartProtocolPacket *pPkt)
         pPkt->Data[2] = (u8)((val >> 8)&0xFF);
         pPkt->Data[3] = (u8)(val&0xFF);
         pPkt->DataLen = 4;
+        pPkt->ACK = DMA_UART_PACKET_NACK;
         sendMainMcuPkt(pPkt, 0);
     }
 }
@@ -102,6 +103,11 @@ static void MainMcuExecutePktTask(void *pvParameters)
         if(xQueueReceive(pMainMcuRxPktQueue, (void *)&rxPacket, DELAY_MAX_WAIT))
         {
             INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
+            if (DMA_UART_PACKET_NACK == rxPacket.ACK) //delete pkt from send buffer
+            {
+                deleteMainMcuAckPkt(rxPacket.ID);
+            }
+            
             switch (rxPacket.ID)
             {
             case PKT_ID_DRIVER_TEST:

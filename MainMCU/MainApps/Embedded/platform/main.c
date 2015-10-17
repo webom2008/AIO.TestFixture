@@ -77,6 +77,7 @@ static int platform_init(void)
     res |= AppTestedAIOInit();
     res |= AppPCInit();
     res |= AppGeneralIOInit();
+    res |= MainProcessInit();
     
     while (res < 0); //error hanppen
     return res;

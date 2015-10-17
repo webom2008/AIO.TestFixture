@@ -18,6 +18,8 @@
 ******************************************************************************/
 #include "includes.h"
 
+//#define ADC_DMA_INTERRUPT_USED
+
 /*----------------------------------------------*
  * external variables                           *
  *----------------------------------------------*/
@@ -31,7 +33,6 @@
  *----------------------------------------------*/
 static void InterAdcCfg(void);
 static void InterAdcCfgDMA(void);
-//static void WaitInterAdcDone(void);
 
 /*----------------------------------------------*
  * project-wide global variables                *
@@ -40,7 +41,9 @@ static void InterAdcCfgDMA(void);
 /*----------------------------------------------*
  * module-wide global variables                 *
  *----------------------------------------------*/
+#ifdef ADC_DMA_INTERRUPT_USED
 static xSemaphoreHandle xUpdateResultOpLock     = NULL; //update result operate lock
+#endif
 
 /*----------------------------------------------*
  * constants                                    *
@@ -49,6 +52,7 @@ static xSemaphoreHandle xUpdateResultOpLock     = NULL; //update result operate 
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
+
 #define ADC1_DR_Address             ((uint32_t)0x4001244C)
 
 
@@ -134,6 +138,7 @@ static uint16_t gInterAdcResult[INTER_ADC_TOTAL];
  * routines' implementations                    *
  *----------------------------------------------*/
 
+#ifdef ADC_DMA_INTERRUPT_USED
 static void NVIC_Configuration(const FunctionalState state)
 {
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -144,6 +149,7 @@ static void NVIC_Configuration(const FunctionalState state)
     NVIC_InitStructure.NVIC_IRQChannelCmd = state;
     NVIC_Init(&NVIC_InitStructure);
 }
+#endif
 
 int InterAdcInit(void)
 {
@@ -151,7 +157,7 @@ int InterAdcInit(void)
     
     /* ADCCLK 14MHz Max */
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);//72MHz/8=9MHz
-	
+
     RCC_APB2PeriphClockCmd(InterAdcChannel[INTER_ADC_D3V3E].rcc \
                           | InterAdcChannel[INTER_ADC_5V6N].rcc\
                           | InterAdcChannel[INTER_ADC_D3V3N].rcc\
@@ -192,17 +198,30 @@ int InterAdcInit(void)
     
     InterAdcCfgDMA();
     InterAdcCfg();
+    
+#ifdef ADC_DMA_INTERRUPT_USED
     NVIC_Configuration(ENABLE);
-
     xUpdateResultOpLock = xSemaphoreCreateMutex();
-	do{} while (NULL == xUpdateResultOpLock);
+    do{} while (NULL == xUpdateResultOpLock);
+#endif
     
     return 0;
 }
 
+#ifndef ADC_DMA_INTERRUPT_USED
+static void WaitInterAdcDone(void)
+{
+    /* Test DMA1 TC flag */
+    while(RESET == (DMA_GetFlagStatus(DMA1_FLAG_TC1)));
+    
+    /* Clear DMA TC flag */
+    DMA_ClearFlag(DMA1_FLAG_TC1);
+}
+#endif
+
 int InterAdcOpen(void)
 {
-    InterAdcCtrl(INTER_ADC_CMD_START,NULL);
+//    InterAdcCtrl(INTER_ADC_CMD_START,NULL);
     return 0;
 }
 
@@ -212,17 +231,25 @@ int InterAdcRead(uint32_t *pResultArray, const int totalNums)
     uint8_t index;
     
     if ((INTER_ADC_TOTAL != totalNums) || (NULL == pBuf)) return -1;
+#ifdef ADC_DMA_INTERRUPT_USED
     if( pdTRUE != xSemaphoreTake( xUpdateResultOpLock, ( TickType_t ) 5 ))
     {
         return -2;
     }
-    
-//    WaitInterAdcDone(); //Test
+#endif
+
+#ifndef ADC_DMA_INTERRUPT_USED
+    WaitInterAdcDone(); //Test
+    memcpy((void *)gInterAdcResult, (void *)RegularConvData_Tab, sizeof(RegularConvData_Tab));
+#endif
+
     for(index = 0; index < INTER_ADC_TOTAL; index++)
     {
         pBuf[index] = ((gInterAdcResult[index]* 3300) / 0xFFF); //mv
     }
+#ifdef ADC_DMA_INTERRUPT_USED
     xSemaphoreGive( xUpdateResultOpLock);
+#endif
     return 0;
 }
 
@@ -253,10 +280,14 @@ int InterAdcCtrl(const INTER_ADC_CTRL_CMD cmd, void *parameter)
 int InterAdcClose(void)
 {
     ADC_SoftwareStartConvCmd(ADC1, DISABLE);
-    NVIC_Configuration(DISABLE);
     ADC_Cmd(ADC1, DISABLE);
     ADC_DMACmd(ADC1, DISABLE);
     DMA_Cmd(DMA1_Channel1, DISABLE);
+    
+#ifdef ADC_DMA_INTERRUPT_USED
+    NVIC_Configuration(DISABLE);
+#endif
+
     return 0;
 }
 
@@ -300,9 +331,6 @@ static void InterAdcCfg(void)
     ADC_StartCalibration(ADC1);
     //Check the end of ADC1 calibration
     while(ADC_GetCalibrationStatus(ADC1));
-
-    /* ADC1 regular Software Start Conv */ 
-//    ADC_StartOfConversion(ADC1);
 }
 
 static void InterAdcCfgDMA(void)
@@ -323,28 +351,22 @@ static void InterAdcCfgDMA(void)
     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(DMA1_Channel1, &DMA_InitStructure);
-
+    
+#ifdef ADC_DMA_INTERRUPT_USED
     DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
+#endif
+
     /* Enable DMA1 channel1 */
     DMA_Cmd(DMA1_Channel1, ENABLE);
 }
 
-
-//static void WaitInterAdcDone(void)
-//{
-//    /* Test DMA1 TC flag */
-//    while((DMA_GetFlagStatus(DMA1_FLAG_TC1)) == RESET );
-//    
-//    /* Clear DMA TC flag */
-//    DMA_ClearFlag(DMA1_FLAG_TC1);
-//}
-
+#ifdef ADC_DMA_INTERRUPT_USED
 void DMA1_Channel1_IRQHandler(void)
 {
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
-	xHigherPriorityTaskWoken = pdFALSE;
+    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
+    xHigherPriorityTaskWoken = pdFALSE;
 
     if(RESET != DMA_GetITStatus(DMA1_IT_TC1))
     {
@@ -355,14 +377,14 @@ void DMA1_Channel1_IRQHandler(void)
             xResult =xSemaphoreGiveFromISR( xUpdateResultOpLock ,&xHigherPriorityTaskWoken);
         }
     }
-	if( xResult == pdPASS )
-	{
-		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		// switch should be requested.  The macro used is port specific and 
-		// will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
-		// refer to the documentation page for the port being used.
-		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-	}
-
+    if( xResult == pdPASS )
+    {
+        // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+        // switch should be requested.  The macro used is port specific and 
+        // will be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - 
+        // refer to the documentation page for the port being used.
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    }
 }
+#endif
 

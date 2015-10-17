@@ -208,6 +208,7 @@ static int waitAioStmUpdateEnd(void)
         return -1;
     }
 }
+
 static void AioStmUpdateTask(void *pvParameters)
 {    
     char err_flag = 1;

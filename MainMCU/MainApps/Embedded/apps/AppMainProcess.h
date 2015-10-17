@@ -3,22 +3,23 @@
    Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : AlarmSystem.h
+  File Name     : AppMainProcess.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/23
+  Created       : 2015/10/16
   Last Modified :
-  Description   : AlarmSystem.c header file
+  Description   : AppMainProcess.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/23
+  1.Date        : 2015/10/16
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
 
-#ifndef __ALARMSYSTEM_H__
-#define __ALARMSYSTEM_H__
+
+#ifndef __APPMAINPROCESS_H__
+#define __APPMAINPROCESS_H__
 
 
 #ifdef __cplusplus
@@ -27,8 +28,10 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-int         testAIOBaordD3V3EPower(void);
-uint16_t    testAIOBaordOtherPower(void);
+
+int MainProcessInit(void);
+bool isMainProcessTaskRuning(void);
+int createMainProcessTask(void);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -37,4 +40,4 @@ uint16_t    testAIOBaordOtherPower(void);
 #endif /* __cplusplus */
 
 
-#endif /* __ALARMSYSTEM_H__ */
+#endif /* __APPMAINPROCESS_H__ */

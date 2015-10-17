@@ -35,12 +35,13 @@ extern EventGroupHandle_t xUart3RxEventGroup;
 /*----------------------------------------------*
  * project-wide global variables                *
  *----------------------------------------------*/
+EventGroupHandle_t xCoopMCUPktAckEventGroup = NULL;
 
 /*----------------------------------------------*
  * module-wide global variables                 *
  *----------------------------------------------*/
 static QueueHandle_t    pCoopMcuRxPktQueue  = NULL;
-
+static int gAIOBoardCurrent;
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -76,15 +77,14 @@ int AppCoopMcuInit(void)
     int ret = 0;
     
     pCoopMcuRxPktQueue  = xQueueCreate(2, sizeof(DmaUartProtocolPacket));
+    xCoopMCUPktAckEventGroup = xEventGroupCreate();
+    
     ret |= CoopMcuProtocolInit();
     ret |= AioStmUpdateInit();
     
-    if(NULL == pCoopMcuRxPktQueue)
-    {
-        ERROR("Create pCoopMcuRxPktQueue Failed!");
-        ret = -1;
-    }
-    while (ret < 0); //error hanppen
+    do{} while ((NULL == xCoopMCUPktAckEventGroup) \
+                || (NULL == pCoopMcuRxPktQueue) \
+                || (ret < 0));
     return 0;
 
 }
@@ -191,10 +191,9 @@ static void testCoopMcuAndMyself(DmaUartProtocolPacket *pPkt)
     udprintf("PKT_ID=0X%02X, Data=%s\r\n",pPkt->ID ,pPkt->Data);
 }
 
-static void getTDMxResult(DmaUartProtocolPacket *pPkt)
+int getAIOBaordCurrent(void)
 {
-    int val = (pPkt->Data[0]<<24) | (pPkt->Data[1]<<16)| (pPkt->Data[2]<<8)| pPkt->Data[3];
-    udprintf("TDM = %d\r\n",val);
+    return gAIOBoardCurrent;
 }
 
 static void CoopMcuExecutePktTask(void *pvParameters)
@@ -239,7 +238,13 @@ static void CoopMcuExecutePktTask(void *pvParameters)
                                     PKT_ACK_BIT_AIOSTM_END);
                 break;
             case PKT_ID_TDM_RESULT:
-                getTDMxResult(&rxPacket);
+                gAIOBoardCurrent = (int)((rxPacket.Data[0]<<24) \
+                                    | (rxPacket.Data[1]<<16) \
+                                    | (rxPacket.Data[2]<<8) \
+                                    | rxPacket.Data[3]);
+//                udprintf("TDM = %d\r\n",gAIOBoardCurrent);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_TDM);
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);

@@ -26,9 +26,16 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+
+#define COOPMCU_PKT_ACK_BIT_TDM    ((EventBits_t)(1<<0))
+
+
+
 int AppCoopMcuInit(void);
 
 int AppCoopMcuStart(void);
+
+int getAIOBaordCurrent(void);
 
 #ifdef __cplusplus
 #if __cplusplus

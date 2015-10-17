@@ -5,7 +5,8 @@
 #include "AioTestFixture.h"
 #include "PageAioTest.h"
 #include "afxdialogex.h"
-
+#include "Redirect.h"
+#include <iostream>
 
 extern CSerialProtocol *g_pSerialProtocol;
 
@@ -59,23 +60,33 @@ IMPLEMENT_DYNAMIC(CPageAioTest, CPropertyPage)
 CPageAioTest::CPageAioTest()
 	: CPropertyPage(CPageAioTest::IDD)
     ,initApplicationDone(false)
+    ,m_pRedirect(NULL)
 {
 
 }
 
 CPageAioTest::~CPageAioTest()
 {
+    if (NULL != m_pRedirect)
+    {
+        m_pRedirect->Stop();
+        delete m_pRedirect;
+        m_pRedirect = NULL;
+    }
     initApplicationDone = false;
 }
 
 void CPageAioTest::DoDataExchange(CDataExchange* pDX)
 {
-	CPropertyPage::DoDataExchange(pDX);
+    CPropertyPage::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_EDIT_DISPLAY, m_EditDisplay);
 }
 
 
 BEGIN_MESSAGE_MAP(CPageAioTest, CPropertyPage)
     ON_MESSAGE(MSG_POWER_ALRAM, &CPageAioTest::OnPowerAlramMsg)
+    ON_EN_SETFOCUS(IDC_EDIT_DISPLAY, &CPageAioTest::OnEnSetfocusEditDisplay)
+    ON_BN_CLICKED(IDC_BUTTON1, &CPageAioTest::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -85,6 +96,11 @@ int CPageAioTest::initApplication(void)
 {
     g_pSerialProtocol->bindPaktFuncByID(AIO_TEST_FIXTURE_ID ,this, CPageAioTest::PktHandlePowerResult);
 
+    m_pRedirect = new CRedirect("C:\\Temp\\sample.bat", &m_EditDisplay);
+    if (NULL != m_pRedirect)
+    {
+        m_pRedirect->Run();
+    }
     initApplicationDone = true;
     return 0;
 }
@@ -227,4 +243,21 @@ afx_msg LRESULT CPageAioTest::OnPowerAlramMsg(WPARAM wParam, LPARAM lParam)
         m_BtnStatusREF2V5N.Invalidate();
     }
     return 0;
+}
+
+
+void CPageAioTest::OnEnSetfocusEditDisplay()
+{
+    m_EditDisplay.HideCaret();
+}
+
+
+void CPageAioTest::OnBnClickedButton1()
+{
+    // TODO: 在此添加控件通知处理程序代码
+//    m_EditDisplay.SetWindowTextA("OnBnClickedButton1");
+    if (NULL != m_pRedirect)
+    {
+        std::cout<<"OnBnClickedButton1"<<std::endl;
+    }
 }

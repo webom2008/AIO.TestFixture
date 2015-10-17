@@ -29,22 +29,26 @@ CToolSheet::CToolSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
     
     this->m_psh.dwFlags |= PSH_NOAPPLYNOW;
     this->m_psh.dwFlags &= ~(PSH_HASHELP);
-    
+
+#ifdef CONFIG_PAGE_SYSTEMCONFIG_USED
     m_PageSysCfg.m_psp.dwFlags &= ~(PSP_HASHELP);
     AddPage(&m_PageSysCfg);
-    
+#endif
+
+#ifdef CONFIG_PAGE_UPDATE_USED
     m_PageAioUpdate.m_psp.dwFlags &= ~(PSP_HASHELP);
     AddPage(&m_PageAioUpdate);
+#endif
 
+#ifdef CONFIG_PAGE_TEST_USED
     m_PageAioTest.m_psp.dwFlags &= ~(PSP_HASHELP);
     AddPage(&m_PageAioTest);
+#endif
 
-#ifdef CONFIG_DEBUG_PAGE_SHOW
+#ifdef CONFIG_PAGE_DEBUG_USED
     m_PageDebug.m_psp.dwFlags &= ~(PSP_HASHELP);
     AddPage(&m_PageDebug);
 #endif
-//    m_PageDemo.m_psp.dwFlags &= ~(PSP_HASHELP);
-//    AddPage(&m_PageDemo);
 }
 
 CToolSheet::~CToolSheet()
@@ -65,11 +69,19 @@ END_MESSAGE_MAP()
 // CToolSheet 消息处理程序
 void CToolSheet::initApplication(void)
 {
+#ifdef CONFIG_PAGE_SYSTEMCONFIG_USED
     m_PageSysCfg.initApplication();
+#endif
+
+#ifdef CONFIG_PAGE_UPDATE_USED
     m_PageAioUpdate.initApplication();
+#endif
+
+#ifdef CONFIG_PAGE_TEST_USED
     m_PageAioTest.initApplication();
+#endif
     
-#ifdef CONFIG_DEBUG_PAGE_SHOW
+#ifdef CONFIG_PAGE_DEBUG_USED
     m_PageDebug.initApplication();
 #endif
 }

@@ -67,18 +67,18 @@ EventGroupHandle_t xKeysEventGroup      = NULL;
  *----------------------------------------------*/
 static int exeKeyPressed(const Keys_Type key)
 {
-    char pwr = SW_ON;
     if (KEY_1 == key)
     {
-        InterAdcCtrl(INTER_ADC_CMD_START,NULL);
-        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&pwr);
+        if (!isMainProcessTaskRuning())
+        {
+            createMainProcessTask();
+        }
 #ifdef CONFIG_BTN_TASK_UTILITIES
         AppTaskUtilitiesStart();
 #endif
     }
     else if (KEY_2 == key)
     {
-        InterAdcCtrl(INTER_ADC_CMD_STOP,NULL);
     }
     else if (KEY_3 == key)
     {
@@ -99,7 +99,6 @@ static void GeneralIOTask(void *pvParameters)
     u8 ledcount = 0;
     u32 u32MyTimerNextTick = getMyTimerTick();
     int val;
-    DmaUartProtocolPacket txPacket;
     
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
@@ -146,15 +145,8 @@ static void GeneralIOTask(void *pvParameters)
         if (IsMyTimerOnTime(u32MyTimerNextTick))
         {
             u32MyTimerNextTick += (1000 / MY_TIM_TICK_PERIOD_MS);
-            alarmPowerDetect();
+//            alarmPowerDetect();
             SecurFlashCtrl(SECUR_CTRL_R_DOWNLOAD_CNT, &val);
-
-            //test
-            DmaUartProtocolPacketInit(&txPacket);
-            txPacket.ID = (u8)PKT_ID_TDM_RESULT;
-//            txPacket.ID = (u8)PKT_ID_DRIVER_TEST;
-//            sprintf((char *)txPacket.Data, "DRIVER_TEST=%d",u32MyTimerNextTick);
-            sendCoopMcuPkt(&txPacket, 0);
         }
         vTaskDelayUntil(&xLastWakeTime, xTicksToWait);
     }

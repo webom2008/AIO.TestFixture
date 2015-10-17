@@ -823,6 +823,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\AlarmSystem.c</FilePath>
             </File>
+            <File>
+              <FileName>AppMainProcess.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\AppMainProcess.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
