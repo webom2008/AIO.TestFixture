@@ -210,16 +210,15 @@ struct CLog
         if ( 0 == nLine)
         { 
             //当nLine==0 时,即Logout("xxx")只打印信息
-            sprintf(szMsg, "[%02d:%02d:%02d.%03d]:", 
-                st.wHour, st.wMinute, st.wSecond, 
-                st.wMilliseconds);
+            sprintf(szMsg, "[%02d-%02d %02d:%02d:%02d.%03d]:", 
+                st.wMonth, st.wDay,st.wHour, st.wMinute, st.wSecond,st.wMilliseconds);
         }
         else
         {
             //当nLine不等于0 时,即Logflout(AT"xxx")打印文件名行号及信息
-            sprintf(szMsg, "[%02d:%02d:%02d.%03d]:文件%s第%04d行:", 
-                st.wHour, st.wMinute, st.wSecond, 
-                st.wMilliseconds, lpFile, nLine);
+            sprintf(szMsg, "[%02d-%02d %02d:%02d:%02d.%03d]:文件%s第%04d行:", 
+                st.wMonth, st.wDay,st.wHour, st.wMinute, st.wSecond,st.wMilliseconds,
+                lpFile, nLine);
         }
         
         //格式化消息,并完善整条消息

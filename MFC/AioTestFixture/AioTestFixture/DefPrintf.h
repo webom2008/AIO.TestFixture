@@ -39,11 +39,11 @@
 #define _EL_    _ERASELINE_
 #define _CS_    _CLEARSCREEN_
 
-//static char crsuw[] = { '\e', '[', 'A' }; // Cursor Up
-//static char crsdw[] = { '\e', '[', 'B' }; // Cursor Down
-//static char crsfw[] = { '\e', '[', 'C' }; // Cursor Forward
-//static char crsbw[] = { '\e', '[', 'D' }; // Cursor Backward
-//static char crstb[] = { '\e', '[', '4', 'C' }; // Tab: Cursor Forward by 4
+//const char crsuw[] = { '\e', '[', 'A' }; // Cursor Up
+//const char crsdw[] = { '\e', '[', 'B' }; // Cursor Down
+//const char crsfw[] = { '\e', '[', 'C' }; // Cursor Forward
+//const char crsbw[] = { '\e', '[', 'D' }; // Cursor Backward
+//const char crstb[] = { '\e', '[', '4', 'C' }; // Tab: Cursor Forward by 4
 
 #define __VERBOSITY__               2
 

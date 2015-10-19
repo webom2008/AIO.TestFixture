@@ -28,6 +28,8 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+void setLedStatus(Leds_Type type);
+
 int AppGeneralIOInit(void);
 
 int AppGeneralIOStart(void);

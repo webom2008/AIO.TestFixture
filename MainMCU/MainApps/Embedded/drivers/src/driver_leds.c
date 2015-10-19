@@ -80,26 +80,26 @@ const LEDS_GPIO_DEF LEDS_GPIO[LEDS_TYPE_MAX] =
 int LedsInit(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    
-    RCC_APB2PeriphClockCmd(LEDS_GPIO[LED_RED].RCCx_Periph, ENABLE );
-	GPIO_InitStructure.GPIO_Pin = LEDS_GPIO[LED_RED].PINx;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(LEDS_GPIO[LED_RED].PORTx, &GPIO_InitStructure );
 
-    
+    RCC_APB2PeriphClockCmd(LEDS_GPIO[LED_RED].RCCx_Periph, ENABLE );
+    GPIO_InitStructure.GPIO_Pin = LEDS_GPIO[LED_RED].PINx;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(LEDS_GPIO[LED_RED].PORTx, &GPIO_InitStructure );
+
+
     RCC_APB2PeriphClockCmd(LEDS_GPIO[LED_GREEN].RCCx_Periph, ENABLE );
-	GPIO_InitStructure.GPIO_Pin = LEDS_GPIO[LED_GREEN].PINx;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(LEDS_GPIO[LED_GREEN].PORTx, &GPIO_InitStructure );
-    
+    GPIO_InitStructure.GPIO_Pin = LEDS_GPIO[LED_GREEN].PINx;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(LEDS_GPIO[LED_GREEN].PORTx, &GPIO_InitStructure );
+
     return 0;
 }
 
 int LedsOpen(void)
 {
-    LedsCtrl(LED_RED, LED_ON);
+    LedsCtrl(LED_RED, LED_OFF);
     LedsCtrl(LED_GREEN, LED_ON);
     return 0;
 }

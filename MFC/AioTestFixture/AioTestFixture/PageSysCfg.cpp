@@ -116,6 +116,8 @@ void CPageSysCfg::OnBnClickedBtnSerialOpen()
 
 int CPageSysCfg::initApplication(void)
 {
+#ifdef CONFIG_CHECK_PKT_ID_LOST_USED
     g_pSerialProtocol->setPacketNumValidCheck(true);
+#endif
     return 0;
 }

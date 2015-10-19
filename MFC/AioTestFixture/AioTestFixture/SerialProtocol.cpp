@@ -52,6 +52,7 @@ int CSerialProtocol::openDevice(CWnd* pPortOwner, UINT portNr, unsigned long nBa
         m_bSerialOpen = true;
         m_SerialDriver.StartMonitoring();
         startPktMonitoring();
+        Log2File("CSerialProtocol openDevice\r\n");
         return 0;
     }
     return -1;
@@ -63,6 +64,7 @@ int CSerialProtocol::closeDevice(void)
     m_SerialDriver.StopMonitoring();
     m_SerialDriver.CloseSerialPort();//¹Ø±Õ´®¿Ú
     m_bSerialOpen = false;
+    Log2File("CSerialProtocol closeDevice\r\n");
     return 0;
 }
 

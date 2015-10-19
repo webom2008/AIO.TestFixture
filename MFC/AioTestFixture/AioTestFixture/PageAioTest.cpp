@@ -5,11 +5,9 @@
 #include "AioTestFixture.h"
 #include "PageAioTest.h"
 #include "afxdialogex.h"
-#include "Redirect.h"
 #include <iostream>
 
 extern CSerialProtocol *g_pSerialProtocol;
-
 typedef enum
 {
     INTER_ADC_D3V3E     = 0,
@@ -37,11 +35,20 @@ typedef struct
     UINT u32AdcResultmV[INTER_ADC_TOTAL];
 } ALARM_PWR_RESULT;
 
+typedef enum
+{
+    STATE_AIOBOARD_START,
+    STATE_AIOBOARD_DETECT_READY,
+    STATE_AIOBOARD_POWERUP,
+    STATE_AIOBOARD_DETECT_CURRENT,
+    STATE_DETECT_D3V3E_POWER,
+    STATE_DETECT_OTHER_POWER,
 
-
-
-
-
+    
+    STATE_PROCESS_SUCCESS,
+    STATE_PROCESS_UNVALID,
+} MainProcessState_Typedef;
+static const char* MainProcessStateInfo[STATE_PROCESS_UNVALID];
 
 
 
@@ -60,19 +67,11 @@ IMPLEMENT_DYNAMIC(CPageAioTest, CPropertyPage)
 CPageAioTest::CPageAioTest()
 	: CPropertyPage(CPageAioTest::IDD)
     ,initApplicationDone(false)
-    ,m_pRedirect(NULL)
 {
-
 }
 
 CPageAioTest::~CPageAioTest()
 {
-    if (NULL != m_pRedirect)
-    {
-        m_pRedirect->Stop();
-        delete m_pRedirect;
-        m_pRedirect = NULL;
-    }
     initApplicationDone = false;
 }
 
@@ -82,11 +81,9 @@ void CPageAioTest::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT_DISPLAY, m_EditDisplay);
 }
 
-
 BEGIN_MESSAGE_MAP(CPageAioTest, CPropertyPage)
-    ON_MESSAGE(MSG_POWER_ALRAM, &CPageAioTest::OnPowerAlramMsg)
     ON_EN_SETFOCUS(IDC_EDIT_DISPLAY, &CPageAioTest::OnEnSetfocusEditDisplay)
-    ON_BN_CLICKED(IDC_BUTTON1, &CPageAioTest::OnBnClickedButton1)
+    ON_BN_CLICKED(IDC_BTN_CLEAN, &CPageAioTest::OnBnClickedBtnClean)
 END_MESSAGE_MAP()
 
 
@@ -96,11 +93,14 @@ int CPageAioTest::initApplication(void)
 {
     g_pSerialProtocol->bindPaktFuncByID(AIO_TEST_FIXTURE_ID ,this, CPageAioTest::PktHandlePowerResult);
 
-    m_pRedirect = new CRedirect("C:\\Temp\\sample.bat", &m_EditDisplay);
-    if (NULL != m_pRedirect)
-    {
-        m_pRedirect->Run();
-    }
+    
+    MainProcessStateInfo[STATE_AIOBOARD_START]          = ">>========STATE:开始！！\r\n";
+    MainProcessStateInfo[STATE_AIOBOARD_DETECT_READY]   = ">>========STATE:在位检测！！\r\n";
+    MainProcessStateInfo[STATE_AIOBOARD_POWERUP]        = ">>========STATE:板卡供电！！\r\n";
+    MainProcessStateInfo[STATE_AIOBOARD_DETECT_CURRENT] = ">>========STATE:电流检测与控制！！\r\n";
+    MainProcessStateInfo[STATE_DETECT_D3V3E_POWER]      = ">>========STATE:D3V3E电压检测！！\r\n";
+    MainProcessStateInfo[STATE_DETECT_OTHER_POWER]      = ">>========STATE:其他电压检测！！\r\n";
+    MainProcessStateInfo[STATE_PROCESS_SUCCESS]         = ">>========STATE:测试成功！！\r\n";
     initApplicationDone = true;
     return 0;
 }
@@ -111,16 +111,28 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
 
     switch(pPacket->DataAndCRC[0])
     {
-    case COMP_ID_VERSION:
-    {
+    case COMP_ID_VERSION:{
                          
-    }
-        break;
-    case COMP_ID_PWR_ALARM:
-    {
-        pDlgTest->refreshPowerAlarmStatus(pParam, (void *)&pPacket->DataAndCRC[1]);
-    }
-        break;
+    }break;
+
+    case COMP_ID_PWR_ALARM:{
+
+    }break;
+        
+    case COMP_ID_TASK_UTILITES:{
+                         
+    }break;
+
+    case COMP_ID_DOWNLOAD_CNT:{
+
+    }break;
+    case COMP_ID_ERROR_INFO:{
+        pDlgTest->PktHandleErrorInfo(pPacket);
+    }break;
+    case COMP_ID_PROCESS_STATE:{
+        pDlgTest->PktHandleProcessState(pPacket);
+    }break;
+
     default:
         break;
     }
@@ -131,120 +143,23 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
 BOOL CPageAioTest::OnInitDialog()
 {
     CPropertyPage::OnInitDialog();
-    
-    m_BtnStatusD3V3E.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD3V3E.SubclassDlgItem(IDC_BTN_D3V3E_STATUS, this);
-    m_BtnStatusD3V3E.SizeToContent();
-    m_BtnStatusD3V3E.Invalidate();
-    m_BtnStatusD5V6N.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD5V6N.SubclassDlgItem(IDC_BTN_D5V6N_STATUS, this);
-    m_BtnStatusD5V6N.SizeToContent();
-    m_BtnStatusD5V6N.Invalidate();
-    m_BtnStatusD3V3N.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD3V3N.SubclassDlgItem(IDC_BTN_D3V3N_STATUS, this);
-    m_BtnStatusD3V3N.SizeToContent();
-    m_BtnStatusD3V3N.Invalidate();
-    m_BtnStatusD5VAN.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD5VAN.SubclassDlgItem(IDC_BTN_D5VAN_STATUS, this);
-    m_BtnStatusD5VAN.SizeToContent();
-    m_BtnStatusD5VAN.Invalidate();
-    m_BtnStatusD5VSPO2.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD5VSPO2.SubclassDlgItem(IDC_BTN_D5V_SPO2_STATUS, this);
-    m_BtnStatusD5VSPO2.SizeToContent();
-    m_BtnStatusD5VSPO2.Invalidate();
-    m_BtnStatusD5VNIBP.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusD5VNIBP.SubclassDlgItem(IDC_BTN_D5V_NIBP_STATUS, this);
-    m_BtnStatusD5VNIBP.SizeToContent();
-    m_BtnStatusD5VNIBP.Invalidate();
-    m_BtnStatusREF2V5N.LoadBitmaps(IDB_BITMAP_RED);
-    m_BtnStatusREF2V5N.SubclassDlgItem(IDC_BTN_REF2V5N_STATUS, this);
-    m_BtnStatusREF2V5N.SizeToContent();
-    m_BtnStatusREF2V5N.Invalidate();
-
-
+    m_BtnTestStatus.LoadBitmaps(IDB_BITMAP_RED);
+    m_BtnTestStatus.SubclassDlgItem(IDC_BTN_TEST_STATUS, this);
+    m_BtnTestStatus.SizeToContent();
+    m_BtnTestStatus.Invalidate();
     return TRUE;
 }
 
-void CPageAioTest::refreshPowerAlarmStatus(LPVOID pWnd, void *param)
+void CPageAioTest::setTestResultFlag(void)
 {
-    ALARM_PWR_RESULT *pPwrResult = (ALARM_PWR_RESULT *)param;
-    CPageAioTest *pDlgTest = (CPageAioTest*)pWnd;
-
-    if (NULL == pPwrResult || NULL == pDlgTest) return;
-    
-    if (pPwrResult->flag){
-        TEST_INFO("Power:flag = 0X%04X\r\n",pPwrResult->flag);
-        if (pPwrResult->flag & PWR_BIT_D3V3E_MASK){
-            m_BtnStatusD3V3E.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D3V3E     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3E]);
-        }else{
-            m_BtnStatusD3V3E.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_5V6N_MASK){
-            m_BtnStatusD5V6N.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D5V6N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V6N]);
-        }else{
-            m_BtnStatusD5V6N.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_D3V3N_MASK){
-            m_BtnStatusD3V3N.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D3V3N     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_D3V3N]);
-        }else{
-            m_BtnStatusD3V3N.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_5VAN_MASK){
-            m_BtnStatusD5VAN.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D5VAN     = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5VAN]);
-        }else{
-            m_BtnStatusD5VAN.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_5V_SPO2_MASK){
-            m_BtnStatusD5VSPO2.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D5VSPO2   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_SPO2]);
-        }else{
-            m_BtnStatusD5VSPO2.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_5V_NIBP_MASK){
-            m_BtnStatusD5VNIBP.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========D5VNIBP   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_5V_NIBP]);
-        }else{
-            m_BtnStatusD5VNIBP.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-        
-        if (pPwrResult->flag & PWR_BIT_REF2V5N_MASK){
-            m_BtnStatusREF2V5N.LoadBitmaps(IDB_BITMAP_RED);
-            TEST_INFO("========REF2V5N   = %dmV\r\n",pPwrResult->u32AdcResultmV[INTER_ADC_REF2V5N]);
-        }else{
-            m_BtnStatusREF2V5N.LoadBitmaps(IDB_BITMAP_NORMAL);
-        }
-    }
-    HWND hWnd = pDlgTest->GetSafeHwnd(); 
-    if (hWnd != NULL)
-    {
-        ::SendMessage(hWnd, MSG_POWER_ALRAM, NULL, NULL);
-    }
+    m_BtnTestStatus.LoadBitmaps(IDB_BITMAP_RED);
+    m_BtnTestStatus.Invalidate();
 }
-
-afx_msg LRESULT CPageAioTest::OnPowerAlramMsg(WPARAM wParam, LPARAM lParam)
+void CPageAioTest::clearTestResultFlag(void)
 {
-    if (initApplicationDone)
-    {
-        m_BtnStatusD3V3E.Invalidate();
-        m_BtnStatusD5V6N.Invalidate();
-        m_BtnStatusD3V3N.Invalidate();
-        m_BtnStatusD5VAN.Invalidate();
-        m_BtnStatusD5VSPO2.Invalidate();
-        m_BtnStatusD5VNIBP.Invalidate();
-        m_BtnStatusREF2V5N.Invalidate();
-    }
-    return 0;
+    m_BtnTestStatus.LoadBitmaps(IDB_BITMAP_NORMAL);
+    m_BtnTestStatus.Invalidate();
 }
-
 
 void CPageAioTest::OnEnSetfocusEditDisplay()
 {
@@ -252,12 +167,120 @@ void CPageAioTest::OnEnSetfocusEditDisplay()
 }
 
 
-void CPageAioTest::OnBnClickedButton1()
+void CPageAioTest::add2Display(CString &str)
 {
-    // TODO: 在此添加控件通知处理程序代码
-//    m_EditDisplay.SetWindowTextA("OnBnClickedButton1");
-    if (NULL != m_pRedirect)
+	m_EditDisplay.SetSel(-1, -1);
+	m_EditDisplay.ReplaceSel(str);
+    m_EditDisplay.Invalidate();
+    Log2File(str.GetBuffer(str.GetLength()));
+}
+
+void CPageAioTest::add2Display(LPCSTR pStr)
+{
+    CString str(pStr);
+	m_EditDisplay.SetSel(-1, -1);
+	m_EditDisplay.ReplaceSel(str);
+    m_EditDisplay.Invalidate();
+    Log2File(str.GetBuffer(str.GetLength()));
+}
+
+void CPageAioTest::clearDisplay(void)
+{
+	m_EditDisplay.SetWindowText("");
+    m_EditDisplay.SetSel(-1);
+    m_EditDisplay.Invalidate();
+}
+
+
+int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
+{
+    switch(pPacket->DataAndCRC[1])
     {
-        std::cout<<"OnBnClickedButton1"<<std::endl;
+    case ERR_INFO_ID_TEST_END:{
+        add2Display(_T(">>******************************\r\n"));
+        add2Display(_T(">>========STATE:测量异常结束！！\r\n"));
+        add2Display(_T(">>******************************\r\n"));
+        setTestResultFlag();
+    }break;
+
+    case ERR_INFO_ID_D3V3E_PWR:{
+        add2Display(_T("E04-01:板卡故障，电源可能异常，请送修!!!\r\n"));
+    }break;
+        
+    case ERR_INFO_ID_OTHER_PWR:{
+        checkAndPrintPowerInfo(&pPacket->DataAndCRC[2]);
+    }break;
+
+    default:
+        break;
     }
+    return 0;
+}
+
+int CPageAioTest::PktHandleProcessState(UartProtocolPacket *pPacket)
+{
+    add2Display(MainProcessStateInfo[pPacket->DataAndCRC[1]]);
+    if((BYTE)STATE_AIOBOARD_START == pPacket->DataAndCRC[1])
+    {
+        clearTestResultFlag();
+    }
+    return 0;
+}
+
+int CPageAioTest::checkAndPrintPowerInfo(void *arg)
+{
+    char buf[100] = {0};
+    ALARM_PWR_RESULT *pPwrInfo = (ALARM_PWR_RESULT *)arg;
+    if (pPwrInfo->flag & PWR_BIT_5V6N_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:5V6N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V6N]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_D3V3N_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:D3V3N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_D3V3N]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_5VAN_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:+5VAN异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5VAN]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_5V_SPO2_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:+5V_SPO2异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_SPO2]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_5V_NIBP_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:5V_NIBP异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_NIBP]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_REF2V5N_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:REF_2V5N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_REF2V5N]);
+        add2Display(buf);
+    }
+    return 0;
+}
+
+
+
+
+
+
+void CPageAioTest::OnBnClickedBtnClean()
+{
+    clearDisplay();
 }

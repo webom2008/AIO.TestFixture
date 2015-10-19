@@ -113,7 +113,6 @@
     <ClInclude Include="PageDebug.h" />
     <ClInclude Include="PageDemo.h" />
     <ClInclude Include="PageSysCfg.h" />
-    <ClInclude Include="Redirect.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SerialDrive.h" />
     <ClInclude Include="SerialProtocol.h" />
@@ -130,7 +129,6 @@
     <ClCompile Include="PageDebug.cpp" />
     <ClCompile Include="PageDemo.cpp" />
     <ClCompile Include="PageSysCfg.cpp" />
-    <ClCompile Include="Redirect.cpp" />
     <ClCompile Include="SerialDrive.cpp" />
     <ClCompile Include="SerialProtocol.cpp" />
     <ClCompile Include="stdafx.cpp">

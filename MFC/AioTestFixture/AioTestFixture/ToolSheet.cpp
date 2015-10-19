@@ -25,7 +25,10 @@ CToolSheet::CToolSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 	:CPropertySheet(pszCaption, pParentWnd, iSelectPage)
 {
     g_pSerialProtocol = new CSerialProtocol;
-    g_pSerialProtocol->initApplication();
+    if (NULL != g_pSerialProtocol)
+    {
+        g_pSerialProtocol->initApplication();
+    }
     
     this->m_psh.dwFlags |= PSH_NOAPPLYNOW;
     this->m_psh.dwFlags &= ~(PSH_HASHELP);
@@ -53,7 +56,6 @@ CToolSheet::CToolSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
 
 CToolSheet::~CToolSheet()
 {
-    Log2File("Close aPM12Tool \r\n");
     if (NULL != g_pSerialProtocol)
     {
         delete g_pSerialProtocol;
@@ -108,7 +110,6 @@ BOOL CToolSheet::OnInitDialog()
     {
         Logconsole_open();
         InitConsoleWindow();
-        Log2File("Open aPM12Tool \r\n");
     }
 
     //去掉“确定”和“取消”按钮

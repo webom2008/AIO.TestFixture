@@ -38,7 +38,7 @@
  * module-wide global variables                 *
  *----------------------------------------------*/
 EventGroupHandle_t xKeysEventGroup      = NULL;
-
+static u8 u8LedGreenTrigger = U8_FLAG_TRUE;
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -85,6 +85,22 @@ static int exeKeyPressed(const Keys_Type key)
 
     }
     return 0;
+}
+
+void setLedStatus(Leds_Type type)
+{
+    if (LED_GREEN == type)
+    {
+        u8LedGreenTrigger = U8_FLAG_TRUE;
+        LedsCtrl(LED_RED, LED_OFF);
+        LedsCtrl(LED_GREEN, LED_TRIGGER);
+    }
+    else
+    {
+        u8LedGreenTrigger = U8_FLAG_FALT;
+        LedsCtrl(LED_RED, LED_ON);
+        LedsCtrl(LED_GREEN, LED_OFF);
+    }
 }
 
 static void GeneralIOTask(void *pvParameters)
@@ -134,10 +150,9 @@ static void GeneralIOTask(void *pvParameters)
         }
 
         ledcount++;
-        if (ledcount >= ledDelayMaxCnt)
+        if ((U8_FLAG_TRUE == u8LedGreenTrigger)&&(ledcount >= ledDelayMaxCnt))
         {
             ledcount = 0;
-            LedsCtrl(LED_RED, LED_TRIGGER);
             LedsCtrl(LED_GREEN, LED_TRIGGER);
         }
 

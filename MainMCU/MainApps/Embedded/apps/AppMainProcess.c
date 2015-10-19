@@ -44,8 +44,9 @@ static u32 u32CreateAppCount;
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
-enum
+typedef enum
 {
+    STATE_AIOBOARD_START,
     STATE_AIOBOARD_DETECT_READY,
     STATE_AIOBOARD_POWERUP,
     STATE_AIOBOARD_DETECT_CURRENT,
@@ -54,7 +55,8 @@ enum
 
     
     STATE_PROCESS_SUCCESS,
-};
+    STATE_PROCESS_UNVALID,
+} MainProcessState_Typedef;
 
 /*----------------------------------------------*
  * macros                                       *
@@ -135,6 +137,7 @@ static int testAIOBaordCurrent(void)
     DmaUartProtocolPacket txPacket;
     int current = 0;
     int i;
+    EventBits_t uxBits;
     
     DmaUartProtocolPacketInit(&txPacket);
     txPacket.ID = (u8)PKT_ID_TDM_RESULT;
@@ -144,14 +147,21 @@ static int testAIOBaordCurrent(void)
     {
         sendCoopMcuPkt(&txPacket, 1000);
         
-        xEventGroupWaitBits(
+        uxBits = xEventGroupWaitBits(
                 xCoopMCUPktAckEventGroup,   // The event group being tested.
                 COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
                 pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
                 pdFALSE,                    // Don't wait for both bits, either bit will do.
-                DELAY_MAX_WAIT );           // Wait a maximum of for either bit to be set.
-
-        current += getAIOBaordCurrent();
+                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
+        {
+            current += getAIOBaordCurrent();
+        }
+        else //timeout
+        {
+            ERROR("testAIOBaordCurrent timeout!!!\r\n");
+            return 1;
+        }
         vTaskDelay(100);
     }
     
@@ -178,19 +188,35 @@ static void sendErrorHappenForceEnd(void)
     sendComputerPkt(&pkt);
 }
 
+static void sendMainProcessState(MainProcessState_Typedef state)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_PROCESS_STATE;
+    pkt.DataAndCRC[i++] = (u8)state;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+    sendComputerPkt(&pkt);
+}
+
 static void MainProcessTask(void *pvParameters)
 {    
     int ret = 0;
     bool running = true;
     char s8Val = 0;
-    int state = STATE_AIOBOARD_DETECT_READY;
+    MainProcessState_Typedef state = STATE_AIOBOARD_DETECT_READY;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
     INFO("MainProcessTask[%d] running...\r\n",u32CreateAppCount);
 
+    setLedStatus(LED_GREEN);
+    sendMainProcessState(STATE_AIOBOARD_START);
     while(running)
     {
+        sendMainProcessState(state);
         switch(state)
         {
         case STATE_AIOBOARD_DETECT_READY:{
@@ -198,8 +224,13 @@ static void MainProcessTask(void *pvParameters)
             if (ret){
                 state = STATE_AIOBOARD_POWERUP;
             }else{
+                s8Val++;
                 ERROR("E03-01:No AIO-Board deteced!!\r\n");
                 vTaskDelay(1000 / portTICK_PERIOD_MS); //delay 1s
+            }
+            if (s8Val > 5)
+            {
+                running = false;
             }
         }break;
         
@@ -254,6 +285,7 @@ static void MainProcessTask(void *pvParameters)
     if (STATE_PROCESS_SUCCESS != state)
     {
         sendErrorHappenForceEnd();
+        setLedStatus(LED_RED);
         INFO("Error happen!!!\r\n");
     }
 
