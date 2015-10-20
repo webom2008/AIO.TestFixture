@@ -35,6 +35,9 @@ typedef enum
     COMP_ID_DOWNLOAD_CNT    = 0x03,
     COMP_ID_ERROR_INFO      = 0x04,
     COMP_ID_PROCESS_STATE   = 0x05,
+    COMP_ID_AIOSTM_BOOT     = 0x06,
+    COMP_ID_AIODSP_APP      = 0x07,
+    COMP_ID_AIOSTM_APP      = 0x08,
 
     COMP_ID_UNVALID,
 } COMPUTER_PKT_CID;
@@ -48,6 +51,21 @@ typedef enum
 
     ERR_INFO_ID_UNVALID,
 } ERROR_INFO_CID;
+
+typedef struct
+{
+    u8 u8AioDspAppResult;
+    u8 u8AioStmAppResult;
+} ComputerReult_Typedef;
+
+
+
+#define COMP_PKT_BIT_AIODSP_APP        ((EventBits_t)(1<<0))
+#define COMP_PKT_BIT_AIOSTM_APP        ((EventBits_t)(1<<1))
+
+
+extern ComputerReult_Typedef *gpComputerReult;
+
 
 int initComputerProtocol(void);
 

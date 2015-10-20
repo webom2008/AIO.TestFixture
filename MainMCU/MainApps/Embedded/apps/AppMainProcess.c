@@ -22,7 +22,7 @@
  * external variables                           *
  *----------------------------------------------*/
 extern EventGroupHandle_t xCoopMCUPktAckEventGroup;
-
+extern EventGroupHandle_t xCompPktAckEventGroup;
 /*----------------------------------------------*
  * external routine prototypes                  *
  *----------------------------------------------*/
@@ -52,6 +52,9 @@ typedef enum
     STATE_AIOBOARD_DETECT_CURRENT,
     STATE_DETECT_D3V3E_POWER,
     STATE_DETECT_OTHER_POWER,
+    STATE_DOWNLOAD_AIOSTM_BOOT,
+    STATE_DOWNLOAD_AIODSP_APP,
+    STATE_DOWNLOAD_AIOSTM_APP,
 
     
     STATE_PROCESS_SUCCESS,
@@ -201,6 +204,99 @@ static void sendMainProcessState(MainProcessState_Typedef state)
     sendComputerPkt(&pkt);
 }
 
+
+static int sendAndWaitAIOStmBoot(void)
+{
+    return 0;
+}
+
+static int sendAndWaitAIODspApp(void)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    EventBits_t uxBits;
+//    char s8Val = 0;
+
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_AIODSP_APP;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+
+    for (i = 0; i < 3; i++)
+    {
+//        vTaskDelay(DELAY_MAX_WAIT);
+//        //Reset AIO power
+//        s8Val = SW_OFF;
+//        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+//        vTaskDelay(2000 / portTICK_PERIOD_MS);
+//        s8Val = SW_ON;
+//        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+//        vTaskDelay(1000 / portTICK_PERIOD_MS);
+//        
+        sendComputerPkt(&pkt);
+        
+        uxBits = xEventGroupWaitBits(
+                xCompPktAckEventGroup,      // The event group being tested.
+                COMP_PKT_BIT_AIODSP_APP,     // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                DELAY_MAX_WAIT );           // Wait a maximum of for either bit to be set.
+        if (uxBits & COMP_PKT_BIT_AIODSP_APP)
+        {
+            if (0 == gpComputerReult->u8AioDspAppResult)//success
+            {
+                return 0;
+            }
+            else //error happen
+            {
+                continue;
+            }
+        }
+    }
+    return -1;
+}
+
+static int sendAndWaitAIOStmApp(void)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    EventBits_t uxBits;
+    
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_AIOSTM_APP;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+
+    for (i = 0; i < 3; i++)
+    {
+        sendComputerPkt(&pkt);
+        
+        uxBits = xEventGroupWaitBits(
+                xCompPktAckEventGroup,      // The event group being tested.
+                COMP_PKT_BIT_AIOSTM_APP,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                DELAY_MAX_WAIT );           // Wait a maximum of for either bit to be set.
+        if (uxBits & COMP_PKT_BIT_AIOSTM_APP)
+        {
+            if (0 == gpComputerReult->u8AioStmAppResult)//success
+            {
+                return 0;
+            }
+            else //error happen
+            {
+                continue;
+            }
+        }
+    }
+    return -1;
+}
+
+//#define SKIP_STATE_DETECT_OTHER_POWER
+//#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
+//#define SKIP_STATE_DOWNLOAD_AIODSP_APP
+//#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
+
 static void MainProcessTask(void *pvParameters)
 {    
     int ret = 0;
@@ -212,7 +308,7 @@ static void MainProcessTask(void *pvParameters)
     
     INFO("MainProcessTask[%d] running...\r\n",u32CreateAppCount);
 
-    setLedStatus(LED_GREEN);
+    setLedStatus(LED_STATUS_RUNNING);
     sendMainProcessState(STATE_AIOBOARD_START);
     while(running)
     {
@@ -264,11 +360,50 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_DETECT_OTHER_POWER:{
+#ifndef SKIP_STATE_DETECT_OTHER_POWER
             ret = testAIOBaordOtherPower();
+#endif
+            if (0 == ret){
+                state = STATE_DOWNLOAD_AIOSTM_BOOT;
+            }else{
+                ERROR("E04-02:Other power!!\r\n");
+                running = false;
+            }
+        }break;
+        
+        case STATE_DOWNLOAD_AIOSTM_BOOT:{
+#ifndef SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
+            ret = sendAndWaitAIOStmBoot();
+#endif
+            if (0 == ret){
+                state = STATE_DOWNLOAD_AIODSP_APP;
+            }else{
+                ERROR("E04-02:AIOSTM_BOOT!!\r\n");
+                running = false;
+            }
+        }break;
+        
+        case STATE_DOWNLOAD_AIODSP_APP:{
+#ifndef SKIP_STATE_DOWNLOAD_AIODSP_APP
+            ret = sendAndWaitAIODspApp();
+#endif
+            if (0 == ret){
+                state = STATE_DOWNLOAD_AIOSTM_APP;
+                vTaskDelay(20000 /portTICK_PERIOD_MS); //delay 20s for AIODSP boot
+            }else{
+                ERROR("E04-02:AIODSP_APP!!\r\n");
+                running = false;
+            }
+        }break;
+        
+        case STATE_DOWNLOAD_AIOSTM_APP:{
+#ifndef SKIP_STATE_DOWNLOAD_AIOSTM_APP
+            ret = sendAndWaitAIOStmApp();
+#endif
             if (0 == ret){
                 state = STATE_PROCESS_SUCCESS;
             }else{
-                ERROR("E04-02:Other power!!\r\n");
+                ERROR("E04-02:AIOSTM_APP!!\r\n");
                 running = false;
             }
         }break;
@@ -285,8 +420,12 @@ static void MainProcessTask(void *pvParameters)
     if (STATE_PROCESS_SUCCESS != state)
     {
         sendErrorHappenForceEnd();
-        setLedStatus(LED_RED);
+        setLedStatus(LED_STATUS_ERROR);
         INFO("Error happen!!!\r\n");
+    }
+    else
+    {
+        setLedStatus(LED_STATUS_SUCCESS);
     }
 
     // power-off aio board

@@ -27,8 +27,16 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+typedef enum
+{
+    LED_STATUS_IDLE,
+    LED_STATUS_RUNNING,
+    LED_STATUS_ERROR,
+    LED_STATUS_SUCCESS,
+    
+} LedStatus_Typedef;
 
-void setLedStatus(Leds_Type type);
+void setLedStatus(LedStatus_Typedef type);
 
 int AppGeneralIOInit(void);
 

@@ -59,9 +59,9 @@ typedef struct
 #define D3V3E_NORMAL_ADC_MAX    (uint16_t)(D3V3E_NORMAL_ADC * (100 + D3V3E_NORMAL_RANGE) / 100)
 #define D3V3E_NORMAL_ADC_MIN    (uint16_t)(D3V3E_NORMAL_ADC * (100 - D3V3E_NORMAL_RANGE) / 100)
 
-#define D5V6N_NORMAL_ADC        ((uint16_t) (5700 / 2)) //mV
-#define D5V6N_NORMAL_RANGE      ((uint16_t) 4)    //%
-#define D5V6N_NORMAL_ADC_MAX    (uint16_t)(D5V6N_NORMAL_ADC * (100 + D5V6N_NORMAL_RANGE) / 100)
+#define D5V6N_NORMAL_ADC        ((uint16_t) (5600 / 2)) //mV
+#define D5V6N_NORMAL_RANGE      ((uint16_t) 5)    //%
+#define D5V6N_NORMAL_ADC_MAX    (uint16_t)(D5V6N_NORMAL_ADC * (100 + 20) / 100)
 #define D5V6N_NORMAL_ADC_MIN    (uint16_t)(D5V6N_NORMAL_ADC * (100 - D5V6N_NORMAL_RANGE) / 100)
 
 #define D3V3N_NORMAL_ADC        ((uint16_t) (3300 / 2)) //mV
@@ -75,7 +75,7 @@ typedef struct
 #define D5VAN_NORMAL_ADC_MIN    (uint16_t)(D5VAN_NORMAL_ADC * (100 - D5VAN_NORMAL_RANGE) / 100)
 
 #define D5V_SPO2_NORMAL_ADC     ((uint16_t) (5000 / 2)) //mV
-#define D5V_SPO2_NORMAL_RANGE   ((uint16_t) 1)    //%
+#define D5V_SPO2_NORMAL_RANGE   ((uint16_t) 2)    //%
 #define D5V_SPO2_NORMAL_ADC_MAX (uint16_t)(D5V_SPO2_NORMAL_ADC * (100 + D5V_SPO2_NORMAL_RANGE) / 100)
 #define D5V_SPO2_NORMAL_ADC_MIN (uint16_t)(D5V_SPO2_NORMAL_ADC * (100 - D5V_SPO2_NORMAL_RANGE) / 100)
 
@@ -86,8 +86,8 @@ typedef struct
 
 #define REF2V5N_NORMAL_ADC      ((uint16_t) (2500 / 2)) //mV
 #define REF2V5N_NORMAL_RANGE    ((uint16_t) 1)    //%
-#define REF2V5N_NORMAL_ADC_MAX  (uint16_t)(D3V3E_NORMAL_ADC * (100 + D3V3E_NORMAL_RANGE) / 100)
-#define REF2V5N_NORMAL_ADC_MIN  (uint16_t)(D3V3E_NORMAL_ADC * (100 - D3V3E_NORMAL_RANGE) / 100)
+#define REF2V5N_NORMAL_ADC_MAX  (uint16_t)(REF2V5N_NORMAL_ADC * (100 + REF2V5N_NORMAL_RANGE) / 100)
+#define REF2V5N_NORMAL_ADC_MIN  (uint16_t)(REF2V5N_NORMAL_ADC * (100 - REF2V5N_NORMAL_RANGE) / 100)
 
 #define PWR_BIT_D3V3E_MASK      ((uint16_t) (0x0001 << INTER_ADC_D3V3E))
 #define PWR_BIT_5V6N_MASK       ((uint16_t) (0x0001 << INTER_ADC_5V6N))

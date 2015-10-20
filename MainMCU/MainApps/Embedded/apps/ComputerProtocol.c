@@ -60,10 +60,12 @@ enum AnalysisStatus{
 /*----------------------------------------------*
  * internal routine prototypes                  *
  *----------------------------------------------*/
-
+ComputerReult_Typedef gComputerReult;
+ComputerReult_Typedef *gpComputerReult = &gComputerReult;
 /*----------------------------------------------*
  * project-wide global variables                *
  *----------------------------------------------*/
+EventGroupHandle_t xCompPktAckEventGroup = NULL;
 
 /*----------------------------------------------*
  * module-wide global variables                 *
@@ -278,8 +280,10 @@ static void ComputerUnpackTask(void *pvParameters)
 int initComputerProtocol(void)
 {
     xpReceiveQueueHandle = xQueueCreate(PC_RX_BUFF_LEN_MAX, sizeof(char));
+    xCompPktAckEventGroup = xEventGroupCreate();
 
-    do {}while(NULL == xpReceiveQueueHandle);
+    do {}while( (NULL == xpReceiveQueueHandle)\
+                ||(NULL == xCompPktAckEventGroup));
     
     return 0;
 }
@@ -337,6 +341,26 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
         break;
     case COMP_ID_DOWNLOAD_CNT:{
         exeSecurFlashPkt(pPacket);
+    }
+        break;
+    case COMP_ID_ERROR_INFO:{
+    }
+        break;
+    case COMP_ID_PROCESS_STATE:{
+    }
+        break;
+    case COMP_ID_AIOSTM_BOOT:{
+    }
+        break;
+    case COMP_ID_AIODSP_APP:{
+        gpComputerReult->u8AioDspAppResult = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( xCompPktAckEventGroup, 
+                            COMP_PKT_BIT_AIODSP_APP);
+    }
+    case COMP_ID_AIOSTM_APP:{
+        gpComputerReult->u8AioStmAppResult = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( xCompPktAckEventGroup, 
+                            COMP_PKT_BIT_AIOSTM_APP);
     }
         break;
     default:

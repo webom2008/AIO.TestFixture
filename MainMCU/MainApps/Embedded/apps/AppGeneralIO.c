@@ -87,19 +87,31 @@ static int exeKeyPressed(const Keys_Type key)
     return 0;
 }
 
-void setLedStatus(Leds_Type type)
+void setLedStatus(LedStatus_Typedef type)
 {
-    if (LED_GREEN == type)
+    switch(type)
     {
-        u8LedGreenTrigger = U8_FLAG_TRUE;
-        LedsCtrl(LED_RED, LED_OFF);
-        LedsCtrl(LED_GREEN, LED_TRIGGER);
-    }
-    else
-    {
+    case LED_STATUS_ERROR:{
         u8LedGreenTrigger = U8_FLAG_FALT;
         LedsCtrl(LED_RED, LED_ON);
         LedsCtrl(LED_GREEN, LED_OFF);
+
+    }break;
+    case LED_STATUS_RUNNING:{
+        u8LedGreenTrigger = U8_FLAG_TRUE;
+        LedsCtrl(LED_RED, LED_OFF);
+        LedsCtrl(LED_GREEN, LED_TRIGGER);
+    }break;
+    case LED_STATUS_SUCCESS:{
+        u8LedGreenTrigger = U8_FLAG_FALT;
+        LedsCtrl(LED_RED, LED_OFF);
+        LedsCtrl(LED_GREEN, LED_ON);
+    }break;
+    default :
+        u8LedGreenTrigger = U8_FLAG_FALT;
+        LedsCtrl(LED_RED, LED_OFF);
+        LedsCtrl(LED_GREEN, LED_OFF);
+        break;
     }
 }
 
