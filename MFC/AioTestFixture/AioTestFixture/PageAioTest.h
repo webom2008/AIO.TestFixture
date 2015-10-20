@@ -1,4 +1,6 @@
 #pragma once
+#include <map>
+#include "Update.h"
 #include "afxwin.h"
 
 // CPageAioTest 对话框
@@ -20,15 +22,20 @@ public:
 // 对话框数据
 	enum { IDD = IDD_DLG_TEST };
 private:
-    bool initApplicationDone;
-    CBitmapButton m_BtnTestStatus;
-    
+    bool                    initApplicationDone;
+    CBitmapButton           m_BtnTestStatus;
+    std::map<BYTE, CString> m_Target;
+    CUpdate                 *m_pUpdate;
 
     void    setTestResultFlag(void);
     void    clearTestResultFlag(void);
     int     PktHandleErrorInfo(UartProtocolPacket *pPacket);
     int     PktHandleProcessState(UartProtocolPacket *pPacket);
+    int     PktHandleStartUpdateDspApp(void);
+    int     PktHandleStartUpdateStmApp(void);
     int     checkAndPrintPowerInfo(void *arg);
+    int     detectBinFile(const char *wildcard,CString &name);
+    int     updateTask(BYTE &CID, CString &name);
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
     
@@ -39,4 +46,7 @@ public:
     afx_msg void OnEnSetfocusEditDisplay();
     virtual BOOL OnInitDialog();
     afx_msg void OnBnClickedBtnClean();
+protected:
+    afx_msg LRESULT OnMsgUpdateAiodspApp(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnMsgUpdateAiostmApp(WPARAM wParam, LPARAM lParam);
 };

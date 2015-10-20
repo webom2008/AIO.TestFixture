@@ -1,6 +1,6 @@
 #pragma once
 
-//#define CONFIG_CONSOLE_USED
+#define CONFIG_CONSOLE_USED
 #define CONFIG_LOGS_FILE_USED
 
 //#define CONFIG_CHECK_PKT_ID_LOST_USED

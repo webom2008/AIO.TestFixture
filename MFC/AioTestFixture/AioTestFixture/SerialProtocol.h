@@ -143,6 +143,9 @@ typedef enum
     COMP_ID_DOWNLOAD_CNT    = 0x03,
     COMP_ID_ERROR_INFO      = 0x04,
     COMP_ID_PROCESS_STATE   = 0x05,
+    COMP_ID_AIOSTM_BOOT     = 0x06,
+    COMP_ID_AIODSP_APP      = 0x07,
+    COMP_ID_AIOSTM_APP      = 0x08,
 
     COMP_ID_UNVALID,
 } COMPUTER_PKT_CID;

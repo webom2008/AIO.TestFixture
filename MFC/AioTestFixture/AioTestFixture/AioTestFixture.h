@@ -19,6 +19,8 @@
 
 #define MSG_POWER_ALRAM                         WM_USER+1 
 #define MSG_AIO_VERSION_UPDATE                  WM_USER+2 
+#define MSG_UPDATE_AIODSP_APP                   WM_USER+3 
+#define MSG_UPDATE_AIOSTM_APP                   WM_USER+4 
 
 
 // CAioTestFixtureApp:
