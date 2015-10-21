@@ -237,6 +237,10 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
     case ERR_INFO_ID_OTHER_PWR:{
         checkAndPrintPowerInfo(&pPacket->DataAndCRC[2]);
     }break;
+        
+    case ERR_INFO_ID_DOWNLOAD_CNT:{
+        add2Display(_T("E05-02:工装已失效，请将工装送原厂升级!!!\r\n"));
+    }break;
 
     default:
         break;
@@ -326,12 +330,13 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     unsigned int len;   //bin file lenght
     int result;
     CString str;
+    bool flag = false;
     
     INFO("正准备软件升级...\r\n");
 
     if (NULL == m_pUpdate)
     {
-        add2Display(_T("错误:m_pUpdate初始化失败\r\n"));
+        add2Display(_T(">>错误:m_pUpdate初始化失败\r\n"));
         return -1;
     }
     if (CID != m_pUpdate->getPacketCID())
@@ -341,7 +346,7 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     if (m_pUpdate->SaveFiletoRAM(&len, name) < 0)
     {
         INFO("错误:文件拷贝至内存失败\r\n");
-        add2Display(_T("错误:文件拷贝至内存失败\r\n"));
+        add2Display(_T(">>错误:文件拷贝至内存失败\r\n"));
         return -2;
     }
     else
@@ -352,6 +357,7 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     //>>>>>>>>S3:Send Update Tag, Target ready to download.
     i = 5;
     INFO("(1/5)等待目标板确认包...");
+    add2Display(_T(">>(1/5)等待目标板确认包...\r\n"));
     while(--i)
     {
         if (m_pUpdate->SendResetAndUpdateTag()) break;
@@ -359,13 +365,15 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     m_pUpdate->DisplayOKorError(i);
     if (i == 0)
     {
-        add2Display(_T("错误:等待目标板确认包失败\r\n"));
+        add2Display(_T(">>失败!!!\r\n"));
         return -3;
     }
+    add2Display(_T(">>成功\r\n"));
 
     //>>>>>>>>S4:Send UPDATE_SOL
     i = 5;
     INFO("(2/5)等待文件长度确认包...");
+    add2Display(_T(">>(2/5)等待文件长度确认包...\r\n"));
     while(--i)
     {
         result = m_pUpdate->SendUpdateStartOfLenght(len);
@@ -374,24 +382,35 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     if (-1 == result)
     {
         INFO("Error(文件大小超出Flash范围)\r\n");
-        add2Display(_T("错误:文件大小超出Flash范围\r\n"));
+        add2Display(_T(">>错误:文件大小超出Flash范围\r\n"));
         return -4;
     }
     m_pUpdate->DisplayOKorError(i);
     if (i == 0)
     {
-        add2Display(_T("错误:等待目标板长度确认包失败\r\n"));
+        add2Display(_T(">>失败!!!\r\n"));
         return -5;
     }
+    add2Display(_T(">>成功\r\n"));
 
     INFO("(3/5)正在传送数据:\r\n");
+    add2Display(_T(">>(3/5)正在传送数据:"));
     do 
     {
         result = m_pUpdate->SendUpdateStartOfData(len);
         if (result > 0)
         {
-            i = 5 + 90 * (len - result)/len;
-            //pSmartUpdate->displayProgressAIO(index, i);
+            i = 100 * (len - result)/len;
+            if ((0 == i%10)&&!flag)
+            {
+                TRACE("\r\n%d",i);
+                add2Display(_T("#"));
+                flag = true;
+            }
+            else if (0 != i%10)
+            {
+                flag = false;
+            }
         }
     } while(result > 0);
         
@@ -411,13 +430,19 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
         {
             ERROR_INFO("等待响应超时!");
         }
-        add2Display(_T("错误:数据传输失败\r\n"));
+        add2Display(_T(">>失败!!!\r\n"));
         return -6;
     }
+    add2Display(_T(">>成功\r\n"));
 
     //>>>>>>>>S6:Send UPDATE_EOT
     i = 5;
     INFO("(4/5)等待文件结束确认包...");
+    add2Display(_T(">>(4/5)等待文件结束确认包...\r\n"));
+	if (SF_AIO_STM_UPDATE == CID)
+    {
+        Sleep(50); //wait for last data receive
+    }
     while(--i)
     {
         if (m_pUpdate->SendUpdateEndOfTransmit()) break;
@@ -425,12 +450,13 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     m_pUpdate->DisplayOKorError(i);
     if (i == 0)
     {
-        add2Display(_T("错误:等待文件结束确认包失败\r\n"));
+        add2Display(_T(">>失败!!!\r\n"));
         return -7;
     }
-    //pSmartUpdate->displayProgressAIO(index, 97);
+    add2Display(_T(">>成功\r\n"));
 
     INFO("(5/5)等待烧写进Flash:");
+    add2Display(_T(">>(5/5)等待烧写进Flash:\r\n"));
     for (i = 0; i < 1000; i++)
     {  
         result = m_pUpdate->WaitUpdateWrite2FlashDone();
@@ -452,15 +478,18 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     }
     if (1000 == i)
     {
+        add2Display(_T(">>超时!!!\r\n"));
         ERROR_INFO("超时\r\n");
     }
-    //pSmartUpdate->displayProgressAIO(index, 100);
+    else
+    {
+        add2Display(_T(">>成功\r\n"));
+    }
     
     INFO("\r\n===========================");
     INFO("\r\n===========================");
     INFO("\r\n===========================");
     INFO("\r\n>>>>>>>>烧写已完成<<<<<<<<<\r\n");
-    add2Display(_T("\r\n>>>>烧写成功<<<<\r\n"));
     return 0;
 }
 
@@ -475,9 +504,11 @@ UINT CPageAioTest::AioDspAppUpdateThread(LPVOID pParam)
 
     if (pSmartUpdate->detectBinFile(AIO_DSP_APP_BIN_NAME, bin_name) > 0)
     {
+        info = ">>检测到待升级文件"+bin_name+"\r\n";
+        pSmartUpdate->add2Display(info);
         if (pSmartUpdate->updateTask(id, bin_name) < 0)
         {
-            pSmartUpdate->add2Display("错误:AIODSP-APP升级失败!!!\r\n");
+            pSmartUpdate->add2Display(">>错误:AIODSP-APP升级失败!!!\r\n");
             id = AIO_TEST_FIXTURE_ID;
             pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
             pBuf[1] = (BYTE)0x01;
@@ -485,7 +516,7 @@ UINT CPageAioTest::AioDspAppUpdateThread(LPVOID pParam)
         }
         else
         {
-            pSmartUpdate->add2Display("AIODSP-APP升级成功!!!\r\n");
+            pSmartUpdate->add2Display(">>AIODSP-APP升级成功!!!\r\n");
             id = AIO_TEST_FIXTURE_ID;
             pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
             pBuf[1] = (BYTE)0x00;
@@ -494,7 +525,7 @@ UINT CPageAioTest::AioDspAppUpdateThread(LPVOID pParam)
     }
     else
     {
-        info.Format("错误:没有检测到升级文件%s\r\n", AIO_DSP_APP_BIN_NAME);
+        info.Format(">>错误:没有检测到升级文件%s\r\n", AIO_DSP_APP_BIN_NAME);
         pSmartUpdate->add2Display(info);
         id = AIO_TEST_FIXTURE_ID;
         pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
@@ -514,9 +545,11 @@ UINT CPageAioTest::AioDspStmUpdateThread(LPVOID pParam)
 
     if (pSmartUpdate->detectBinFile(AIO_STM_APP_BIN_NAME, bin_name) > 0)
     {
+        info = ">>检测到待升级文件"+bin_name+"\r\n";
+        pSmartUpdate->add2Display(info);
         if (pSmartUpdate->updateTask(id, bin_name) < 0)
         {
-            pSmartUpdate->add2Display("错误:AIOSTM-APP升级失败!!!\r\n");
+            pSmartUpdate->add2Display(">>错误:AIOSTM-APP升级失败!!!\r\n");
             id = AIO_TEST_FIXTURE_ID;
             pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
             pBuf[1] = (BYTE)0x01;
@@ -524,7 +557,7 @@ UINT CPageAioTest::AioDspStmUpdateThread(LPVOID pParam)
         }
         else
         {
-            pSmartUpdate->add2Display("AIODSP-APP升级成功!!!\r\n");
+            pSmartUpdate->add2Display(">>AIODSP-APP升级成功!!!\r\n");
             id = AIO_TEST_FIXTURE_ID;
             pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
             pBuf[1] = (BYTE)0x00;
@@ -533,7 +566,7 @@ UINT CPageAioTest::AioDspStmUpdateThread(LPVOID pParam)
     }
     else
     {
-        info.Format("错误:没有检测到升级文件%s\r\n", AIO_STM_APP_BIN_NAME);
+        info.Format(">>错误:没有检测到升级文件%s\r\n", AIO_STM_APP_BIN_NAME);
         pSmartUpdate->add2Display(info);
         id = AIO_TEST_FIXTURE_ID;
         pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
@@ -550,7 +583,7 @@ void CPageAioTest::createAioDspAppUpdateThread(void)
     if (NULL == m_UpdateThread)
     {
         ERROR_INFO("升级失败:创建线程AioDspAppUpdateThread ERROR\r\n");
-        add2Display(_T("错误:创建线程失败AioDspAppUpdateThread\r\n"));
+        add2Display(_T(">>错误:创建线程失败AioDspAppUpdateThread\r\n"));
     }
 }
 
@@ -561,7 +594,7 @@ void CPageAioTest::createAioDspStmUpdateThread(void)
     if (NULL == m_UpdateThread)
     {
         ERROR_INFO("升级失败:创建线程AioDspStmUpdateThread ERROR\r\n");
-        add2Display(_T("错误:创建线程失败AioDspStmUpdateThread\r\n"));
+        add2Display(_T(">>错误:创建线程失败AioDspStmUpdateThread\r\n"));
     }
 }
 

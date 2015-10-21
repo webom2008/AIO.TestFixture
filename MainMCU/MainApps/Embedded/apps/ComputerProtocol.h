@@ -48,6 +48,7 @@ typedef enum
     ERR_INFO_ID_TEST_END        = 0x00,
     ERR_INFO_ID_D3V3E_PWR       = 0x01,
     ERR_INFO_ID_OTHER_PWR       = 0x02,
+    ERR_INFO_ID_DOWNLOAD_CNT    = 0x03,
 
     ERR_INFO_ID_UNVALID,
 } ERROR_INFO_CID;

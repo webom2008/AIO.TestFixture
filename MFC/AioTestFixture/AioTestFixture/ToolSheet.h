@@ -4,7 +4,6 @@
 #include "PageDemo.h"
 #include "PageSysCfg.h"
 #include "PageAioTest.h"
-#include "PageAioUpdate.h"
 #include "PageDebug.h"
 
 // CToolSheet
@@ -23,7 +22,6 @@ public:
 private:
     CPageDemo           m_PageDemo;
     CPageSysCfg         m_PageSysCfg;
-    CPageAioUpdate      m_PageAioUpdate;
     CPageAioTest        m_PageAioTest;
     CPageDebug          m_PageDebug;
 

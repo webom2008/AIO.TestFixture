@@ -191,6 +191,19 @@ static void sendErrorHappenForceEnd(void)
     sendComputerPkt(&pkt);
 }
 
+static void sendErrorForDownloadCount(void)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+    pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_DOWNLOAD_CNT;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+    sendComputerPkt(&pkt);
+}
+
 static void sendMainProcessState(MainProcessState_Typedef state)
 {
     AioDspProtocolPkt pkt;
@@ -302,12 +315,21 @@ static void MainProcessTask(void *pvParameters)
     int ret = 0;
     bool running = true;
     char s8Val = 0;
+    int s32Val = 0;
     MainProcessState_Typedef state = STATE_AIOBOARD_DETECT_READY;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
     INFO("MainProcessTask[%d] running...\r\n",u32CreateAppCount);
 
+    if ((0 != SecurFlashCtrl(SECUR_CTRL_R_DOWNLOAD_CNT, &s32Val))||(0 == s32Val))
+    {
+        sendErrorForDownloadCount();
+        setLedStatus(LED_STATUS_ERROR);
+        xMainProcessTaskHandle = NULL;
+        vTaskDelete(NULL);
+        return;
+    }
     setLedStatus(LED_STATUS_RUNNING);
     sendMainProcessState(STATE_AIOBOARD_START);
     while(running)
@@ -389,7 +411,8 @@ static void MainProcessTask(void *pvParameters)
 #endif
             if (0 == ret){
                 state = STATE_DOWNLOAD_AIOSTM_APP;
-                vTaskDelay(20000 /portTICK_PERIOD_MS); //delay 20s for AIODSP boot
+                SecurFlashCtrl(SECUR_CTRL_W_DEC_DOWNLOAD_CNT, NULL);
+                vTaskDelay(20000 / portTICK_PERIOD_MS); //delay 20s for AIODSP boot
             }else{
                 ERROR("E04-02:AIODSP_APP!!\r\n");
                 running = false;
@@ -402,6 +425,8 @@ static void MainProcessTask(void *pvParameters)
 #endif
             if (0 == ret){
                 state = STATE_PROCESS_SUCCESS;
+                vTaskDelay(8000 / portTICK_PERIOD_MS); //delay 8s for AIOSTM boot
+                
             }else{
                 ERROR("E04-02:AIOSTM_APP!!\r\n");
                 running = false;

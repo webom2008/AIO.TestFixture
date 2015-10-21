@@ -219,7 +219,7 @@ int SecurFlashCtrl(const SecurCmd_TypeDef cmd, void *arg)
     }
         break;
     case SECUR_CTRL_R_DOWNLOAD_CNT:{
-        readDownloadCount((int *)arg);
+        ret = readDownloadCount((int *)arg);
     }
         break;
     default:
