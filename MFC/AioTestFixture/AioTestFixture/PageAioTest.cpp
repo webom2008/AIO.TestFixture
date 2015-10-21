@@ -95,8 +95,6 @@ void CPageAioTest::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPageAioTest, CPropertyPage)
     ON_EN_SETFOCUS(IDC_EDIT_DISPLAY, &CPageAioTest::OnEnSetfocusEditDisplay)
     ON_BN_CLICKED(IDC_BTN_CLEAN, &CPageAioTest::OnBnClickedBtnClean)
-    ON_MESSAGE(MSG_UPDATE_AIODSP_APP, &CPageAioTest::OnMsgUpdateAiodspApp)
-    ON_MESSAGE(MSG_UPDATE_AIOSTM_APP, &CPageAioTest::OnMsgUpdateAiostmApp)
 END_MESSAGE_MAP()
 
 
@@ -156,20 +154,10 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
     case COMP_ID_AIOSTM_BOOT:{
     }break;
     case COMP_ID_AIODSP_APP:{
-        //pDlgTest->PktHandleStartUpdateDspApp();
-        HWND hWnd = pDlgTest->GetSafeHwnd(); 
-        if (hWnd != NULL)
-        {
-            ::SendMessage(hWnd, MSG_UPDATE_AIODSP_APP, NULL, NULL);
-        }
+        pDlgTest->createAioDspAppUpdateThread();
     }break;
     case COMP_ID_AIOSTM_APP:{
-        //pDlgTest->PktHandleStartUpdateStmApp();
-        HWND hWnd = pDlgTest->GetSafeHwnd(); 
-        if (hWnd != NULL)
-        {
-            ::SendMessage(hWnd, MSG_UPDATE_AIOSTM_APP, NULL, NULL);
-        }
+        pDlgTest->createAioDspStmUpdateThread();
     }break;
 
     default:
@@ -258,7 +246,10 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
 
 int CPageAioTest::PktHandleProcessState(UartProtocolPacket *pPacket)
 {
-    add2Display(MainProcessStateInfo[pPacket->DataAndCRC[1]]);
+    if (NULL != MainProcessStateInfo[pPacket->DataAndCRC[1]])
+    {
+        add2Display(MainProcessStateInfo[pPacket->DataAndCRC[1]]);
+    }
     if((BYTE)STATE_AIOBOARD_START == pPacket->DataAndCRC[1])
     {
         clearTestResultFlag();
@@ -280,78 +271,50 @@ int CPageAioTest::detectBinFile(const char *wildcard,CString &name)
     return 0;
 }
 
-int CPageAioTest::PktHandleStartUpdateDspApp(void)
+int CPageAioTest::checkAndPrintPowerInfo(void *arg)
 {
-    CString bin_name;
-    BYTE    id = SF_AIO_DSP_UPDATE;
-    CString info;
-    BYTE pBuf[2];
-
-    if (detectBinFile(AIO_DSP_APP_BIN_NAME, bin_name) > 0)
+    char buf[100] = {0};
+    ALARM_PWR_RESULT *pPwrInfo = (ALARM_PWR_RESULT *)arg;
+    if (pPwrInfo->flag & PWR_BIT_5V6N_MASK)
     {
-        if (updateTask(id, bin_name) < 0)
-        {
-            add2Display("错误:AIODSP-APP升级失败!!!\r\n");
-            id = AIO_TEST_FIXTURE_ID;
-            pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
-            pBuf[1] = (BYTE)0x01;
-            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
-        }
-        else
-        {
-            add2Display("AIODSP-APP升级成功!!!\r\n");
-            id = AIO_TEST_FIXTURE_ID;
-            pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
-            pBuf[1] = (BYTE)0x00;
-            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
-        }
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:5V6N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V6N]);
+        add2Display(buf);
     }
-    else
-    {
-        info.Format("错误:没有检测到升级文件%s\r\n", AIO_DSP_APP_BIN_NAME);
-        add2Display(info);
-        id = AIO_TEST_FIXTURE_ID;
-        pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
-        pBuf[1] = (BYTE)0x01;
-        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
-    }
-    return 0;
-}
 
-int CPageAioTest::PktHandleStartUpdateStmApp(void)
-{
-    CString bin_name;
-    BYTE    id = SF_AIO_STM_UPDATE;
-    CString info;
-    BYTE pBuf[2];
-
-    if (detectBinFile(AIO_STM_APP_BIN_NAME, bin_name) > 0)
+    if (pPwrInfo->flag & PWR_BIT_D3V3N_MASK)
     {
-        if (updateTask(id, bin_name) < 0)
-        {
-            add2Display("错误:AIOSTM-APP升级失败!!!\r\n");
-            id = AIO_TEST_FIXTURE_ID;
-            pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
-            pBuf[1] = (BYTE)0x01;
-            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
-        }
-        else
-        {
-            add2Display("AIODSP-APP升级成功!!!\r\n");
-            id = AIO_TEST_FIXTURE_ID;
-            pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
-            pBuf[1] = (BYTE)0x00;
-            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
-        }
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:D3V3N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_D3V3N]);
+        add2Display(buf);
     }
-    else
+
+    if (pPwrInfo->flag & PWR_BIT_5VAN_MASK)
     {
-        info.Format("错误:没有检测到升级文件%s\r\n", AIO_STM_APP_BIN_NAME);
-        add2Display(info);
-        id = AIO_TEST_FIXTURE_ID;
-        pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
-        pBuf[1] = (BYTE)0x01;
-        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:+5VAN异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5VAN]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_5V_SPO2_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:+5V_SPO2异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_SPO2]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_5V_NIBP_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:5V_NIBP异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_NIBP]);
+        add2Display(buf);
+    }
+
+    if (pPwrInfo->flag & PWR_BIT_REF2V5N_MASK)
+    {
+        memset(buf,0x00, sizeof(buf));
+        sprintf_s(buf,sizeof(buf), "E04-02:REF_2V5N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_REF2V5N]);
+        add2Display(buf);
     }
     return 0;
 }
@@ -501,78 +464,110 @@ int CPageAioTest::updateTask(BYTE &CID, CString &name)
     return 0;
 }
 
-int CPageAioTest::checkAndPrintPowerInfo(void *arg)
+
+UINT CPageAioTest::AioDspAppUpdateThread(LPVOID pParam)
 {
-    char buf[100] = {0};
-    ALARM_PWR_RESULT *pPwrInfo = (ALARM_PWR_RESULT *)arg;
-    if (pPwrInfo->flag & PWR_BIT_5V6N_MASK)
-    {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:5V6N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V6N]);
-        add2Display(buf);
-    }
+    CPageAioTest *pSmartUpdate = (CPageAioTest *)pParam;
+    CString bin_name;
+    BYTE    id = SF_AIO_DSP_UPDATE;
+    CString info;
+    BYTE pBuf[2];
 
-    if (pPwrInfo->flag & PWR_BIT_D3V3N_MASK)
+    if (pSmartUpdate->detectBinFile(AIO_DSP_APP_BIN_NAME, bin_name) > 0)
     {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:D3V3N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_D3V3N]);
-        add2Display(buf);
+        if (pSmartUpdate->updateTask(id, bin_name) < 0)
+        {
+            pSmartUpdate->add2Display("错误:AIODSP-APP升级失败!!!\r\n");
+            id = AIO_TEST_FIXTURE_ID;
+            pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
+            pBuf[1] = (BYTE)0x01;
+            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+        }
+        else
+        {
+            pSmartUpdate->add2Display("AIODSP-APP升级成功!!!\r\n");
+            id = AIO_TEST_FIXTURE_ID;
+            pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
+            pBuf[1] = (BYTE)0x00;
+            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+        }
     }
-
-    if (pPwrInfo->flag & PWR_BIT_5VAN_MASK)
+    else
     {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:+5VAN异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5VAN]);
-        add2Display(buf);
-    }
-
-    if (pPwrInfo->flag & PWR_BIT_5V_SPO2_MASK)
-    {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:+5V_SPO2异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_SPO2]);
-        add2Display(buf);
-    }
-
-    if (pPwrInfo->flag & PWR_BIT_5V_NIBP_MASK)
-    {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:5V_NIBP异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_5V_NIBP]);
-        add2Display(buf);
-    }
-
-    if (pPwrInfo->flag & PWR_BIT_REF2V5N_MASK)
-    {
-        memset(buf,0x00, sizeof(buf));
-        sprintf_s(buf,sizeof(buf), "E04-02:REF_2V5N异常,实测: %d mV\r\n",pPwrInfo->u32AdcResultmV[INTER_ADC_REF2V5N]);
-        add2Display(buf);
+        info.Format("错误:没有检测到升级文件%s\r\n", AIO_DSP_APP_BIN_NAME);
+        pSmartUpdate->add2Display(info);
+        id = AIO_TEST_FIXTURE_ID;
+        pBuf[0] = (BYTE)COMP_ID_AIODSP_APP;
+        pBuf[1] = (BYTE)0x01;
+        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
     }
     return 0;
 }
 
+UINT CPageAioTest::AioDspStmUpdateThread(LPVOID pParam)
+{
+    CPageAioTest *pSmartUpdate = (CPageAioTest *)pParam;
+    CString bin_name;
+    BYTE    id = SF_AIO_STM_UPDATE;
+    CString info;
+    BYTE pBuf[2];
 
+    if (pSmartUpdate->detectBinFile(AIO_STM_APP_BIN_NAME, bin_name) > 0)
+    {
+        if (pSmartUpdate->updateTask(id, bin_name) < 0)
+        {
+            pSmartUpdate->add2Display("错误:AIOSTM-APP升级失败!!!\r\n");
+            id = AIO_TEST_FIXTURE_ID;
+            pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
+            pBuf[1] = (BYTE)0x01;
+            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+        }
+        else
+        {
+            pSmartUpdate->add2Display("AIODSP-APP升级成功!!!\r\n");
+            id = AIO_TEST_FIXTURE_ID;
+            pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
+            pBuf[1] = (BYTE)0x00;
+            g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+        }
+    }
+    else
+    {
+        info.Format("错误:没有检测到升级文件%s\r\n", AIO_STM_APP_BIN_NAME);
+        pSmartUpdate->add2Display(info);
+        id = AIO_TEST_FIXTURE_ID;
+        pBuf[0] = (BYTE)COMP_ID_AIOSTM_APP;
+        pBuf[1] = (BYTE)0x01;
+        g_pSerialProtocol->sendOnePacket(id, 0, pBuf, 2);
+    }
+    return 0;
+}
 
+void CPageAioTest::createAioDspAppUpdateThread(void)
+{
+    CWinThread* m_UpdateThread = NULL;
+    m_UpdateThread = AfxBeginThread(AioDspAppUpdateThread, this);
+    if (NULL == m_UpdateThread)
+    {
+        ERROR_INFO("升级失败:创建线程AioDspAppUpdateThread ERROR\r\n");
+        add2Display(_T("错误:创建线程失败AioDspAppUpdateThread\r\n"));
+    }
+}
+
+void CPageAioTest::createAioDspStmUpdateThread(void)
+{
+    CWinThread* m_UpdateThread = NULL;
+    m_UpdateThread = AfxBeginThread(AioDspStmUpdateThread, this);
+    if (NULL == m_UpdateThread)
+    {
+        ERROR_INFO("升级失败:创建线程AioDspStmUpdateThread ERROR\r\n");
+        add2Display(_T("错误:创建线程失败AioDspStmUpdateThread\r\n"));
+    }
+}
 
 
 
 void CPageAioTest::OnBnClickedBtnClean()
 {
     clearDisplay();
-    PktHandleStartUpdateDspApp();
-//    PktHandleStartUpdateStmApp();
-}
-
-
-afx_msg LRESULT CPageAioTest::OnMsgUpdateAiodspApp(WPARAM wParam, LPARAM lParam)
-{
-    INFO("========================OnMsgUpdateAiodspApp\r\n");
-    //PktHandleStartUpdateDspApp();
-    return 0;
-}
-
-
-afx_msg LRESULT CPageAioTest::OnMsgUpdateAiostmApp(WPARAM wParam, LPARAM lParam)
-{
-    INFO("========================OnMsgUpdateAiostmApp\r\n");
-    PktHandleStartUpdateStmApp();
-    return 0;
 }

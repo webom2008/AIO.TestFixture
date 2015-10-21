@@ -329,40 +329,32 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
     {
     case COMP_ID_VERSION:{
 
-    }
-        break;
+    } break;
     case COMP_ID_PWR_ALARM:{
 
-    }
-        break;
+    } break;
     case COMP_ID_TASK_UTILITES:{
         AppTaskUtilitiesStart();
-    }
-        break;
+    } break;
     case COMP_ID_DOWNLOAD_CNT:{
         exeSecurFlashPkt(pPacket);
-    }
-        break;
+    } break;
     case COMP_ID_ERROR_INFO:{
-    }
-        break;
+    } break;
     case COMP_ID_PROCESS_STATE:{
-    }
-        break;
+    } break;
     case COMP_ID_AIOSTM_BOOT:{
-    }
-        break;
+    } break;
     case COMP_ID_AIODSP_APP:{
         gpComputerReult->u8AioDspAppResult = pPacket->DataAndCRC[1];
         xEventGroupSetBits( xCompPktAckEventGroup, 
                             COMP_PKT_BIT_AIODSP_APP);
-    }
+    } break;
     case COMP_ID_AIOSTM_APP:{
         gpComputerReult->u8AioStmAppResult = pPacket->DataAndCRC[1];
         xEventGroupSetBits( xCompPktAckEventGroup, 
                             COMP_PKT_BIT_AIOSTM_APP);
-    }
-        break;
+    } break;
     default:
         break;
     }

@@ -21,15 +21,13 @@ public:
 	int SendUpdateEndOfTransmit(void);
     int WaitUpdateWrite2FlashDone(void);
 
-protected:
-	UartProtocolPacket  m_PktForUpdate;
-
 private:
     BYTE    *pFileRamAddr;
     unsigned int m_packetCount;
     unsigned int m_Mem_addr_offset;
 
     BYTE		        m_BChildID;
+	UartProtocolPacket  m_PktForUpdate;
 	// handles 
 	HANDLE	            m_hGetUpdatePacketEvent;
 	CRITICAL_SECTION	m_csCommunicationSync; 
