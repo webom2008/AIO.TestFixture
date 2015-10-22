@@ -55,7 +55,25 @@ typedef enum
     STATE_DOWNLOAD_AIOSTM_BOOT,
     STATE_DOWNLOAD_AIODSP_APP,
     STATE_DOWNLOAD_AIOSTM_APP,
-
+    STATE_AIOBOARD_MAX_CURRENT,
+    STATE_ECG_SELFCHECK,
+    STATE_ECG_AMPLITUDE_BAND,
+    STATE_ECG_PROBE_OFF,
+    STATE_ECG_POLARITY,
+    STATE_ECG_PACE,
+    STATE_ECG_QUICK_QRS,
+    STATE_RESP_AMPLITUDE_BAND,
+    STATE_TEMP_SELFCHECK,
+    STATE_TEMP_PROBE_OFF,
+    STATE_TEMP_PRECISION,
+    STATE_SPO2_UART,
+    STATE_NIBP_SELFCHECK,
+    STATE_NIBP_VERIFY,
+    STATE_NIBP_GAS_CONTROL,
+    STATE_NIBP_OVER_PRESS,
+    STATE_IBP_SELFCHECK,
+    STATE_IBP_PROBE_OFF,
+    STATE_IBP_AMPLITUDE_BAND,
     
     STATE_PROCESS_SUCCESS,
     STATE_PROCESS_UNVALID,
@@ -328,7 +346,7 @@ static int sendAndWaitAIOStmApp(void)
     return -1;
 }
 
-//#define SKIP_STATE_DETECT_OTHER_POWER
+#define SKIP_STATE_DETECT_OTHER_POWER
 #define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
 #define SKIP_STATE_DOWNLOAD_AIODSP_APP
 #define SKIP_STATE_DOWNLOAD_AIOSTM_APP
@@ -461,7 +479,7 @@ static void MainProcessTask(void *pvParameters)
             ret = sendAndWaitAIOStmApp();
 #endif
             if (0 == ret){
-                state = STATE_PROCESS_SUCCESS;
+                state = STATE_AIOBOARD_MAX_CURRENT;
                 vTaskDelay(8000 / portTICK_PERIOD_MS); //delay 8s for AIOSTM boot
                 
             }else{
@@ -470,6 +488,77 @@ static void MainProcessTask(void *pvParameters)
             }
         }break;
         
+        case STATE_AIOBOARD_MAX_CURRENT:{
+            state = STATE_ECG_SELFCHECK;
+        }break;
+        
+        case STATE_ECG_SELFCHECK:{
+            state = STATE_ECG_AMPLITUDE_BAND;
+        }break;
+        
+        case STATE_ECG_AMPLITUDE_BAND:{
+            state = STATE_ECG_PROBE_OFF;
+        }break;
+        
+        case STATE_ECG_PROBE_OFF:{
+            state = STATE_ECG_POLARITY;
+        }break;
+        
+        case STATE_ECG_POLARITY:{
+            state = STATE_ECG_PACE;
+        }break;
+        
+        case STATE_ECG_PACE:{
+            state = STATE_ECG_QUICK_QRS;
+        }break;
+        case STATE_ECG_QUICK_QRS:{
+            state = STATE_RESP_AMPLITUDE_BAND;
+        }break;
+        
+        case STATE_RESP_AMPLITUDE_BAND:{
+            state = STATE_TEMP_SELFCHECK;
+        }break;
+        case STATE_TEMP_SELFCHECK:{
+            state = STATE_TEMP_PROBE_OFF;
+        }break;
+        
+        case STATE_TEMP_PROBE_OFF:{
+            state = STATE_TEMP_PRECISION;
+        }break;
+        case STATE_TEMP_PRECISION:{
+            state = STATE_SPO2_UART;
+        }break;
+        
+        case STATE_SPO2_UART:{
+            state = STATE_NIBP_SELFCHECK;
+        }break;
+        case STATE_NIBP_SELFCHECK:{
+            state = STATE_NIBP_VERIFY;
+        }break;
+        
+        case STATE_NIBP_VERIFY:{
+            state = STATE_NIBP_GAS_CONTROL;
+        }break;
+        
+        case STATE_NIBP_GAS_CONTROL:{
+            state = STATE_NIBP_OVER_PRESS;
+        }break;
+        
+        case STATE_NIBP_OVER_PRESS:{
+            state = STATE_IBP_SELFCHECK;
+        }break;
+        
+        case STATE_IBP_SELFCHECK:{
+            state = STATE_IBP_PROBE_OFF;
+        }break;
+        
+        case STATE_IBP_PROBE_OFF:{
+            state = STATE_IBP_AMPLITUDE_BAND;
+        }break;
+        
+        case STATE_IBP_AMPLITUDE_BAND:{
+            state = STATE_PROCESS_SUCCESS;
+        }break;
         case STATE_PROCESS_SUCCESS:{
             running = false;
         }break;

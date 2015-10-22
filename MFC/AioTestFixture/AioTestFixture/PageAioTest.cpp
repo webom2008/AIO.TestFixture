@@ -47,7 +47,25 @@ typedef enum
     STATE_DOWNLOAD_AIOSTM_BOOT,
     STATE_DOWNLOAD_AIODSP_APP,
     STATE_DOWNLOAD_AIOSTM_APP,
-
+    STATE_AIOBOARD_MAX_CURRENT,
+    STATE_ECG_SELFCHECK,
+    STATE_ECG_AMPLITUDE_BAND,
+    STATE_ECG_PROBE_OFF,
+    STATE_ECG_POLARITY,
+    STATE_ECG_PACE,
+    STATE_ECG_QUICK_QRS,
+    STATE_RESP_AMPLITUDE_BAND,
+    STATE_TEMP_SELFCHECK,
+    STATE_TEMP_PROBE_OFF,
+    STATE_TEMP_PRECISION,
+    STATE_SPO2_UART,
+    STATE_NIBP_SELFCHECK,
+    STATE_NIBP_VERIFY,
+    STATE_NIBP_GAS_CONTROL,
+    STATE_NIBP_OVER_PRESS,
+    STATE_IBP_SELFCHECK,
+    STATE_IBP_PROBE_OFF,
+    STATE_IBP_AMPLITUDE_BAND,
     
     STATE_PROCESS_SUCCESS,
     STATE_PROCESS_UNVALID,
@@ -119,7 +137,27 @@ int CPageAioTest::initApplication(void)
     MainProcessStateInfo[STATE_DOWNLOAD_AIOSTM_BOOT]    = ">>========STATE:烧写AIOSTM_BOOT！！\r\n";
     MainProcessStateInfo[STATE_DOWNLOAD_AIODSP_APP]     = ">>========STATE:升级AIODSP-APP！！\r\n";
     MainProcessStateInfo[STATE_DOWNLOAD_AIOSTM_APP]     = ">>========STATE:升级AIOSTM-APP！！\r\n";
+    MainProcessStateInfo[STATE_AIOBOARD_MAX_CURRENT]    = ">>========STATE:带负荷电流检测！！\r\n";
+    MainProcessStateInfo[STATE_ECG_SELFCHECK]           = ">>========STATE:心电自检结果！！\r\n";
+    MainProcessStateInfo[STATE_ECG_AMPLITUDE_BAND]      = ">>========STATE:心电幅度和带宽测试！！\r\n";
+    MainProcessStateInfo[STATE_ECG_PROBE_OFF]           = ">>========STATE:心电导联测试！！\r\n";
+    MainProcessStateInfo[STATE_ECG_POLARITY]            = ">>========STATE:心电极化测试！！\r\n";
+    MainProcessStateInfo[STATE_ECG_PACE]                = ">>========STATE:心电PACE测试！！\r\n";
+    MainProcessStateInfo[STATE_ECG_QUICK_QRS]           = ">>========STATE:快速QRS波抑制功能测试！！\r\n";
+    MainProcessStateInfo[STATE_RESP_AMPLITUDE_BAND]     = ">>========STATE:呼吸幅度和带宽测试！！\r\n";
+    MainProcessStateInfo[STATE_TEMP_SELFCHECK]          = ">>========STATE:体温电路自检！！\r\n";
+    MainProcessStateInfo[STATE_TEMP_PROBE_OFF]          = ">>========STATE:体温传感器脱落检测！！\r\n";
+    MainProcessStateInfo[STATE_TEMP_PRECISION]          = ">>========STATE:体温精度测试！！\r\n";
+    MainProcessStateInfo[STATE_SPO2_UART]               = ">>========STATE:血氧板通信测试！！\r\n";
+    MainProcessStateInfo[STATE_NIBP_SELFCHECK]          = ">>========STATE:NIBP电路自检！！\r\n";
+    MainProcessStateInfo[STATE_NIBP_VERIFY]             = ">>========STATE:NIBP压力自动校准！！\r\n";
+    MainProcessStateInfo[STATE_NIBP_GAS_CONTROL]        = ">>========STATE:NIBP气阀检测！！\r\n";
+    MainProcessStateInfo[STATE_NIBP_OVER_PRESS]         = ">>========STATE:NIBP过压保护测试！！\r\n";
+    MainProcessStateInfo[STATE_IBP_SELFCHECK]           = ">>========STATE:IBP电路自检！！\r\n";
+    MainProcessStateInfo[STATE_IBP_PROBE_OFF]           = ">>========STATE:IBP探头脱落检测！！\r\n";
+    MainProcessStateInfo[STATE_IBP_AMPLITUDE_BAND]      = ">>========STATE:IBP幅度及带宽测试！！\r\n";
     MainProcessStateInfo[STATE_PROCESS_SUCCESS]         = ">>========STATE:测试成功！！\r\n";
+
     initApplicationDone = true;
     return 0;
 }
