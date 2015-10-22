@@ -63,10 +63,10 @@ static void uart3_driver_task(void *pvParameters)
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
     char txBuf[32];
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart3_driver_task running...");
     for (;;)
     {
@@ -86,9 +86,9 @@ static void uart3_unpack_task(void *pvParameters)
     char rxBuf[32];
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS;
     
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart3_unpack_task running...");
     for (;;)
     {
@@ -99,6 +99,10 @@ static void uart3_unpack_task(void *pvParameters)
         {
             test_uart3_rx_count += rLen;
             TEST_UART3_INFO(">>uart3_unpack_task rLen:%d",rLen);
+        }
+        else
+        {
+            TEST_UART3_INFO(">>uart3_unpack_task rLen:0");
         }
         vTaskDelay(xTicksToWait);
     }

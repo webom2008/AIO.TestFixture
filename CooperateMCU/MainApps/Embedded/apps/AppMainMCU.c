@@ -49,7 +49,7 @@ static QueueHandle_t    pMainMcuRxPktQueue  = NULL;
  * macros                                       *
  *----------------------------------------------*/
 //#define _SEND_DEMO_PKT_
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -89,6 +89,27 @@ static void getTDMxResult(DmaUartProtocolPacket *pPkt)
     }
 }
 
+static void setAioStmBoot0Pin(DmaUartProtocolPacket *pPkt)
+{
+    AioStmCtrl(AIO_STM_CTRL_CMD_SET_BOOT0, pPkt->Data);
+
+    memset(pPkt->Data, 0x00, sizeof(pPkt->Data));
+    pPkt->DataLen = 0;
+    pPkt->ACK = DMA_UART_PACKET_NACK;
+    sendMainMcuPkt(pPkt, 0);
+    INFO("setAioStmBoot0Pin\r\n");
+}
+
+static void startDownloadAioStmBoot(DmaUartProtocolPacket *pPkt)
+{
+    xSemaphoreGive(gpAioStmDev->pStartUpdateSemaphore);
+
+    memset(pPkt->Data, 0x00, sizeof(pPkt->Data));
+    pPkt->DataLen = 0;
+    pPkt->ACK = DMA_UART_PACKET_NACK;
+    sendMainMcuPkt(pPkt, 0);
+    INFO("startDownloadAioStmBoot\r\n");
+}
 
 static void MainMcuExecutePktTask(void *pvParameters)
 {
@@ -97,12 +118,12 @@ static void MainMcuExecutePktTask(void *pvParameters)
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
 
-    INFO("MainMcuExecutePktTask running...\n");
+    INFO("MainMcuExecutePktTask running...\r\n");
     for (;;)
     {
         if(xQueueReceive(pMainMcuRxPktQueue, (void *)&rxPacket, DELAY_MAX_WAIT))
         {
-            INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
+//            INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
             if (DMA_UART_PACKET_NACK == rxPacket.ACK) //delete pkt from send buffer
             {
                 deleteMainMcuAckPkt(rxPacket.ID);
@@ -114,12 +135,12 @@ static void MainMcuExecutePktTask(void *pvParameters)
                 testMainMcuAndMyself(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_START:
-                xSemaphoreGive(gpAioStmDev->pStartUpdateSemaphore);
+                startDownloadAioStmBoot(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_ERROR:
                 break;
             case PKT_ID_AIOSTM_UPDATE_BOOT:
-                AioStmCtrl(AIO_STM_CTRL_CMD_SET_BOOT0, rxPacket.Data);
+                setAioStmBoot0Pin(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_END:
                 break;
@@ -128,7 +149,7 @@ static void MainMcuExecutePktTask(void *pvParameters)
             }
                 break;
             default:
-                INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);
+                INFO("PKT_ID=0X%02X unKnown!\r\n",rxPacket.ID);
                 break;
             }
         }
@@ -144,11 +165,11 @@ static void MainMcuTimeoutPktTask(void *pvParameters)
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
 
-    INFO("MainMcuTimeoutPktTask running...\n");
+    INFO("MainMcuTimeoutPktTask running...\r\n");
     for (;;)
     {
         checkAndResendMainMcuACKPkt();
-        INFO("MainMcuTimeoutPktTask running %d\n",getMyTimerTick());
+//        INFO("MainMcuTimeoutPktTask running %d\r\n",getMyTimerTick());
         vTaskDelay(xTicksToWait);
     }
 }
@@ -167,7 +188,7 @@ static void MainMcuUnpackTask(void *pvParameters)
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
-    INFO("MainMcuUnpackTask running...\n");
+    INFO("MainMcuUnpackTask running...\r\n");
     for (;;)
     {
         rLen = 0;
@@ -183,12 +204,12 @@ static void MainMcuUnpackTask(void *pvParameters)
         if( ( uxBits & UART_DMA_RX_COMPLETE_EVENT_BIT ) != 0 )
         {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
-            INFO("Uart2Read COMPLETE rLen=%d\n",rLen);
+//            INFO("Uart2Read COMPLETE rLen=%d\r\n",rLen);
         }
         else if( ( uxBits & UART_DMA_RX_INCOMPLETE_EVENT_BIT ) != 0 )
         {
             rLen = Uart2Read((char *)&rxPacket, sizeof(DmaUartProtocolPacket));
-            INFO("Uart2Read INCOMPLETE rLen=%d\n",rLen);
+//            INFO("Uart2Read INCOMPLETE rLen=%d\r\n",rLen);
         }
         else
         {
@@ -213,7 +234,7 @@ static void MainMcuUnpackTask(void *pvParameters)
         }
         else
         {
-            INFO("PKT ERROR\n");
+            INFO("PKT ERROR\r\n");
         }
     }
 }

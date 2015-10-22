@@ -27,8 +27,11 @@ extern "C"{
 #endif /* __cplusplus */
 
 
-#define COOPMCU_PKT_ACK_BIT_TDM    ((EventBits_t)(1<<0))
-
+#define COOPMCU_PKT_ACK_BIT_TDM             ((EventBits_t)(1<<0))
+#define COOPMCU_PKT_ACK_BIT_AIOSTM_START    ((EventBits_t)(1<<1))
+#define COOPMCU_PKT_ACK_BIT_AIOSTM_ERROR    ((EventBits_t)(1<<2))
+#define COOPMCU_PKT_ACK_BIT_AIOSTM_BOOT     ((EventBits_t)(1<<3))
+#define COOPMCU_PKT_ACK_BIT_AIOSTM_END      ((EventBits_t)(1<<4))
 
 
 int AppCoopMcuInit(void);

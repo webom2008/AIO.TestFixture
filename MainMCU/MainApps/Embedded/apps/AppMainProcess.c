@@ -217,12 +217,6 @@ static void sendMainProcessState(MainProcessState_Typedef state)
     sendComputerPkt(&pkt);
 }
 
-
-static int sendAndWaitAIOStmBoot(void)
-{
-    return 0;
-}
-
 static int sendAndWaitAIODspApp(void)
 {
     AioDspProtocolPkt pkt;
@@ -307,8 +301,8 @@ static int sendAndWaitAIOStmApp(void)
 
 //#define SKIP_STATE_DETECT_OTHER_POWER
 //#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
-//#define SKIP_STATE_DOWNLOAD_AIODSP_APP
-//#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
+#define SKIP_STATE_DOWNLOAD_AIODSP_APP
+#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
 
 static void MainProcessTask(void *pvParameters)
 {    

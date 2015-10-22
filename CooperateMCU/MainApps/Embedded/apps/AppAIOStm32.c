@@ -69,10 +69,10 @@ static void AioStmUnpackTask(void *pvParameters)
     int rLen = 0, i;
     char rxBuf[128];
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     INFO("AioStmUnpackTask running...\n");
     for (;;)
     {

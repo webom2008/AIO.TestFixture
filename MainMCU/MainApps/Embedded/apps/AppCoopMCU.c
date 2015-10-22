@@ -221,21 +221,20 @@ static void CoopMcuExecutePktTask(void *pvParameters)
                 testCoopMcuAndMyself(&rxPacket);
                 break;
             case PKT_ID_AIOSTM_UPDATE_START:
-                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
-                                    PKT_ACK_BIT_AIOSTM_START);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_AIOSTM_START);
                 break;
             case PKT_ID_AIOSTM_UPDATE_ERROR:
-//                deleteAioStmUpdateTask();
-                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
-                                    PKT_ACK_BIT_AIOSTM_ERROR);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_AIOSTM_ERROR);
                 break;
             case PKT_ID_AIOSTM_UPDATE_BOOT:
-                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
-                                    PKT_ACK_BIT_AIOSTM_BOOT);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_AIOSTM_BOOT);
                 break;
             case PKT_ID_AIOSTM_UPDATE_END:
-                xEventGroupSetBits( gpAioStmDev->xPktAckEventGroup, 
-                                    PKT_ACK_BIT_AIOSTM_END);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_AIOSTM_END);
                 break;
             case PKT_ID_TDM_RESULT:
                 gAIOBoardCurrent = (int)((rxPacket.Data[0]<<24) \

@@ -61,8 +61,8 @@ int Uart3Init(void)
     UartDeviceDefaultInit(&uart3_device);
     uart3_device.num        = UART_NUM03;
     uart3_device.mode       = UART_INTERRUPT_MODE;
-    uart3_device.baudrate   = B230400;
-    uart3_device.ParityType = PARITY_NONE; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
+    uart3_device.baudrate   = B19200;
+    uart3_device.ParityType = PARITY_EVEN; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart3_device.IRQPriority= IRQPriority11Uart23;
         
     uart3_tx_queue  = xQueueCreate( UART3_TX_QUEUE_SIZE, sizeof( char ) );
@@ -70,7 +70,7 @@ int Uart3Init(void)
     xReadOpLock     = xSemaphoreCreateMutex();
     xWriteOpLock    = xSemaphoreCreateMutex();
     
-	do{} while ((NULL == uart3_tx_queue) \
+    do{} while ((NULL == uart3_tx_queue) \
                 ||(NULL == uart3_rx_queue)\
                 ||(NULL == xReadOpLock)\
                 ||(NULL == xWriteOpLock));
@@ -113,10 +113,10 @@ int Uart3Read(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueReceive(uart3_rx_queue, pReadData++, (TickType_t)10))
-		{
+        if(pdPASS != xQueueReceive(uart3_rx_queue, pReadData++, (TickType_t)10))
+        {
             break;
-		}
+        }
     }
     xSemaphoreGive( xReadOpLock );
     return i;
@@ -139,11 +139,11 @@ int Uart3Write(char *pWriteData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-		if(pdPASS != xQueueSendToBack(uart3_tx_queue, (void *)pData++, (TickType_t)3))
-		{
+        if(pdPASS != xQueueSendToBack(uart3_tx_queue, (void *)pData++, (TickType_t)3))
+        {
             // Failed to post the message, even after 10 ticks.
-			break;
-		}
+            break;
+        }
     }
     xSemaphoreGive( xWriteOpLock );
     USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
@@ -171,8 +171,8 @@ void USART3_IRQHandler(void)
     volatile char temp = 0;
     BaseType_t xHigherPriorityTaskWoken, xResult;
 
-	// xHigherPriorityTaskWoken must be initialised to pdFALSE.
-	xHigherPriorityTaskWoken = pdFALSE;
+    // xHigherPriorityTaskWoken must be initialised to pdFALSE.
+    xHigherPriorityTaskWoken = pdFALSE;
     
     if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
     {
@@ -215,9 +215,9 @@ void USART3_IRQHandler(void)
         USART_ClearITPendingBit(USART3, USART_IT_FE | USART_IT_NE);
     }
 
-	if(xHigherPriorityTaskWoken)
-	{
-		taskYIELD ();
-	}
+    if(xHigherPriorityTaskWoken)
+    {
+        taskYIELD ();
+    }
 }
 

@@ -42,22 +42,22 @@ static AioStmDev_TypeDef gAioStmDev;
 AioStmDev_TypeDef *gpAioStmDev = &gAioStmDev;
 
 
-const uint8_t ACK = 0x79;
-const uint8_t NACK = 0x1F;
+const uint8_t ACK           = 0x79;
+const uint8_t NACK          = 0x1F;
 
-#define TICKTOWAIT	1000
-#define SIZE_WRITE	128
+#define TICKTOWAIT          1000
+#define SIZE_WRITE          128
 
-#define Start_Address   0x08010004
-uint32_t Write_Address	= 0x08000000 - SIZE_WRITE;
-uint32_t Read_Address = 0x08000000 - SIZE_WRITE;
-uint8_t Start_CMD = 0x7F;
-uint8_t Get_CMD[2] = {0x00, 0xFF};
-uint8_t Go_CMD[2] = {0x21, 0xDE};
-uint8_t WR_CMD[2] = {0x31, 0xCE};
-uint8_t RD_CMD[2] = {0x11, 0xEE};
-uint8_t ER_CMD[2] = {0x43, 0xBC};
-uint8_t ER_ALL_CMD[2] = {0xFF, 0x00};
+#define Start_Address       0x0801C004
+uint32_t Write_Address      = 0x08000000 - SIZE_WRITE;
+uint32_t Read_Address       = 0x08000000 - SIZE_WRITE;
+uint8_t Start_CMD           = 0x7F;
+uint8_t Get_CMD[2]          = {0x00, 0xFF};
+uint8_t Go_CMD[2]           = {0x21, 0xDE};
+uint8_t WR_CMD[2]           = {0x31, 0xCE};
+uint8_t RD_CMD[2]           = {0x11, 0xEE};
+uint8_t ER_CMD[2]           = {0x43, 0xBC};
+uint8_t ER_ALL_CMD[2]       = {0xFF, 0x00};
 
 uint8_t Write_Data[SIZE_WRITE] = {0};
 uint8_t Read_Data[SIZE_WRITE]  = {0};
@@ -200,6 +200,7 @@ static int isGetACKSignal(void)
     uint8_t Rev_Data = 0;
     xQueueReceive(gpAioStmDev->pAioStmUpdateRxQueue,&Rev_Data,TICKTOWAIT);
     clearUartRxQueue();
+    vTaskDelay(1000);
     if(ACK != Rev_Data)
     {
         return 0; //failed reback
@@ -251,7 +252,7 @@ void AioStmUpdateTask(void *pvParameter)
     uint8_t isError = 0;
     DmaUartProtocolPacket txPacket;
 
-    INFO("AioStmUpdateTask running...\n");
+    INFO("AioStmUpdateTask running...\r\n");
     while(1)
     {
         if (0 != isError) //Error Happend, send pkt to tell Main MCU know
@@ -271,10 +272,11 @@ void AioStmUpdateTask(void *pvParameter)
             continue;
         }
 
+        INFO("pStartUpdateSemaphore==start\r\n");
         clearUartRxQueue();//clear queue is important here. a bug will happan if not do it.
 
         //S1: ==========>start
-        Uart3Write((char *)&Start_CMD,1);
+        Uart3Write((char *)&Start_CMD,1);   //to select AIO-STM bootloader USARTx mode
         if(!isGetACKSignal())
         {
             isError = 1;
