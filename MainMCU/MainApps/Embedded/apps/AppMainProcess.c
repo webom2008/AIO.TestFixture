@@ -83,11 +83,16 @@ typedef enum
  * macros                                       *
  *----------------------------------------------*/
 
-#define AIOBOARD_CURRENT_MAX        ((int)100)
+#define AIOBOARD_POWERON_CURRENT_MAX        ((int)100) //mA
+#define AIOBOARD_PUMP_ON_CURRENT_MAX        ((int)500) //mA
+#define AIOBOARD_PUMP_OFF_CURRENT_MAX       ((int)150) //mA
 
 
 
-
+#define SKIP_STATE_DETECT_OTHER_POWER
+#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
+#define SKIP_STATE_DOWNLOAD_AIODSP_APP
+#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
 
 
 
@@ -217,7 +222,7 @@ static int testAIOBaordCurrent(void)
     
     current = current / 5;
 
-    if (current > AIOBOARD_CURRENT_MAX)
+    if (current > AIOBOARD_POWERON_CURRENT_MAX)
     {
         ERROR("AIOBaordCurrent = %d\r\n",current);
         return 1;
@@ -266,6 +271,7 @@ static void sendMainProcessState(MainProcessState_Typedef state)
 
 static int sendAndWaitAIODspApp(void)
 {
+#ifndef SKIP_STATE_DOWNLOAD_AIODSP_APP
     AioDspProtocolPkt pkt;
     int i = 0;
     EventBits_t uxBits;
@@ -308,10 +314,14 @@ static int sendAndWaitAIODspApp(void)
         }
     }
     return -1;
+#else
+    return 0;
+#endif
 }
 
 static int sendAndWaitAIOStmApp(void)
 {
+#ifndef SKIP_STATE_DOWNLOAD_AIOSTM_APP
     AioDspProtocolPkt pkt;
     int i = 0;
     EventBits_t uxBits;
@@ -344,12 +354,172 @@ static int sendAndWaitAIOStmApp(void)
         }
     }
     return -1;
+#else
+    return 0;
+#endif
 }
 
-#define SKIP_STATE_DETECT_OTHER_POWER
-#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
-#define SKIP_STATE_DOWNLOAD_AIODSP_APP
-#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
+static int testAioBoardMaxCurrent(void)
+{
+    DmaUartProtocolPacket txPacket;
+    int normal_current = 0;
+    int pump_on_current = 0;
+    int i;
+    EventBits_t uxBits;
+    
+    DmaUartProtocolPacketInit(&txPacket);
+    txPacket.ID = (u8)PKT_ID_TDM_RESULT;
+    txPacket.ACK = DMA_UART_PACKET_ACK;
+
+    for (i = 0; i < 5; i++)
+    {
+        sendCoopMcuPkt(&txPacket, 1000);
+        
+        uxBits = xEventGroupWaitBits(
+                xCoopMCUPktAckEventGroup,   // The event group being tested.
+                COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
+        {
+            normal_current += getAIOBaordCurrent();
+        }
+        else //timeout
+        {
+            ERROR("testAIOBaordCurrent timeout!!!\r\n");
+            return 1;
+        }
+        vTaskDelay(100);
+    }
+    
+    normal_current = normal_current / 5;
+
+    for (i = 0; i < 5; i++)
+    {
+        sendCoopMcuPkt(&txPacket, 1000);
+        
+        uxBits = xEventGroupWaitBits(
+                xCoopMCUPktAckEventGroup,   // The event group being tested.
+                COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
+        {
+            pump_on_current += getAIOBaordCurrent();
+        }
+        else //timeout
+        {
+            ERROR("testAIOBaordCurrent timeout!!!\r\n");
+            return 1;
+        }
+        vTaskDelay(100);
+    }
+    
+    pump_on_current = pump_on_current / 5;
+    
+    if ((pump_on_current > AIOBOARD_PUMP_ON_CURRENT_MAX) \
+        ||(normal_current > AIOBOARD_PUMP_OFF_CURRENT_MAX))
+    {
+        ERROR("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
+            pump_on_current,normal_current);
+        return 1;
+    }
+    INFO("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
+        pump_on_current,normal_current);
+    return 0;
+}
+
+static int getEcgSelfcheck(void)
+{
+    return 0;
+}
+
+static int testEcgAmplitudeBand(void)
+{
+    return 0;
+}
+
+static int testEcgProbeOff(void)
+{
+    return 0;
+}
+
+static int testEcgPolarity(void)
+{
+    return 0;
+}
+
+static int testEcgPace(void)
+{
+    return 0;
+}
+
+static int testEcgQuickQRS(void)
+{
+    return 0;
+}
+
+static int testRespAmplitudeBand(void)
+{
+    return 0;
+}
+
+static int testTempSelfcheck(void)
+{
+    return 0;
+}
+
+static int testTempProbeOff(void)
+{
+    return 0;
+}
+
+static int testTempPrecision(void)
+{
+    return 0;
+}
+
+static int testSpo2Uart(void)
+{
+    return 0;
+}
+
+static int testNibpSelfcheck(void)
+{
+    return 0;
+}
+
+static int testNibpVerify(void)
+{
+    return 0;
+}
+
+static int testNibpGasControl(void)
+{
+    return 0;
+}
+
+static int testNibpOverPress(void)
+{
+    return 0;
+}
+
+static int testIbpSelfcheck(void)
+{
+    return 0;
+}
+
+static int testIbpProbeOff(void)
+{
+    return 0;
+}
+
+static int testIbpAmplitudeBand(void)
+{
+    return 0;
+}
 
 static void MainProcessTask(void *pvParameters)
 {    
@@ -461,9 +631,7 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_DOWNLOAD_AIODSP_APP:{
-#ifndef SKIP_STATE_DOWNLOAD_AIODSP_APP
             ret = sendAndWaitAIODspApp();
-#endif
             if (0 == ret){
                 state = STATE_DOWNLOAD_AIOSTM_APP;
                 SecurFlashCtrl(SECUR_CTRL_W_DEC_DOWNLOAD_CNT, NULL);
@@ -475,9 +643,7 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_DOWNLOAD_AIOSTM_APP:{
-#ifndef SKIP_STATE_DOWNLOAD_AIOSTM_APP
             ret = sendAndWaitAIOStmApp();
-#endif
             if (0 == ret){
                 state = STATE_AIOBOARD_MAX_CURRENT;
                 vTaskDelay(8000 / portTICK_PERIOD_MS); //delay 8s for AIOSTM boot
@@ -489,75 +655,189 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_AIOBOARD_MAX_CURRENT:{
-            state = STATE_ECG_SELFCHECK;
+            ret = testAioBoardMaxCurrent();
+            if (0 == ret){
+                state = STATE_ECG_SELFCHECK;
+            }else{
+                ERROR("E06-02:STATE_AIOBOARD_MAX_CURRENT!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_ECG_SELFCHECK:{
-            state = STATE_ECG_AMPLITUDE_BAND;
+            ret = getEcgSelfcheck();
+            if (0 == ret){
+                state = STATE_ECG_AMPLITUDE_BAND;
+            }else{
+                ERROR("E06-02:STATE_ECG_SELFCHECK!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_ECG_AMPLITUDE_BAND:{
-            state = STATE_ECG_PROBE_OFF;
+            ret = testEcgAmplitudeBand();
+            if (0 == ret){
+                state = STATE_ECG_PROBE_OFF;
+            }else{
+                ERROR("E06-02:STATE_ECG_AMPLITUDE_BAND!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_ECG_PROBE_OFF:{
-            state = STATE_ECG_POLARITY;
+            ret = testEcgProbeOff();
+            if (0 == ret){
+                state = STATE_ECG_POLARITY;
+            }else{
+                ERROR("E06-02:STATE_ECG_PROBE_OFF!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_ECG_POLARITY:{
-            state = STATE_ECG_PACE;
+            ret = testEcgPolarity();
+            if (0 == ret){
+                state = STATE_ECG_PACE;
+            }else{
+                ERROR("E06-02:STATE_ECG_POLARITY!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_ECG_PACE:{
-            state = STATE_ECG_QUICK_QRS;
+            ret = testEcgPace();
+            if (0 == ret){
+                state = STATE_ECG_QUICK_QRS;
+            }else{
+                ERROR("E06-02:STATE_ECG_PACE!!\r\n");
+                running = false;
+            }
         }break;
         case STATE_ECG_QUICK_QRS:{
-            state = STATE_RESP_AMPLITUDE_BAND;
+            ret = testEcgQuickQRS();
+            if (0 == ret){
+                state = STATE_RESP_AMPLITUDE_BAND;
+            }else{
+                ERROR("E06-02:STATE_ECG_QUICK_QRS!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_RESP_AMPLITUDE_BAND:{
-            state = STATE_TEMP_SELFCHECK;
+            ret = testRespAmplitudeBand();
+            if (0 == ret){
+                state = STATE_TEMP_SELFCHECK;
+            }else{
+                ERROR("E06-02:STATE_RESP_AMPLITUDE_BAND!!\r\n");
+                running = false;
+            }
         }break;
         case STATE_TEMP_SELFCHECK:{
-            state = STATE_TEMP_PROBE_OFF;
+            ret = testTempSelfcheck();
+            if (0 == ret){
+                state = STATE_TEMP_PROBE_OFF;
+            }else{
+                ERROR("E06-02:STATE_TEMP_SELFCHECK!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_TEMP_PROBE_OFF:{
-            state = STATE_TEMP_PRECISION;
+            ret = testTempProbeOff();
+            if (0 == ret){
+                state = STATE_TEMP_PRECISION;
+            }else{
+                ERROR("E06-02:STATE_TEMP_PROBE_OFF!!\r\n");
+                running = false;
+            }
         }break;
         case STATE_TEMP_PRECISION:{
-            state = STATE_SPO2_UART;
+            ret = testTempPrecision();
+            if (0 == ret){
+                state = STATE_SPO2_UART;
+            }else{
+                ERROR("E06-02:STATE_TEMP_PRECISION!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_SPO2_UART:{
-            state = STATE_NIBP_SELFCHECK;
+            ret = testSpo2Uart();
+            if (0 == ret){
+                state = STATE_NIBP_SELFCHECK;
+            }else{
+                ERROR("E06-02:STATE_SPO2_UART!!\r\n");
+                running = false;
+            }
         }break;
         case STATE_NIBP_SELFCHECK:{
-            state = STATE_NIBP_VERIFY;
+            ret = testNibpSelfcheck();
+            if (0 == ret){
+                state = STATE_NIBP_VERIFY;
+            }else{
+                ERROR("E06-02:STATE_NIBP_SELFCHECK!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_NIBP_VERIFY:{
-            state = STATE_NIBP_GAS_CONTROL;
+            ret = testNibpVerify();
+            if (0 == ret){
+                state = STATE_NIBP_GAS_CONTROL;
+            }else{
+                ERROR("E06-02:STATE_NIBP_VERIFY!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_NIBP_GAS_CONTROL:{
-            state = STATE_NIBP_OVER_PRESS;
+            ret = testNibpGasControl();
+            if (0 == ret){
+                state = STATE_NIBP_OVER_PRESS;
+            }else{
+                ERROR("E06-02:STATE_NIBP_GAS_CONTROL!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_NIBP_OVER_PRESS:{
-            state = STATE_IBP_SELFCHECK;
+            ret = testNibpOverPress();
+            if (0 == ret){
+                state = STATE_IBP_SELFCHECK;
+            }else{
+                ERROR("E06-02:STATE_NIBP_OVER_PRESS!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_IBP_SELFCHECK:{
-            state = STATE_IBP_PROBE_OFF;
+            ret = testIbpSelfcheck();
+            if (0 == ret){
+                state = STATE_IBP_PROBE_OFF;
+            }else{
+                ERROR("E06-02:STATE_IBP_SELFCHECK!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_IBP_PROBE_OFF:{
-            state = STATE_IBP_AMPLITUDE_BAND;
+            ret = testIbpProbeOff();
+            if (0 == ret){
+                state = STATE_IBP_AMPLITUDE_BAND;
+            }else{
+                ERROR("E06-02:STATE_IBP_PROBE_OFF!!\r\n");
+                running = false;
+            }
         }break;
         
         case STATE_IBP_AMPLITUDE_BAND:{
-            state = STATE_PROCESS_SUCCESS;
+            ret = testIbpAmplitudeBand();
+            if (0 == ret){
+                state = STATE_PROCESS_SUCCESS;
+            }else{
+                ERROR("E06-02:STATE_IBP_AMPLITUDE_BAND!!\r\n");
+                running = false;
+            }
         }break;
         case STATE_PROCESS_SUCCESS:{
             running = false;
