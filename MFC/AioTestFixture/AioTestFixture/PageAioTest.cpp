@@ -159,6 +159,9 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
     case COMP_ID_AIOSTM_APP:{
         pDlgTest->createAioDspStmUpdateThread();
     }break;
+    case COMP_ID_CONNECT_TEST:{
+        pDlgTest->PktHandleConnectted(pPacket);
+    }break;
 
     default:
         break;
@@ -245,6 +248,12 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
     default:
         break;
     }
+    return 0;
+}
+
+int CPageAioTest::PktHandleConnectted(UartProtocolPacket *pPacket)
+{
+    g_pSerialProtocol->sendOnePacket(pPacket->PacketID, 0, &pPacket->DataAndCRC[0], 1);
     return 0;
 }
 

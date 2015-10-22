@@ -146,6 +146,7 @@ typedef enum
     COMP_ID_AIOSTM_BOOT     = 0x06,
     COMP_ID_AIODSP_APP      = 0x07,
     COMP_ID_AIOSTM_APP      = 0x08,
+    COMP_ID_CONNECT_TEST    = 0x09,
 
     COMP_ID_UNVALID,
 } COMPUTER_PKT_CID;

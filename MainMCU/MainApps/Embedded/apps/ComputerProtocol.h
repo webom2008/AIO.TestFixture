@@ -38,6 +38,7 @@ typedef enum
     COMP_ID_AIOSTM_BOOT     = 0x06,
     COMP_ID_AIODSP_APP      = 0x07,
     COMP_ID_AIOSTM_APP      = 0x08,
+    COMP_ID_CONNECT_TEST    = 0x09,
 
     COMP_ID_UNVALID,
 } COMPUTER_PKT_CID;
@@ -63,6 +64,7 @@ typedef struct
 
 #define COMP_PKT_BIT_AIODSP_APP        ((EventBits_t)(1<<0))
 #define COMP_PKT_BIT_AIOSTM_APP        ((EventBits_t)(1<<1))
+#define COMP_PKT_BIT_CONNECTTED        ((EventBits_t)(1<<2))
 
 
 extern ComputerReult_Typedef *gpComputerReult;

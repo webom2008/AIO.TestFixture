@@ -135,6 +135,35 @@ static int testAIOBaordReady(void)
     return 0;
 }
 
+static int checkComputerConnect(void)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    EventBits_t uxBits;
+    
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_CONNECT_TEST;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+
+    for (i = 0; i < 3; i++)
+    {
+        sendComputerPkt(&pkt);
+        
+        uxBits = xEventGroupWaitBits(
+                xCompPktAckEventGroup,      // The event group being tested.
+                COMP_PKT_BIT_CONNECTTED,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 );                 // Wait a maximum of for either bit to be set.
+        if (uxBits & COMP_PKT_BIT_CONNECTTED)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int testAIOBaordCurrent(void)
 {
     DmaUartProtocolPacket txPacket;
@@ -300,9 +329,9 @@ static int sendAndWaitAIOStmApp(void)
 }
 
 //#define SKIP_STATE_DETECT_OTHER_POWER
-//#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
-//#define SKIP_STATE_DOWNLOAD_AIODSP_APP
-//#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
+#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
+#define SKIP_STATE_DOWNLOAD_AIODSP_APP
+#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
 
 static void MainProcessTask(void *pvParameters)
 {    
@@ -310,7 +339,7 @@ static void MainProcessTask(void *pvParameters)
     bool running = true;
     char s8Val = 0;
     int s32Val = 0;
-    MainProcessState_Typedef state = STATE_AIOBOARD_DETECT_READY;
+    MainProcessState_Typedef state = STATE_AIOBOARD_START;
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
@@ -325,16 +354,30 @@ static void MainProcessTask(void *pvParameters)
         return;
     }
     setLedStatus(LED_STATUS_RUNNING);
-    sendMainProcessState(STATE_AIOBOARD_START);
     while(running)
     {
         sendMainProcessState(state);
         switch(state)
         {
+        case STATE_AIOBOARD_START:{
+            ret = checkComputerConnect();
+            if (ret){
+                state = STATE_AIOBOARD_DETECT_READY;
+                s8Val = 0;
+            }else{
+                s8Val++;
+                ERROR("E03-01:No PC Connect!!\r\n");
+            }
+            if (s8Val > 2)
+            {
+                running = false;
+            }
+        }break;
         case STATE_AIOBOARD_DETECT_READY:{
             ret = testAIOBaordReady();
             if (ret){
                 state = STATE_AIOBOARD_POWERUP;
+                s8Val = 0;
             }else{
                 s8Val++;
                 ERROR("E03-01:No AIO-Board deteced!!\r\n");

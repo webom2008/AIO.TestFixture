@@ -355,6 +355,10 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xCompPktAckEventGroup, 
                             COMP_PKT_BIT_AIOSTM_APP);
     } break;
+    case COMP_ID_CONNECT_TEST:{
+        xEventGroupSetBits( xCompPktAckEventGroup, 
+                            COMP_PKT_BIT_CONNECTTED);
+    } break;
     default:
         break;
     }
