@@ -171,53 +171,47 @@ static int waitAioStmUpdateEnd(void)
     }
 }
 
-int sendAndWaitAIOStmBoot(void)
-{    
-    char err_flag = 1;
+
+static void resetAioBoardPower(void)
+{
     char sw = SW_OFF;
-    
-    for (;;)
+    sw = SW_OFF;
+    AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
+    vTaskDelay(1000);
+    sw = SW_ON;
+    AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
+    vTaskDelay(1000);
+}
+
+int sendAndWaitAIOStmBoot(void)
+{
+    //make the test board into BOOT mode
+    if (0 != setAioStmBoot0State(PIN_HIGH)) //BOOT0 = 1
     {
-        //make the test board into BOOT mode
-        if (0 != setAioStmBoot0State(PIN_HIGH)) //BOOT0 = 1
-        {
-            break;
-        }
-
-        sw = SW_OFF;
-        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
-        vTaskDelay(1000);
-        sw = SW_ON;
-        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
-        vTaskDelay(1000);
-
-        //Send CO-MCU AioStmUpdateTask
-        if (0 != sendAioStmUpdateStart())
-        {
-            break;
-        }
-
-        //Wait for End
-        if (0 != waitAioStmUpdateEnd())
-        {
-            break;
-        }
-        
-        //End of Task
-        if (0 != setAioStmBoot0State(PIN_LOW)) //BOOT0 = 0
-        {
-            break;
-        }
-
-        //Normal finished!
-        err_flag = 0;
-    }
-    
-    if (err_flag)
-    {
-        //TODO: error hanppen
         return -1;
     }
-    return 0;
+        
+    resetAioBoardPower();
+
+    //Send CO-MCU AioStmUpdateTask
+    if (0 != sendAioStmUpdateStart())
+    {
+        return -2;
+    }
+
+    //Wait for End
+    if (0 != waitAioStmUpdateEnd())
+    {
+        return -3;
+    }
+        
+    //End of Task
+    if (0 != setAioStmBoot0State(PIN_LOW)) //BOOT0 = 0
+    {
+        return -4;
+    }
+
+    resetAioBoardPower();
+    return 0;//Normal finished!
 }
 

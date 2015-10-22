@@ -63,34 +63,34 @@
 /*----------------------------------------------*
  * routines' implementations                    *
  *----------------------------------------------*/
- 
-static void AioStmUnpackTask(void *pvParameters)
-{
-    int rLen = 0, i;
-    char rxBuf[128];
-    const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
+// 
+//static void AioStmUnpackTask(void *pvParameters)
+//{
+//    int rLen = 0, i;
+//    char rxBuf[128];
+//    const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
 
-    /* Just to stop compiler warnings. */
-    ( void ) pvParameters;
+//    /* Just to stop compiler warnings. */
+//    ( void ) pvParameters;
 
-    INFO("AioStmUnpackTask running...\n");
-    for (;;)
-    {
-        rLen = 0;
-        memset(rxBuf, 0x00, sizeof(rxBuf));
-        rLen = Uart3Read(rxBuf, sizeof(rxBuf));
-        if (rLen > 0)
-        {
-            for(i=0; i < rLen; i++)
-            {
-                xQueueSendToBack(gpAioStmDev->pAioStmUpdateRxQueue,
-                                (void *)&rxBuf[i],
-                                DELAY_NO_WAIT);
-            }
-        }
-        vTaskDelay(xTicksToWait);
-    }
-}
+//    INFO("AioStmUnpackTask running...\n");
+//    for (;;)
+//    {
+//        rLen = 0;
+//        memset(rxBuf, 0x00, sizeof(rxBuf));
+//        rLen = Uart3Read(rxBuf, sizeof(rxBuf));
+//        if (rLen > 0)
+//        {
+//            for(i=0; i < rLen; i++)
+//            {
+//                xQueueSendToBack(gpAioStmDev->pAioStmUpdateRxQueue,
+//                                (void *)&rxBuf[i],
+//                                DELAY_NO_WAIT);
+//            }
+//        }
+//        vTaskDelay(xTicksToWait);
+//    }
+//}
 
 int AppAioStmInit(void)
 {
@@ -105,12 +105,12 @@ int AppAioStmInit(void)
 int AppAioStmStart(void)
 {
 #ifndef CONFIG_DRIVER_TEST_UART3
-    xTaskCreate(AioStmUnpackTask,
-                "AioStmUnpackTask",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                AIOSTM_UNPACK_TASK_PRIORITY,
-                NULL);
+//    xTaskCreate(AioStmUnpackTask,
+//                "AioStmUnpackTask",
+//                configMINIMAL_STACK_SIZE,
+//                NULL,
+//                AIOSTM_UNPACK_TASK_PRIORITY,
+//                NULL);
     xTaskCreate(AioStmUpdateTask,
                 "AioStmUpdateTask",
                 configMINIMAL_STACK_SIZE,

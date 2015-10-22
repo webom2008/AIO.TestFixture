@@ -1,24 +1,24 @@
 /******************************************************************************
 
-  Copyright (C), 2005-2014, CVTE.
+   Copyright (C), 2005-2015, CVTE.
 
  ******************************************************************************
-  File Name     : sysconfigs.h
+  File Name     : driver_aiostm.h
   Version       : Initial Draft
   Author        : qiuweibo
-  Created       : 2015/9/3
+  Created       : 2015/10/22
   Last Modified :
-  Description   : sysconfigs.h header file
+  Description   : driver_aiostm.c header file
   Function List :
   History       :
-  1.Date        : 2015/9/3
+  1.Date        : 2015/10/22
     Author      : qiuweibo
     Modification: Created file
 
 ******************************************************************************/
 
-#ifndef __SYSCONFIGS_H__
-#define __SYSCONFIGS_H__
+#ifndef __DRIVER_AIOSTM_H__
+#define __DRIVER_AIOSTM_H__
 
 
 #ifdef __cplusplus
@@ -27,19 +27,19 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+typedef enum
+{
+    AIO_STM_CTRL_CMD_SET_BOOT0,
+    AIO_STM_CTRL_CMD_GET_BOOT0,
+    AIO_STM_CTRL_CMD_SET_UART,
+    AIO_STM_CTRL_CMD_GET_UART,
 
-//#define CONFIG_UART1_DMA_MODE
-#define CONFIG_UART1_INT_MODE
+    AIO_STM_CTRL_CMD_UNVALID
+} AioStmCtrlCMD;
 
-
-// config for drivers test task 
-//#define CONFIG_DRIVER_TEST_UART1
-//#define CONFIG_DRIVER_TEST_UART2
-//#define CONFIG_DRIVER_TEST_UART3
-//#define CONFIG_DRIVER_TEST_UART4
-//#define CONFIG_DRIVER_TEST_UART5
-
-//#define CONFIG_UART1_FOR_DPM2200
+int AioStmOpen(void);
+int AioStmCtrl(AioStmCtrlCMD cmd, void *pParameter);
+int AioStmClose(void);
 
 
 #ifdef __cplusplus
@@ -49,5 +49,4 @@ extern "C"{
 #endif /* __cplusplus */
 
 
-#endif /* __SYSCONFIGS_H__ */
-
+#endif /* __DRIVER_AIOSTM_H__ */

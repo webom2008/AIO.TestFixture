@@ -27,27 +27,13 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-typedef enum
-{
-    AIO_STM_CTRL_CMD_SET_BOOT0,
-    AIO_STM_CTRL_CMD_GET_BOOT0,
-    AIO_STM_CTRL_CMD_SET_UART,
-    AIO_STM_CTRL_CMD_GET_UART,
-
-    AIO_STM_CTRL_CMD_UNVALID
-} AioStmCtrlCMD;
 
 typedef struct _AioStmDev_DEF_
 {
-    QueueHandle_t pAioStmUpdateRxQueue;
     SemaphoreHandle_t pStartUpdateSemaphore;
 } AioStmDev_TypeDef;
 
 extern AioStmDev_TypeDef *gpAioStmDev;
-
-int AioStmOpen(void);
-int AioStmCtrl(AioStmCtrlCMD cmd, void *pParameter);
-int AioStmClose(void);
 
 int AioStmUpdateInit(void);
 void AioStmUpdateTask(void *pvParameter);

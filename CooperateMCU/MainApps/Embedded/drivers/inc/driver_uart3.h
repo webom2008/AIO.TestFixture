@@ -27,11 +27,21 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+
+typedef enum
+{
+    Uart3CTRL_ClearRxQueue,
+    Uart3CTRL_ClearTxQueue,
+    
+    Uart3CTRL_RESERVED             //Reserved 
+} Uart3CtrlCmd_TypeDef;
+
+
 int Uart3Init(void);
 int Uart3Open(void);
 int Uart3Read(char *pReadData, const int nDataLen);
 int Uart3Write(char *pWriteData, const int nDataLen);
-int Uart3Ctrl(void);
+int Uart3Ctrl(const Uart3CtrlCmd_TypeDef cmd, void *arg);
 int Uart3Close(void);
 
 #ifdef __cplusplus

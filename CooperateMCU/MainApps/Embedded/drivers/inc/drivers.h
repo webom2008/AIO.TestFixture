@@ -40,6 +40,7 @@ extern "C"{
 
 #include "driver_dpm2200.h"
 #include "driver_tdm.h"
+#include "driver_aiostm.h"
 
 int DriverMoudleInit(void);
 

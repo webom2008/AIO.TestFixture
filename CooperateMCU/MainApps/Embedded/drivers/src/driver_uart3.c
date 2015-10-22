@@ -61,7 +61,7 @@ int Uart3Init(void)
     UartDeviceDefaultInit(&uart3_device);
     uart3_device.num        = UART_NUM03;
     uart3_device.mode       = UART_INTERRUPT_MODE;
-    uart3_device.baudrate   = B19200;
+    uart3_device.baudrate   = B115200;
     uart3_device.ParityType = PARITY_EVEN; //PARITY_NONE,PARITY_EVEN ,PARITY_ODD;
     uart3_device.IRQPriority= IRQPriority11Uart23;
         
@@ -98,6 +98,7 @@ int Uart3Open(void)
     return 0;
 }
 
+#define TICKTOWAIT          1000
 int Uart3Read(char *pReadData, const int nDataLen)
 {
     int i;
@@ -113,7 +114,7 @@ int Uart3Read(char *pReadData, const int nDataLen)
     
     for (i=0; i < nDataLen; i++)
     {
-        if(pdPASS != xQueueReceive(uart3_rx_queue, pReadData++, (TickType_t)10))
+        if(pdPASS != xQueueReceive(uart3_rx_queue, pReadData++, (TickType_t)TICKTOWAIT))
         {
             break;
         }
@@ -151,8 +152,17 @@ int Uart3Write(char *pWriteData, const int nDataLen)
     return i;
 }
 
-int Uart3Ctrl(void)
+int Uart3Ctrl(const Uart3CtrlCmd_TypeDef cmd, void *arg)
 {
+    switch(cmd)
+    {
+    case Uart3CTRL_ClearRxQueue:
+        xQueueReset(uart3_rx_queue);
+        break;
+    default:
+        break;
+
+    }
     return 0;
 }
 
@@ -181,7 +191,7 @@ void USART3_IRQHandler(void)
         if (errQUEUE_FULL == xResult)
         {
             //TODO: do something.
-            __ASM("nop;");
+//            __ASM("nop;");
         }
         if(USART_GetFlagStatus(USART3, USART_FLAG_ORE) != RESET)
         {
