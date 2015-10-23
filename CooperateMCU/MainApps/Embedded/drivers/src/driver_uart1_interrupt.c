@@ -218,9 +218,17 @@ int Uart1Write(char *pWriteData, const int nDataLen)
     return i;
 }
 
-int Uart1Ctrl(void)
+int Uart1Ctrl(const Uart1CtrlCmd_TypeDef cmd, void *arg)
 {
+    switch(cmd)
+    {
+    case Uart1CTRL_ClearRxQueue:
+        xQueueReset(uart1_rx_queue);
+        break;
+    default:
+        break;
 
+    }
     return 0;
 }
 

@@ -36,12 +36,12 @@ extern EventGroupHandle_t xUart3RxEventGroup;
  * project-wide global variables                *
  *----------------------------------------------*/
 EventGroupHandle_t xCoopMCUPktAckEventGroup = NULL;
-
+CoopMCUDevice_Typedef gCoopMcuDev;
+CoopMCUDevice_Typedef *gpCoopMcuDev = &gCoopMcuDev;
 /*----------------------------------------------*
  * module-wide global variables                 *
  *----------------------------------------------*/
 static QueueHandle_t    pCoopMcuRxPktQueue  = NULL;
-static int gAIOBoardCurrent;
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -191,11 +191,6 @@ static void testCoopMcuAndMyself(DmaUartProtocolPacket *pPkt)
     udprintf("PKT_ID=0X%02X, Data=%s\r\n",pPkt->ID ,pPkt->Data);
 }
 
-int getAIOBaordCurrent(void)
-{
-    return gAIOBoardCurrent;
-}
-
 static void CoopMcuExecutePktTask(void *pvParameters)
 {
     DmaUartProtocolPacket rxPacket;
@@ -237,13 +232,26 @@ static void CoopMcuExecutePktTask(void *pvParameters)
                                     COOPMCU_PKT_ACK_BIT_AIOSTM_END);
                 break;
             case PKT_ID_TDM_RESULT:
-                gAIOBoardCurrent = (int)((rxPacket.Data[0]<<24) \
+                gpCoopMcuDev->testAioBoardCurrent = (int)((rxPacket.Data[0]<<24) \
                                     | (rxPacket.Data[1]<<16) \
                                     | (rxPacket.Data[2]<<8) \
                                     | rxPacket.Data[3]);
-//                udprintf("TDM = %d\r\n",gAIOBoardCurrent);
+//                udprintf("TDM = %d\r\n",gpCoopMcuDev->testAioBoardCurrent);
                 xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
                                     COOPMCU_PKT_ACK_BIT_TDM);
+                break;
+            case PKT_ID_DPM_UNITS:
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_DPM_UNITS);
+                break;
+            case PKT_ID_DPM_PRESSURE:
+                gpCoopMcuDev->testDpmPressure = (int)((rxPacket.Data[0]<<24) \
+                                    | (rxPacket.Data[1]<<16) \
+                                    | (rxPacket.Data[2]<<8) \
+                                    | rxPacket.Data[3]);
+                udprintf("DPM = %d\r\n",gpCoopMcuDev->testDpmPressure);
+                xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
+                                    COOPMCU_PKT_ACK_BIT_DPM_PRESS);
                 break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\n",rxPacket.ID);

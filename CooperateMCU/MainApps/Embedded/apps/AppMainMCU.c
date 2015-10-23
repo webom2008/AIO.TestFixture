@@ -89,6 +89,40 @@ static void getTDMxResult(DmaUartProtocolPacket *pPkt)
     }
 }
 
+static void setDpmUnits(DmaUartProtocolPacket *pPkt)
+{
+    int val = PressUnits_mmHg_20C;
+    
+    if (0 == DPM2200Ctrl(DPMCTRL_W_UNITS, &val))
+    {
+        memset(pPkt->Data, 0x00, sizeof(pPkt->Data));
+        pPkt->Data[0] = (u8)((val >> 24)&0xFF);
+        pPkt->Data[1] = (u8)((val >> 16)&0xFF);
+        pPkt->Data[2] = (u8)((val >> 8)&0xFF);
+        pPkt->Data[3] = (u8)(val&0xFF);
+        pPkt->DataLen = 4;
+        pPkt->ACK = DMA_UART_PACKET_NACK;
+        sendMainMcuPkt(pPkt, 0);
+    }
+}
+
+static void getDpmPressure(DmaUartProtocolPacket *pPkt)
+{
+    int val = 0;
+    
+    if (0 == DPM2200Ctrl(DPMCTRL_R_PRESS, &val))
+    {
+        memset(pPkt->Data, 0x00, sizeof(pPkt->Data));
+        pPkt->Data[0] = (u8)((val >> 24)&0xFF);
+        pPkt->Data[1] = (u8)((val >> 16)&0xFF);
+        pPkt->Data[2] = (u8)((val >> 8)&0xFF);
+        pPkt->Data[3] = (u8)(val&0xFF);
+        pPkt->DataLen = 4;
+        pPkt->ACK = DMA_UART_PACKET_NACK;
+        sendMainMcuPkt(pPkt, 0);
+    }
+}
+
 static void setAioStmBoot0Pin(DmaUartProtocolPacket *pPkt)
 {
     AioStmCtrl(AIO_STM_CTRL_CMD_SET_BOOT0, pPkt->Data);
@@ -146,6 +180,12 @@ static void MainMcuExecutePktTask(void *pvParameters)
                 break;
             case PKT_ID_TDM_RESULT:{
                 getTDMxResult(&rxPacket);
+            }
+            case PKT_ID_DPM_UNITS:{
+                setDpmUnits(&rxPacket);
+            }
+            case PKT_ID_DPM_PRESSURE:{
+                getDpmPressure(&rxPacket);
             }
                 break;
             default:

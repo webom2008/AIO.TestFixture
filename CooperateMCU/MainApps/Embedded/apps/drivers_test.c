@@ -72,6 +72,29 @@
 
 
 
+#ifdef CONFIG_DRIVER_TEST_UART1_DPM2200
+static int cur_press;
+static void uart1_dpm2200_driver_task(void *pvParameters)
+{
+    int val;
+    const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
+    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+    for (;;)
+    {
+        val = 0;
+        DPM2200Ctrl(DPMCTRL_R_PRESS, &val);
+        cur_press = val;
+        vTaskDelay(xTicksToWait);
+        val = PressUnits_PSI;
+        DPM2200Ctrl(DPMCTRL_W_UNITS, &val);
+        vTaskDelay(xTicksToWait);
+    }
+}
+
+#endif
+
 int drivers_test_start(void)
 {
 #ifdef CONFIG_DRIVER_TEST_UART1
@@ -156,6 +179,14 @@ int drivers_test_start(void)
                 NULL);
 #endif
 
+#ifdef CONFIG_DRIVER_TEST_UART1_DPM2200
+    xTaskCreate(uart1_dpm2200_driver_task,
+                "uart1_dpm2200_driver_task",
+                configMINIMAL_STACK_SIZE,
+                NULL,
+                TEST_DRIVERS_TASK_PRIORITY,
+                NULL);
+#endif
     return 0;
 }
 

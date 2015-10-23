@@ -32,13 +32,20 @@ extern "C"{
 #define COOPMCU_PKT_ACK_BIT_AIOSTM_ERROR    ((EventBits_t)(1<<2))
 #define COOPMCU_PKT_ACK_BIT_AIOSTM_BOOT     ((EventBits_t)(1<<3))
 #define COOPMCU_PKT_ACK_BIT_AIOSTM_END      ((EventBits_t)(1<<4))
+#define COOPMCU_PKT_ACK_BIT_DPM_UNITS       ((EventBits_t)(1<<5))
+#define COOPMCU_PKT_ACK_BIT_DPM_PRESS       ((EventBits_t)(1<<6))
 
+typedef struct _COOPMCUDEVICE_TYPEDEF_
+{
+    int testAioBoardCurrent;
+    int testDpmPressure;
+} CoopMCUDevice_Typedef;
+
+extern CoopMCUDevice_Typedef *gpCoopMcuDev;
 
 int AppCoopMcuInit(void);
 
 int AppCoopMcuStart(void);
-
-int getAIOBaordCurrent(void);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -68,16 +68,6 @@ int DPM2200Open(void)
     return 0;
 }
 
-static void cleanUartRxBuffer(void)
-{
-    int rLen = 0;
-    char rBuf[10];
-    do
-    {
-        rLen = Uart1Read(rBuf, sizeof(rBuf));
-    }while(0 != rLen);
-}
-
 /*****************************************************************************
  Prototype    : DPM2200Read
  Description  : read DPM2200
@@ -103,7 +93,7 @@ int DPM2200Read(const int location, char *pReadData, const int nDataLen)
     sprintf(cmd_read_buffer, "R%02d", location);
     cmd_read_buffer[READ_CMD_BUFFER_LEN-1] = SEND_END_TAG[0];
 
-    cleanUartRxBuffer();
+    Uart1Ctrl(Uart1CTRL_ClearRxQueue, NULL);
     Uart1Write(cmd_read_buffer, READ_CMD_BUFFER_LEN);
 
     //read echoed value
@@ -122,7 +112,7 @@ int DPM2200Read(const int location, char *pReadData, const int nDataLen)
     if ((RESPONSE_END_TAG[0] == cmd_read_echo_buufer[READ_CMD_BUFFER_LEN-1]) \
         && (RESPONSE_END_TAG[1] == cmd_read_echo_buufer[READ_CMD_BUFFER_LEN]))
     {
-        if (0 == memcmp(cmd_read_buffer, cmd_read_echo_buufer, WRITE_CMD_BUFFER_LEN))
+        if (0 == memcmp(cmd_read_buffer, cmd_read_echo_buufer, READ_CMD_BUFFER_LEN))
         {
             // read data return
             for(len = 0, fail_cnt = 0, respon = 0;\
@@ -137,10 +127,16 @@ int DPM2200Read(const int location, char *pReadData, const int nDataLen)
                     fail_cnt++;
                 }
             }
-            if (RESPONSE_END_TAG[1] == respon) return 0;
-            else return -3;
-        }
-        else
+            if (RESPONSE_END_TAG[1] == respon)
+            {
+                return len; //success
+            }
+            else
+            {
+                return -3; //error
+            }
+        } 
+        else //echo check failed
         {
             return -2;
         }
@@ -172,7 +168,7 @@ int DPM2200Write(const int location, const int data)
     sprintf(cmd_write_buffer, "W%02d%05d", location, data);
     cmd_write_buffer[WRITE_CMD_BUFFER_LEN-1] = SEND_END_TAG[0];
 
-    cleanUartRxBuffer();
+    Uart1Ctrl(Uart1CTRL_ClearRxQueue, NULL);
     Uart1Write(cmd_write_buffer, WRITE_CMD_BUFFER_LEN);
 
     memset(cmd_write_echo_buufer, 0x00, sizeof(cmd_write_echo_buufer));
@@ -198,9 +194,77 @@ int DPM2200Write(const int location, const int data)
     return -1;
 }
 
-int DPM2200Ctrl(void)
+/*****************************************************************************
+ Prototype    : readCurrentPress
+ Description  : read current pressure
+ Input        : int *pPressure  
+ Output       : None
+ Return Value : int: 0 -- success ; <0 -- failed
+ Calls        : 
+ Called By    : 
+ 
+  History        :
+  1.Date         : 2015/10/23
+    Author       : qiuweibo
+    Modification : Created function
+
+*****************************************************************************/
+static int readCurrentPress(int *pPressure)
 {
-    return 0;
+    int ret = 0;
+    int location;
+    float val;
+    char pBuf[64]= {0,};
+
+    
+    location = 8;
+    ret = DPM2200Read(location, pBuf, sizeof(pBuf));
+    if (ret > 0)
+    {
+        val = atof(pBuf);
+        *pPressure = (int)(val*1000);
+        return 0;
+    }
+    return -1;
+}
+
+/*****************************************************************************
+ Prototype    : setPressUnits
+ Description  : set pressure units
+ Input        : PressUnits_TypeDef *pUnits2Set  
+ Output       : None
+ Return Value : int : 0 -- success ; <0 -- failed
+ Calls        : 
+ Called By    : 
+ 
+  History        :
+  1.Date         : 2015/10/23
+    Author       : qiuweibo
+    Modification : Created function
+
+*****************************************************************************/
+static int setPressUnits(PressUnits_TypeDef *pUnits2Set)
+{
+    int location = 6;
+    int val = *pUnits2Set;
+    return DPM2200Write(location, val);
+}
+
+int DPM2200Ctrl(const DPMCtrlCmd_TypeDef cmd, void *arg)
+{
+    int ret = 0;
+    switch(cmd)
+    {
+    case DPMCTRL_R_PRESS:{
+        ret = readCurrentPress((int *)arg);
+    } break;
+    case DPMCTRL_W_UNITS:{
+        ret = setPressUnits((PressUnits_TypeDef *)arg);
+    } break;
+    default:
+        break;
+    }
+    return ret;
 }
 
 int DPM2200Close(void)

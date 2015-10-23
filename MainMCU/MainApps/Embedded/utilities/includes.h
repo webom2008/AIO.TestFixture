@@ -65,6 +65,7 @@ extern "C"{
 #include "../apps/AppGeneralIO.h"
 #include "../apps/AlarmSystem.h"
 #include "../apps/AppMainProcess.h"
+#include "../apps/testFunctions.h"
 
 //includes others
 #include "../platform/MyTimer.h"

@@ -34,12 +34,13 @@ extern "C"{
 
 // config for drivers test task 
 //#define CONFIG_DRIVER_TEST_UART1
+//#define CONFIG_DRIVER_TEST_UART1_DPM2200
 //#define CONFIG_DRIVER_TEST_UART2
 //#define CONFIG_DRIVER_TEST_UART3
 //#define CONFIG_DRIVER_TEST_UART4
 //#define CONFIG_DRIVER_TEST_UART5
 
-//#define CONFIG_UART1_FOR_DPM2200
+#define CONFIG_UART1_FOR_DPM2200
 
 
 #ifdef __cplusplus

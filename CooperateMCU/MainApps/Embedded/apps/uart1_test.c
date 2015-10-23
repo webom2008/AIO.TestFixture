@@ -66,9 +66,9 @@ static void uart1_driver_task(void *pvParameters)
 {
     unsigned int test_count = 0;
     const TickType_t xTicksToWait = 1000 / portTICK_PERIOD_MS; //delay 1s
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart1_driver_task running...");
     for (;;)
     {
@@ -85,10 +85,10 @@ static void uart1_unpack_task(void *pvParameters)
     int rLen = 0;
     char rBuf[100];
     const TickType_t xTicksToWait = 4 / portTICK_PERIOD_MS;
-    
-	/* Just to stop compiler warnings. */
-	( void ) pvParameters;
-    
+
+    /* Just to stop compiler warnings. */
+    ( void ) pvParameters;
+
     udprintf("\r\n[TEST] uart1_unpack_task running...");
     for (;;)
     {

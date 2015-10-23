@@ -84,8 +84,6 @@ typedef enum
  *----------------------------------------------*/
 
 #define AIOBOARD_POWERON_CURRENT_MAX        ((int)100) //mA
-#define AIOBOARD_PUMP_ON_CURRENT_MAX        ((int)500) //mA
-#define AIOBOARD_PUMP_OFF_CURRENT_MAX       ((int)150) //mA
 
 
 
@@ -158,35 +156,6 @@ static int testAIOBaordReady(void)
     return 0;
 }
 
-static int checkComputerConnect(void)
-{
-    AioDspProtocolPkt pkt;
-    int i = 0;
-    EventBits_t uxBits;
-    
-    initComputerPkt(&pkt);
-    pkt.DataAndCRC[i++] = (u8)COMP_ID_CONNECT_TEST;
-    pkt.Length = i;
-    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
-
-    for (i = 0; i < 3; i++)
-    {
-        sendComputerPkt(&pkt);
-        
-        uxBits = xEventGroupWaitBits(
-                xCompPktAckEventGroup,      // The event group being tested.
-                COMP_PKT_BIT_CONNECTTED,    // The bits within the event group to wait for.
-                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-                pdFALSE,                    // Don't wait for both bits, either bit will do.
-                1000 );                 // Wait a maximum of for either bit to be set.
-        if (uxBits & COMP_PKT_BIT_CONNECTTED)
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 static int testAIOBaordCurrent(void)
 {
     DmaUartProtocolPacket txPacket;
@@ -196,7 +165,7 @@ static int testAIOBaordCurrent(void)
     
     DmaUartProtocolPacketInit(&txPacket);
     txPacket.ID = (u8)PKT_ID_TDM_RESULT;
-    txPacket.ACK = DMA_UART_PACKET_ACK;
+    txPacket.ACK = DMA_UART_PACKET_NACK;
 
     for (i = 0; i < 5; i++)
     {
@@ -210,7 +179,7 @@ static int testAIOBaordCurrent(void)
                 1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
         if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
         {
-            current += getAIOBaordCurrent();
+            current += gpCoopMcuDev->testAioBoardCurrent;
         }
         else //timeout
         {
@@ -359,168 +328,6 @@ static int sendAndWaitAIOStmApp(void)
 #endif
 }
 
-static int testAioBoardMaxCurrent(void)
-{
-    DmaUartProtocolPacket txPacket;
-    int normal_current = 0;
-    int pump_on_current = 0;
-    int i;
-    EventBits_t uxBits;
-    
-    DmaUartProtocolPacketInit(&txPacket);
-    txPacket.ID = (u8)PKT_ID_TDM_RESULT;
-    txPacket.ACK = DMA_UART_PACKET_ACK;
-
-    for (i = 0; i < 5; i++)
-    {
-        sendCoopMcuPkt(&txPacket, 1000);
-        
-        uxBits = xEventGroupWaitBits(
-                xCoopMCUPktAckEventGroup,   // The event group being tested.
-                COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
-                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-                pdFALSE,                    // Don't wait for both bits, either bit will do.
-                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
-        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
-        {
-            normal_current += getAIOBaordCurrent();
-        }
-        else //timeout
-        {
-            ERROR("testAIOBaordCurrent timeout!!!\r\n");
-            return 1;
-        }
-        vTaskDelay(100);
-    }
-    
-    normal_current = normal_current / 5;
-
-    for (i = 0; i < 5; i++)
-    {
-        sendCoopMcuPkt(&txPacket, 1000);
-        
-        uxBits = xEventGroupWaitBits(
-                xCoopMCUPktAckEventGroup,   // The event group being tested.
-                COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
-                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-                pdFALSE,                    // Don't wait for both bits, either bit will do.
-                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
-        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
-        {
-            pump_on_current += getAIOBaordCurrent();
-        }
-        else //timeout
-        {
-            ERROR("testAIOBaordCurrent timeout!!!\r\n");
-            return 1;
-        }
-        vTaskDelay(100);
-    }
-    
-    pump_on_current = pump_on_current / 5;
-    
-    if ((pump_on_current > AIOBOARD_PUMP_ON_CURRENT_MAX) \
-        ||(normal_current > AIOBOARD_PUMP_OFF_CURRENT_MAX))
-    {
-        ERROR("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
-            pump_on_current,normal_current);
-        return 1;
-    }
-    INFO("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
-        pump_on_current,normal_current);
-    return 0;
-}
-
-static int getEcgSelfcheck(void)
-{
-    return 0;
-}
-
-static int testEcgAmplitudeBand(void)
-{
-    return 0;
-}
-
-static int testEcgProbeOff(void)
-{
-    return 0;
-}
-
-static int testEcgPolarity(void)
-{
-    return 0;
-}
-
-static int testEcgPace(void)
-{
-    return 0;
-}
-
-static int testEcgQuickQRS(void)
-{
-    return 0;
-}
-
-static int testRespAmplitudeBand(void)
-{
-    return 0;
-}
-
-static int testTempSelfcheck(void)
-{
-    return 0;
-}
-
-static int testTempProbeOff(void)
-{
-    return 0;
-}
-
-static int testTempPrecision(void)
-{
-    return 0;
-}
-
-static int testSpo2Uart(void)
-{
-    return 0;
-}
-
-static int testNibpSelfcheck(void)
-{
-    return 0;
-}
-
-static int testNibpVerify(void)
-{
-    return 0;
-}
-
-static int testNibpGasControl(void)
-{
-    return 0;
-}
-
-static int testNibpOverPress(void)
-{
-    return 0;
-}
-
-static int testIbpSelfcheck(void)
-{
-    return 0;
-}
-
-static int testIbpProbeOff(void)
-{
-    return 0;
-}
-
-static int testIbpAmplitudeBand(void)
-{
-    return 0;
-}
-
 static void MainProcessTask(void *pvParameters)
 {    
     int ret = 0;
@@ -548,13 +355,13 @@ static void MainProcessTask(void *pvParameters)
         switch(state)
         {
         case STATE_AIOBOARD_START:{
-            ret = checkComputerConnect();
-            if (ret){
+            ret = testPrepareAllReady();
+            if (ret < 0){
+                s8Val++;
+                ERROR("E03-01:testPrepareAllReady %d!!\r\n",ret);
+            }else{
                 state = STATE_AIOBOARD_DETECT_READY;
                 s8Val = 0;
-            }else{
-                s8Val++;
-                ERROR("E03-01:No PC Connect!!\r\n");
             }
             if (s8Val > 2)
             {
