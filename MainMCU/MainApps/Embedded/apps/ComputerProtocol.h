@@ -58,7 +58,7 @@ typedef struct
 {
     u8 u8AioDspAppResult;
     u8 u8AioStmAppResult;
-} ComputerReult_Typedef;
+} ComputerResult_Typedef;
 
 
 
@@ -67,7 +67,7 @@ typedef struct
 #define COMP_PKT_BIT_CONNECTTED        ((EventBits_t)(1<<2))
 
 
-extern ComputerReult_Typedef *gpComputerReult;
+extern ComputerResult_Typedef *gpComputerReult;
 
 
 int initComputerProtocol(void);

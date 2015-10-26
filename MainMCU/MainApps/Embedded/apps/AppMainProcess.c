@@ -653,6 +653,8 @@ static void MainProcessTask(void *pvParameters)
         default:
             break;
         }
+        
+        vTaskDelay(10);//delay for uart2 driver DMA-Tx bugs
     }
 
     if (STATE_PROCESS_SUCCESS != state)

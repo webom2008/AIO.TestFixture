@@ -60,8 +60,8 @@ enum AnalysisStatus{
 /*----------------------------------------------*
  * internal routine prototypes                  *
  *----------------------------------------------*/
-ComputerReult_Typedef gComputerReult;
-ComputerReult_Typedef *gpComputerReult = &gComputerReult;
+ComputerResult_Typedef gComputerReult;
+ComputerResult_Typedef *gpComputerReult = &gComputerReult;
 /*----------------------------------------------*
  * project-wide global variables                *
  *----------------------------------------------*/

@@ -33,6 +33,9 @@
 /*----------------------------------------------*
  * project-wide global variables                *
  *----------------------------------------------*/
+EventGroupHandle_t xDspPktAckEventGroup = NULL;
+DspAckResult_Typedef    gDspAckResult;
+DspAckResult_Typedef    *gpDspAckResult = &gDspAckResult;
 
 /*----------------------------------------------*
  * macros                                       *
@@ -69,7 +72,7 @@ enum AnalysisStatus{
 static AioDspProtocolPkt gCurrentRxPkt;
 static char AioDspRxBuf[AIO_DSP_RX_BUFF_LEN_MAX] = {0,};
 static int AioDspRxOffset = 0;
-
+static u8 gTestAioRxCheck[256];
 /*----------------------------------------------*
  * constants                                    *
  *----------------------------------------------*/
@@ -254,6 +257,16 @@ int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, cons
     return res;
 }
 
+
+int initAioDspResource(void)
+{
+    int ret = 0;
+    xDspPktAckEventGroup = xEventGroupCreate();
+    do{} while (NULL == xDspPktAckEventGroup);
+
+    return ret;
+}
+
 int createAioDspUnpackTask(void)
 {
     while (pdPASS != xTaskCreate(   AioDspTryUnpackTask,
@@ -265,9 +278,10 @@ int createAioDspUnpackTask(void)
     return 0;
 }
 
-static u8 gTestAioRxCheck[256];
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
+    u32 MainAdc; // for debug
+    u16 CoopAdc; // for debug
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
     
@@ -281,6 +295,47 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         pPacket->SR_Addr = TEST_ADDR;
         sendComputerPkt(pPacket);
 //        udprintf("AIO:exePacket ID=0X%02X,CID=0X%02X\r\n",id,pPacket->DataAndCRC[0]);
+    }
+    else if (AIO_NIBP_VERIFY_ID == id)
+    {
+        gpDspAckResult->u8DspAckVerifyVal = pPacket->DataAndCRC[0];
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_VERIFY);
+    }
+    else if (AIO_NIBP_150MMHG_ID == id)
+    {
+        gpDspAckResult->u8DspAck150mmHgVal = pPacket->DataAndCRC[0];
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_150MMHG);
+        MainAdc = (u32)((pPacket->DataAndCRC[1] << 16) \
+                        |(pPacket->DataAndCRC[2] << 8) \
+                        |(pPacket->DataAndCRC[3]));
+        CoopAdc = (u16)((pPacket->DataAndCRC[4]<<8)|(pPacket->DataAndCRC[5]));
+        INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
+            gpDspAckResult->u8DspAck150mmHgVal,
+            MainAdc,
+            CoopAdc);
+    }
+    else if (AIO_NIBP_310MMHG_ID == id)
+    {
+        gpDspAckResult->u8DspAck310mmHgVal[0] = pPacket->DataAndCRC[0];
+        gpDspAckResult->u8DspAck310mmHgVal[1] = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_310MMHG);
+        MainAdc = (u32)((pPacket->DataAndCRC[2] << 16) \
+                        |(pPacket->DataAndCRC[3] << 8) \
+                        |(pPacket->DataAndCRC[4]));
+        CoopAdc = (u16)((pPacket->DataAndCRC[5]<<8)|(pPacket->DataAndCRC[6]));
+        INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
+            (int)((gpDspAckResult->u8DspAck310mmHgVal[0] << 8) \
+                    |(gpDspAckResult->u8DspAck310mmHgVal[1])),
+            MainAdc,
+            CoopAdc);
+    }
+    else if (AIO_RX_NIBP_Debug_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_NIBP_DEB);
     }
     else //do nothing...
     {

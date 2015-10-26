@@ -66,6 +66,7 @@
 
 int AppTestedAIOInit(void)
 {
+    initAioDspResource();
     return 0;
 }
 

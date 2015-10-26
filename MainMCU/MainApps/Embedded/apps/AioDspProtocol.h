@@ -102,8 +102,8 @@ typedef enum
     AIO_NIBP_STOP_ID             = 0x41,
     AIO_NIBP_CYCLE_ID            = 0x42,
     AIO_NIBP_VERIFY_ID           = 0x43,
-    AIO_NIBP_VERIFYING_ID        = 0x44,
-    AIO_NIBP_STM32_PRESS_ID      = 0x45,
+    AIO_NIBP_150MMHG_ID          = 0x44,
+    AIO_NIBP_310MMHG_ID          = 0x45,
     AIO_NIBP_RESET_ID            = 0x46,
     AIO_NIBP_PREPROCESS_PRESS_ID = 0x47,
     AIO_NIBP_STATIC_PRESS_ID     = 0x48,
@@ -170,7 +170,25 @@ typedef struct
 #define TEST_ADDR                   0x33
 #define PC_ADDR                     0x99
 
+
+
+typedef struct
+{
+    u8 u8DspAckVerifyVal;
+    u8 u8DspAck150mmHgVal;
+    u8 u8DspAck310mmHgVal[2];
+} DspAckResult_Typedef;
+
+#define DSP_PKT_ACK_BIT_VERIFY      ((EventBits_t)(1<<0))
+#define DSP_PKT_ACK_BIT_150MMHG     ((EventBits_t)(1<<1))
+#define DSP_PKT_ACK_BIT_310MMHG     ((EventBits_t)(1<<2))
+#define DSP_PKT_ACK_BIT_NIBP_DEB    ((EventBits_t)(1<<3))
+
+extern DspAckResult_Typedef    *gpDspAckResult;
+
 int createAioDspUnpackTask(void);
+
+int initAioDspResource(void);
 
 void initAioDspPkt(AioDspProtocolPkt *pTxPacket);
 
