@@ -169,6 +169,7 @@ static int testAIOBaordCurrent(void)
 
     for (i = 0; i < 5; i++)
     {
+        xEventGroupClearBits(xCoopMCUPktAckEventGroup, COOPMCU_PKT_ACK_BIT_TDM);
         sendCoopMcuPkt(&txPacket, 1000);
         
         uxBits = xEventGroupWaitBits(
@@ -196,6 +197,7 @@ static int testAIOBaordCurrent(void)
         ERROR("AIOBaordCurrent = %d\r\n",current);
         return 1;
     }
+    INFO("AIOBaordCurrent = %d\r\n",current);
     return 0;
 }
 
@@ -452,7 +454,7 @@ static void MainProcessTask(void *pvParameters)
         case STATE_DOWNLOAD_AIOSTM_APP:{
             ret = sendAndWaitAIOStmApp();
             if (0 == ret){
-                state = STATE_AIOBOARD_MAX_CURRENT;
+                state = STATE_ECG_SELFCHECK;
                 vTaskDelay(8000 / portTICK_PERIOD_MS); //delay 8s for AIOSTM boot
                 
             }else{
@@ -460,17 +462,7 @@ static void MainProcessTask(void *pvParameters)
                 running = false;
             }
         }break;
-        
-        case STATE_AIOBOARD_MAX_CURRENT:{
-            ret = testAioBoardMaxCurrent();
-            if (0 == ret){
-                state = STATE_ECG_SELFCHECK;
-            }else{
-                ERROR("E06-02:STATE_AIOBOARD_MAX_CURRENT!!\r\n");
-                running = false;
-            }
-        }break;
-        
+                
         case STATE_ECG_SELFCHECK:{
             ret = getEcgSelfcheck();
             if (0 == ret){
@@ -590,9 +582,19 @@ static void MainProcessTask(void *pvParameters)
         case STATE_NIBP_VERIFY:{
             ret = testNibpVerify();
             if (0 == ret){
-                state = STATE_NIBP_GAS_CONTROL;
+                state = STATE_AIOBOARD_MAX_CURRENT;
             }else{
                 ERROR("E06-02:STATE_NIBP_VERIFY!!\r\n");
+                running = false;
+            }
+        }break;
+        
+        case STATE_AIOBOARD_MAX_CURRENT:{
+            ret = testAioBoardMaxCurrent();
+            if (0 == ret){
+                state = STATE_NIBP_GAS_CONTROL;
+            }else{
+                ERROR("E06-02:STATE_AIOBOARD_MAX_CURRENT!!\r\n");
                 running = false;
             }
         }break;

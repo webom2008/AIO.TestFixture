@@ -141,8 +141,9 @@ int checkAndResendMainMcuACKPkt(void)
 
 int sendMainMcuPkt( DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms)
 {
+    int ret = 0;
     u32 tick;
-    Uart2Write((char *)pTxPacket, sizeof(DmaUartProtocolPacket));
+    ret = Uart2Write((char *)pTxPacket, sizeof(DmaUartProtocolPacket));
     if (DMA_UART_PACKET_ACK == pTxPacket->ACK)
     {
         tick = timeout_ms / MY_TIM_TICK_PERIOD_MS;
@@ -150,6 +151,6 @@ int sendMainMcuPkt( DmaUartProtocolPacket *pTxPacket, const u32 timeout_ms)
         tick = tick + getMyTimerTick();
         addMainMcuAckPkt(pTxPacket, tick);
     }
-    return 0;
+    return ret;
 }
 

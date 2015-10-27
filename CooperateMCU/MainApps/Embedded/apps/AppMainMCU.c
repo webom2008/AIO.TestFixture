@@ -49,7 +49,7 @@ static QueueHandle_t    pMainMcuRxPktQueue  = NULL;
  * macros                                       *
  *----------------------------------------------*/
 //#define _SEND_DEMO_PKT_
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -85,7 +85,10 @@ static void getTDMxResult(DmaUartProtocolPacket *pPkt)
         pPkt->Data[3] = (u8)(val&0xFF);
         pPkt->DataLen = 4;
         pPkt->ACK = DMA_UART_PACKET_NACK;
-        sendMainMcuPkt(pPkt, 0);
+        if (sendMainMcuPkt(pPkt, 0) > 0)
+        {
+            INFO("TDMx = %d\r\n",val);
+        }
     }
 }
 
@@ -180,14 +183,13 @@ static void MainMcuExecutePktTask(void *pvParameters)
                 break;
             case PKT_ID_TDM_RESULT:{
                 getTDMxResult(&rxPacket);
-            }
+            } break;
             case PKT_ID_DPM_UNITS:{
                 setDpmUnits(&rxPacket);
-            }
+            } break;
             case PKT_ID_DPM_PRESSURE:{
                 getDpmPressure(&rxPacket);
-            }
-                break;
+            } break;
             default:
                 INFO("PKT_ID=0X%02X unKnown!\r\n",rxPacket.ID);
                 break;

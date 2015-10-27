@@ -241,6 +241,7 @@ int Uart2Write(char *pWriteData, const int nDataLen)
     
     if( pdTRUE != xSemaphoreTake( xSerialTxHandleLock, ( TickType_t ) 100 ))
     {
+//        udprintf("Uart2Write xSerialTxHandleLock error\r\n");
         return -2;
     }
 
@@ -250,6 +251,7 @@ int Uart2Write(char *pWriteData, const int nDataLen)
         if (ready2writeLen > uart2_tx_dma_buf.nBuff2MaxLength)
         {
             //Warnig: Not enugh spare to store.
+//            udprintf("Uart2Write Warnig: Not enugh spare to store\r\n");
         }
         else
         {

@@ -53,7 +53,7 @@ enum AnalysisStatus{
     WaitCRC
 };
 
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -280,8 +280,10 @@ int createAioDspUnpackTask(void)
 
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
+#ifdef _INFO_
     u32 MainAdc; // for debug
     u16 CoopAdc; // for debug
+#endif
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
     
@@ -307,10 +309,12 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         gpDspAckResult->u8DspAck150mmHgVal = pPacket->DataAndCRC[0];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_150MMHG);
+#ifdef _INFO_
         MainAdc = (u32)((pPacket->DataAndCRC[1] << 16) \
                         |(pPacket->DataAndCRC[2] << 8) \
                         |(pPacket->DataAndCRC[3]));
         CoopAdc = (u16)((pPacket->DataAndCRC[4]<<8)|(pPacket->DataAndCRC[5]));
+#endif
         INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
             gpDspAckResult->u8DspAck150mmHgVal,
             MainAdc,
@@ -322,10 +326,12 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         gpDspAckResult->u8DspAck310mmHgVal[1] = pPacket->DataAndCRC[1];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_310MMHG);
+#ifdef _INFO_
         MainAdc = (u32)((pPacket->DataAndCRC[2] << 16) \
                         |(pPacket->DataAndCRC[3] << 8) \
                         |(pPacket->DataAndCRC[4]));
         CoopAdc = (u16)((pPacket->DataAndCRC[5]<<8)|(pPacket->DataAndCRC[6]));
+#endif
         INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
             (int)((gpDspAckResult->u8DspAck310mmHgVal[0] << 8) \
                     |(gpDspAckResult->u8DspAck310mmHgVal[1])),

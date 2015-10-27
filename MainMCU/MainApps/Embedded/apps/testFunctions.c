@@ -36,6 +36,7 @@ extern EventGroupHandle_t xDspPktAckEventGroup;
 /*----------------------------------------------*
  * project-wide global variables                *
  *----------------------------------------------*/
+static int gAioBoardMaxCurrent = 0;
 
 /*----------------------------------------------*
  * module-wide global variables                 *
@@ -62,7 +63,7 @@ enum
 #define NIBP_DEBUG_CID_PUMP                 (u8)(0x03)
 #define NIBP_DEBUG_CID_RELEASE              (u8)(0x04)
 
-#define _INFO_
+//#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -124,7 +125,7 @@ static int testDPM2200Connect(void)
             COOPMCU_PKT_ACK_BIT_DPM_UNITS,    // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
-            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & COOPMCU_PKT_ACK_BIT_DPM_UNITS)
     {
         return 0;
@@ -150,6 +151,8 @@ static int testDPM2200Connect(void)
 *****************************************************************************/
 int testPrepareAllReady(void)
 {
+    gAioBoardMaxCurrent = 0;
+    
     if (testComputerConnect() < 0)
     {
         return -1;
@@ -161,11 +164,44 @@ int testPrepareAllReady(void)
     return 0;
 }
 
+static int refreshMaxAioBoardCurrent(void)
+{
+    DmaUartProtocolPacket txPacket;
+    EventBits_t uxBits;
+    
+    DmaUartProtocolPacketInit(&txPacket);
+    txPacket.ID = (u8)PKT_ID_TDM_RESULT;
+    txPacket.ACK = DMA_UART_PACKET_NACK;
+    
+    sendCoopMcuPkt(&txPacket, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xCoopMCUPktAckEventGroup,   // The event group being tested.
+            COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
+    {
+        if (gpCoopMcuDev->testAioBoardCurrent > gAioBoardMaxCurrent)
+        {
+            gAioBoardMaxCurrent = gpCoopMcuDev->testAioBoardCurrent;
+        }
+//        INFO("refreshMaxAioBoardCurrent =%dmA!!!\r\n",gAioBoardMaxCurrent);
+        return 0;
+    }
+    else //timeout
+    {
+        ERROR("testAIOBaordCurrent timeout!!!\r\n");
+        return 1;
+    }
+}
+
+
 int testAioBoardMaxCurrent(void)
 {
     DmaUartProtocolPacket txPacket;
     int normal_current = 0;
-    int pump_on_current = 0;
     int i;
     EventBits_t uxBits;
     
@@ -189,7 +225,7 @@ int testAioBoardMaxCurrent(void)
         }
         else //timeout
         {
-            ERROR("testAIOBaordCurrent timeout!!!\r\n");
+            ERROR("testAioBoardMaxCurrent timeout!!!\r\n");
             return 1;
         }
         vTaskDelay(100);
@@ -197,39 +233,16 @@ int testAioBoardMaxCurrent(void)
     
     normal_current = normal_current / 5;
 
-    for (i = 0; i < 5; i++)
-    {
-        sendCoopMcuPkt(&txPacket, 1000);
-        
-        uxBits = xEventGroupWaitBits(
-                xCoopMCUPktAckEventGroup,   // The event group being tested.
-                COOPMCU_PKT_ACK_BIT_TDM,    // The bits within the event group to wait for.
-                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
-                pdFALSE,                    // Don't wait for both bits, either bit will do.
-                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
-        if (uxBits & COOPMCU_PKT_ACK_BIT_TDM)
-        {
-            pump_on_current += gpCoopMcuDev->testAioBoardCurrent;
-        }
-        else //timeout
-        {
-            ERROR("testAIOBaordCurrent timeout!!!\r\n");
-            return 1;
-        }
-        vTaskDelay(100);
-    }
     
-    pump_on_current = pump_on_current / 5;
-    
-    if ((pump_on_current > AIOBOARD_PUMP_ON_CURRENT_MAX) \
+    if ((gAioBoardMaxCurrent > AIOBOARD_PUMP_ON_CURRENT_MAX) \
         ||(normal_current > AIOBOARD_PUMP_OFF_CURRENT_MAX))
     {
-        ERROR("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
-            pump_on_current,normal_current);
+        ERROR("AIOBaordCurrent gAioBoardMaxCurrent = %dmA,normal_current=%dmA\r\n",
+            gAioBoardMaxCurrent,normal_current);
         return 1;
     }
-    INFO("AIOBaordCurrent pump_on_current= %d,normal_current=%d\r\n",
-        pump_on_current,normal_current);
+    INFO("AIOBaordCurrent gAioBoardMaxCurrent = %dmA,normal_current=%dmA\r\n",
+        gAioBoardMaxCurrent,normal_current);
     return 0;
 }
 
@@ -392,7 +405,7 @@ static int getPressure(int *pGetVal)
             COOPMCU_PKT_ACK_BIT_DPM_PRESS,    // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
-            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & COOPMCU_PKT_ACK_BIT_DPM_PRESS)
     {
         *pGetVal = gpCoopMcuDev->testDpmPressure;
@@ -468,6 +481,7 @@ static int verify310mmHgPoint(void)
     while(error_cnt < 5)
     {
         ret = getPressure(&press);
+        refreshMaxAioBoardCurrent();
         if ((0 == ret) && press > 320000)
         {
             INFO("=======================3. pump off and wait stable\r\n");
@@ -662,7 +676,7 @@ static int verify150mmHgPoint(void)
             }
             else
             {
-                ERROR("BOTH_HOLD success!!!\r\n");
+                INFO("BOTH_HOLD success!!!\r\n");
                 break;
             }
         }

@@ -176,7 +176,8 @@ static void CoopMcuUnpackTask(void *pvParameters)
             && (DMA_UART_END_HEADER_TAG == rxPacket.EndHeader)  \
             && (DMA_UART_PACKET_PARITY_OK == rxPacket.ParityTag))
         {
-//            INFO("PKT_ID=0X%02X, Data=%s\n",rxPacket.ID ,rxPacket.Data);
+            INFO("PKT_ID=0X%02X, Len=%d, Data=%s\r\n",
+                rxPacket.ID ,rxPacket.DataLen, rxPacket.Data);
             xQueueSendToBack(pCoopMcuRxPktQueue, (void *)&rxPacket, DELAY_NO_WAIT);
         }
         else
@@ -236,7 +237,7 @@ static void CoopMcuExecutePktTask(void *pvParameters)
                                     | (rxPacket.Data[1]<<16) \
                                     | (rxPacket.Data[2]<<8) \
                                     | rxPacket.Data[3]);
-//                udprintf("TDM = %d\r\n",gpCoopMcuDev->testAioBoardCurrent);
+                INFO("TDM = %d\r\n",gpCoopMcuDev->testAioBoardCurrent);
                 xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
                                     COOPMCU_PKT_ACK_BIT_TDM);
                 break;
@@ -249,7 +250,7 @@ static void CoopMcuExecutePktTask(void *pvParameters)
                                     | (rxPacket.Data[1]<<16) \
                                     | (rxPacket.Data[2]<<8) \
                                     | rxPacket.Data[3]);
-                udprintf("DPM = %d\r\n",gpCoopMcuDev->testDpmPressure);
+                INFO("DPM = %d\r\n",gpCoopMcuDev->testDpmPressure);
                 xEventGroupSetBits( xCoopMCUPktAckEventGroup, 
                                     COOPMCU_PKT_ACK_BIT_DPM_PRESS);
                 break;
