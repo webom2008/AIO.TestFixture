@@ -177,12 +177,16 @@ typedef struct
     u8 u8DspAckVerifyVal;
     u8 u8DspAck150mmHgVal;
     u8 u8DspAck310mmHgVal[2];
+    u8 u8DspAckVenipunctureVal;
+    u16 u16DspAckMMHG;
 } DspAckResult_Typedef;
 
 #define DSP_PKT_ACK_BIT_VERIFY      ((EventBits_t)(1<<0))
 #define DSP_PKT_ACK_BIT_150MMHG     ((EventBits_t)(1<<1))
 #define DSP_PKT_ACK_BIT_310MMHG     ((EventBits_t)(1<<2))
 #define DSP_PKT_ACK_BIT_NIBP_DEB    ((EventBits_t)(1<<3))
+#define DSP_PKT_ACK_BIT_NIBP_ALARM  ((EventBits_t)(1<<4))
+#define DSP_PKT_ACK_BIT_VENIPUNCTURE ((EventBits_t)(1<<5))
 
 extern DspAckResult_Typedef    *gpDspAckResult;
 

@@ -63,7 +63,7 @@ enum
 #define NIBP_DEBUG_CID_PUMP                 (u8)(0x03)
 #define NIBP_DEBUG_CID_RELEASE              (u8)(0x04)
 
-//#define _INFO_
+#define _INFO_
 #define _ERROR_
 
 #ifdef _INFO_
@@ -384,6 +384,7 @@ static int exitNibpVerify(void)
         {
             if (val == gpDspAckResult->u8DspAckVerifyVal)
             {
+                vTaskDelay(5000 / portTICK_PERIOD_MS);
                 break;
             }
             else //pkt return unvalied, continue
@@ -528,7 +529,7 @@ static int verify310mmHgPoint(void)
             refreshMaxAioBoardCurrent();
             INFO("=======================pump on PWM=50%\r\n");
             pBuf[0] = NIBP_DEBUG_CID_PUMP;
-            pBuf[1] = 50;
+            pBuf[1] = 60;
             xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
             sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
         }
@@ -820,8 +821,343 @@ int testNibpVerify(void)
     return 0;
 }
 
+static int check280mmHgPoint(void)
+{
+
+    u8 pBuf[2] = {0,};
+    EventBits_t uxBits = 0;
+    int press = 0;
+    int ret = 0;
+    char error_cnt = 0;
+    char check_cnt = 0;
+    char over_cnt = 0;
+
+    INFO("=======================1. Hold release\r\n");
+    pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+    pBuf[1] = (u8)BOTH_HOLD;
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+    sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+    {
+        ERROR("BOTH_HOLD failed!!!\r\n");
+        return -1;
+    }
+    
+    INFO("=======================2. pump on -> 320mmHg\r\n");
+    pBuf[0] = NIBP_DEBUG_CID_PUMP;
+    pBuf[1] = 100; //100% percent
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+    sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+    {
+        ERROR("PUMP ON failed!!!\r\n");
+        return -2;
+    }
+    
+    while(error_cnt < 5)
+    {
+        ret = getPressure(&press);
+        if ((0 == ret) && press > 260000)
+        {
+            INFO("=======================3. pump off and wait stable\r\n");
+            pBuf[0] = NIBP_DEBUG_CID_PUMP;
+            pBuf[1] = 0x00; //PUMP OFF
+            xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+            sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+            
+            uxBits = xEventGroupWaitBits(
+                    xDspPktAckEventGroup,   // The event group being tested.
+                    DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+                    pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,                    // Don't wait for both bits, either bit will do.
+                    1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+            {
+                ERROR("PUMP OFF failed!!!\r\n");
+                return -3;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if ((0 == ret) && (press > 200000) && (press < 220000))
+        {
+            refreshMaxAioBoardCurrent();
+            INFO("=======================pump on PWM=50%\r\n");
+            pBuf[0] = NIBP_DEBUG_CID_PUMP;
+            pBuf[1] = 60;
+            xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+            sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+        }
+        if(0 != ret)
+        {
+            ERROR("getPressure failed!!!\r\n");
+            error_cnt++;
+        }
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
+    }
+
+    if (5 == error_cnt)
+    {
+        pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+        pBuf[1] = (u8)BOTH_RELE;
+        sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+        ERROR("getPressure count = 5 failed!!!\r\n");
+        return -4;
+    }
+    
+    vTaskDelay(2000/portTICK_PERIOD_MS); //delay for stable
+    error_cnt = 0;
+    check_cnt = 0;
+    while(error_cnt < 5 && check_cnt < 5)
+    {
+        ret = getPressure(&press);
+        if (0 == ret)
+        {
+            INFO("DPM=%d, AIO=%d\r\n",press, gpDspAckResult->u16DspAckMMHG);
+            press = (press + 500) / 1000;
+            if ((gpDspAckResult->u16DspAckMMHG > press+2) \
+                ||(gpDspAckResult->u16DspAckMMHG < press-2))
+            {
+                ERROR("check280mmHgPoint over_range\r\n");
+                over_cnt++;
+            }
+            check_cnt++;
+        }
+        else
+        {
+            ERROR("getPressure failed!!!\r\n");
+            error_cnt++;
+        }
+        vTaskDelay(500/portTICK_PERIOD_MS);
+    }
+    
+    if (5 == error_cnt)
+    {
+        pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+        pBuf[1] = (u8)BOTH_RELE;
+        sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+        ERROR("getPressure count = 5 failed!!!\r\n");
+        return -5;
+    }
+    
+    if (over_cnt > 2)
+    {
+        return -6;
+    }
+    return 0;
+}
+
+static int check80mmHgPoint(void)
+{
+    u8 pBuf[2] = {0,};
+    EventBits_t uxBits = 0;
+    int press = 0;
+    int ret = 0;
+    int error_cnt = 0;
+    char check_cnt = 0;
+    char over_cnt = 0;
+    
+    INFO("=======================1.slow release at 150mmHg\r\n");
+    while(error_cnt < 5)
+    {
+        ret = getPressure(&press);
+        if ((0 == ret) && press > 80000)
+        {
+            pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+            pBuf[1] = (u8)SLOW_RELE;
+            xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+            sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+            
+            uxBits = xEventGroupWaitBits(
+                    xDspPktAckEventGroup,   // The event group being tested.
+                    DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+                    pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,                    // Don't wait for both bits, either bit will do.
+                    1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+            {
+                ERROR("SLOW_RELE failed!!!\r\n");
+            }
+            else
+            {
+                INFO("SLOW_RELE success!!!\r\n");
+            }
+        }
+        else if ((0 == ret) && press < 80000)
+        {
+            pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+            pBuf[1] = (u8)BOTH_HOLD;
+            xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+            sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+            
+            uxBits = xEventGroupWaitBits(
+                    xDspPktAckEventGroup,   // The event group being tested.
+                    DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+                    pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                    pdFALSE,                    // Don't wait for both bits, either bit will do.
+                    1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+            {
+                ERROR("BOTH_HOLD failed!!!\r\n");
+            }
+            else
+            {
+                INFO("BOTH_HOLD success!!!\r\n");
+                break;
+            }
+        }
+        if(0 != ret)
+        {
+            ERROR("getPressure failed!!!\r\n");
+            error_cnt++;
+        }
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
+    }
+    
+    if (5 == error_cnt)
+    {
+        pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+        pBuf[1] = (u8)BOTH_RELE;
+        sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+        ERROR("getPressure count = 5 failed!!!\r\n");
+        return -4;
+    }
+    
+    vTaskDelay(2000/portTICK_PERIOD_MS); //delay for stable
+    error_cnt = 0;
+    check_cnt = 0;
+    while(error_cnt < 5 && check_cnt < 5)
+    {
+        ret = getPressure(&press);
+        if (0 == ret)
+        {
+            INFO("DPM=%d, AIO=%d\r\n",press, gpDspAckResult->u16DspAckMMHG);
+            press = (press + 500) / 1000;
+            if ((gpDspAckResult->u16DspAckMMHG > press+2) \
+                ||(gpDspAckResult->u16DspAckMMHG < press-2))
+            {
+                ERROR("check80mmHgPoint over_range\r\n");
+                over_cnt++;
+            }
+            check_cnt++;
+        }
+        else
+        {
+            ERROR("getPressure failed!!!\r\n");
+            error_cnt++;
+        }
+        vTaskDelay(500/portTICK_PERIOD_MS);
+    }
+    
+    if (5 == error_cnt)
+    {
+        ERROR("getPressure count = 5 failed!!!\r\n");
+        return -5;
+    }
+    if (over_cnt > 2)
+    {
+        return -6;
+    }
+    
+    pBuf[0] = NIBP_DEBUG_CID_RELEASE;
+    pBuf[1] = (u8)BOTH_RELE;
+    sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+
+    vTaskDelay(5000/portTICK_PERIOD_MS); //delay for stable
+    error_cnt = 0;
+    check_cnt = 0;
+    over_cnt = 0;
+    while(error_cnt < 5 && check_cnt < 5)
+    {
+        ret = getPressure(&press);
+        if (0 == ret)
+        {
+            INFO("DPM=%d, AIO=%d\r\n",press, gpDspAckResult->u16DspAckMMHG);
+            press = (press + 500) / 1000;
+            if (gpDspAckResult->u16DspAckMMHG > press+2)
+            {
+                ERROR("check0mmHgPoint over_range\r\n");
+                over_cnt++;
+            }
+            check_cnt++;
+        }
+        else
+        {
+            ERROR("getPressure failed!!!\r\n");
+            error_cnt++;
+        }
+        vTaskDelay(500/portTICK_PERIOD_MS);
+    }
+    
+    if (5 == error_cnt)
+    {
+        ERROR("getPressure count = 5 failed!!!\r\n");
+        return -6;
+    }
+    if (over_cnt > 2)
+    {
+        return -7;
+    }
+    
+    return 0;
+}
+
+/*****************************************************************************
+ Prototype    : testNibpGasControl
+ Description  : 
+ Input        : void  
+ Output       : None
+ Return Value : 
+ Calls        : 
+ Called By    : 
+ 
+  History        :
+  1.Date         : 2015/10/27
+    Author       : qiuweibo
+    Modification : Created function
+
+*****************************************************************************/
 int testNibpGasControl(void)
 {
+    if (enterNibpVerify() < 0)
+    {
+        ERROR("enterNibpVerify failed!!!\r\n");
+        return -1;
+    }
+    
+    if (check280mmHgPoint() < 0)
+    {
+        ERROR("check280mmHgPoint failed!!!\r\n");
+        return -2;
+    }
+    
+    if (check80mmHgPoint() < 0)
+    {
+        ERROR("check80mmHgPoint failed!!!\r\n");
+        return -3;
+    }
+    
+    if (exitNibpVerify() < 0)
+    {
+        ERROR("exitNibpVerify failed!!!\r\n");
+        return -4;
+    }
     return 0;
 }
 

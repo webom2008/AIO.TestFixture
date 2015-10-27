@@ -281,11 +281,13 @@ int createAioDspUnpackTask(void)
     return 0;
 }
 
+#define _NIBP_INFO_
+
 static int exePacket(AioDspProtocolPkt *pPacket)
 {
-#ifdef _INFO_
-    u32 MainAdc; // for debug
-    u16 CoopAdc; // for debug
+#ifdef _NIBP_INFO_
+    u32 u32Val; // for debug
+    u16 u16Val; // for debug
 #endif
     UART_PacketID id = (UART_PacketID)pPacket->PacketID;
 
@@ -312,16 +314,16 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         gpDspAckResult->u8DspAck150mmHgVal = pPacket->DataAndCRC[0];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_150MMHG);
-#ifdef _INFO_
-        MainAdc = (u32)((pPacket->DataAndCRC[1] << 16) \
+#ifdef _NIBP_INFO_
+        u32Val = (u32)((pPacket->DataAndCRC[1] << 16) \
                         |(pPacket->DataAndCRC[2] << 8) \
                         |(pPacket->DataAndCRC[3]));
-        CoopAdc = (u16)((pPacket->DataAndCRC[4]<<8)|(pPacket->DataAndCRC[5]));
-#endif
-        INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
+        u16Val = (u16)((pPacket->DataAndCRC[4]<<8)|(pPacket->DataAndCRC[5]));
+        udprintf("15mmHg Point: %d mmHg, u32Val =%d, u16Val =%d\r\n",
             gpDspAckResult->u8DspAck150mmHgVal,
-            MainAdc,
-            CoopAdc);
+            u32Val,
+            u16Val);
+#endif
     }
     else if (AIO_NIBP_310MMHG_ID == id)
     {
@@ -329,22 +331,42 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         gpDspAckResult->u8DspAck310mmHgVal[1] = pPacket->DataAndCRC[1];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_310MMHG);
-#ifdef _INFO_
-        MainAdc = (u32)((pPacket->DataAndCRC[2] << 16) \
+#ifdef _NIBP_INFO_
+        u32Val = (u32)((pPacket->DataAndCRC[2] << 16) \
                         |(pPacket->DataAndCRC[3] << 8) \
                         |(pPacket->DataAndCRC[4]));
-        CoopAdc = (u16)((pPacket->DataAndCRC[5]<<8)|(pPacket->DataAndCRC[6]));
-#endif
-        INFO("15mmHg Point: %d mmHg, MainAdc =%d, CoopAdc =%d\r\n",
+        u16Val = (u16)((pPacket->DataAndCRC[5]<<8)|(pPacket->DataAndCRC[6]));
+        udprintf("15mmHg Point: %d mmHg, u32Val =%d, u16Val =%d\r\n",
             (int)((gpDspAckResult->u8DspAck310mmHgVal[0] << 8) \
                     |(gpDspAckResult->u8DspAck310mmHgVal[1])),
-            MainAdc,
-            CoopAdc);
+            u32Val,
+            u16Val);
+#endif
     }
     else if (AIO_RX_NIBP_Debug_ID == id)
     {
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_NIBP_DEB);
+    }
+    else if (AIO_NIBP_VENIPUNCTURE_ID == id)
+    {
+        gpDspAckResult->u8DspAckVenipunctureVal = pPacket->DataAndCRC[0];
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_VENIPUNCTURE);
+    }
+    else if (AIO_TX_NIBP_ALARM_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_NIBP_ALARM);
+    }
+    else if (AIO_TX_NIBP_MMHG_ID == id)
+    {
+#ifdef _NIBP_INFO_
+        
+        gpDspAckResult->u16DspAckMMHG = ((pPacket->DataAndCRC[1]<<8) \
+                                        |(pPacket->DataAndCRC[2]));
+        udprintf("MMHG:%d\r\n",gpDspAckResult->u16DspAckMMHG);
+#endif
     }
     else //do nothing...
     {
