@@ -92,6 +92,7 @@ CPageAioTest::CPageAioTest()
 	: CPropertyPage(CPageAioTest::IDD)
     ,initApplicationDone(false)
     ,m_pUpdate(NULL)
+    ,m_pWaveformDev(NULL)
 {
 }
 
@@ -124,6 +125,16 @@ int CPageAioTest::initApplication(void)
     if (NULL != m_pUpdate)
     {
         m_pUpdate->initApplication();
+    }
+
+    m_pWaveformDev = new CWaveformDriver;
+    if (NULL != m_pWaveformDev)
+    {
+        m_pWaveformDev->initApplication();
+    }
+    else
+    {
+        TRACE("new CWaveformDriver failed!!!\r\n");
     }
     g_pSerialProtocol->bindPaktFuncByID(AIO_TEST_FIXTURE_ID ,this, CPageAioTest::PktHandlePowerResult);
 
@@ -658,4 +669,5 @@ void CPageAioTest::createAioDspStmUpdateThread(void)
 void CPageAioTest::OnBnClickedBtnClean()
 {
     clearDisplay();
+    m_pWaveformDev->openDevice();
 }
