@@ -196,9 +196,12 @@ static void AioDspTryUnpackTask(void *pvParameters)
 {
     int rLen = 0;
     const TickType_t xTicksToWait = 5 / portTICK_PERIOD_MS;
+    TickType_t xLastWakeTime;
     int tryCountinue = 1;
+    
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
+    xLastWakeTime = xTaskGetTickCount();
     
     INFO("TestedAIOTryUnpackTask running...\r\n");
     for (;;)
@@ -218,7 +221,7 @@ static void AioDspTryUnpackTask(void *pvParameters)
             }
         }
         
-        vTaskDelay(xTicksToWait);
+        vTaskDelayUntil(&xLastWakeTime, xTicksToWait);
     }
 }
 

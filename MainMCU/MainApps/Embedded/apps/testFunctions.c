@@ -151,14 +151,31 @@ static int testDPM2200Connect(void)
 *****************************************************************************/
 int testPrepareAllReady(void)
 {
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    
     gAioBoardMaxCurrent = 0;
     
     if (testComputerConnect() < 0)
     {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_PC_LOST;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
         return -1;
     }
     if (testDPM2200Connect() < 0)
     {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_DPM_LOST;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
         return -2;
     }
     return 0;
@@ -414,6 +431,7 @@ static int getPressure(int *pGetVal)
     return -1;
 }
 
+#define NIBP_VERIFY_DELAY_MS        100
 
 /*****************************************************************************
  Prototype    : verify310mmHgPoint
@@ -481,7 +499,6 @@ static int verify310mmHgPoint(void)
     while(error_cnt < 5)
     {
         ret = getPressure(&press);
-        refreshMaxAioBoardCurrent();
         if ((0 == ret) && press > 320000)
         {
             INFO("=======================3. pump off and wait stable\r\n");
@@ -508,6 +525,7 @@ static int verify310mmHgPoint(void)
         }
         if ((0 == ret) && (press > 280000) && (press < 300000))
         {
+            refreshMaxAioBoardCurrent();
             INFO("=======================pump on PWM=50%\r\n");
             pBuf[0] = NIBP_DEBUG_CID_PUMP;
             pBuf[1] = 50;
@@ -519,7 +537,7 @@ static int verify310mmHgPoint(void)
             ERROR("getPressure failed!!!\r\n");
             error_cnt++;
         }
-        vTaskDelay(200/portTICK_PERIOD_MS);
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
     }
 
     if (5 == error_cnt)
@@ -569,7 +587,7 @@ static int verify310mmHgPoint(void)
             ERROR("getPressure failed!!!\r\n");
             error_cnt++;
         }
-        vTaskDelay(200/portTICK_PERIOD_MS);
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
     }
 
     if (5 == error_cnt)
@@ -685,7 +703,7 @@ static int verify150mmHgPoint(void)
             ERROR("getPressure failed!!!\r\n");
             error_cnt++;
         }
-        vTaskDelay(50/portTICK_PERIOD_MS);
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
     }
     
     if (5 == error_cnt)
@@ -735,7 +753,7 @@ static int verify150mmHgPoint(void)
             ERROR("getPressure failed!!!\r\n");
             error_cnt++;
         }
-        vTaskDelay(200/portTICK_PERIOD_MS);
+        vTaskDelay(NIBP_VERIFY_DELAY_MS/portTICK_PERIOD_MS);
     }
 
     if (5 == error_cnt)

@@ -282,6 +282,14 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
     case ERR_INFO_ID_DOWNLOAD_CNT:{
         add2Display(_T("E05-02:工装已失效，请将工装送原厂升级!!!\r\n"));
     }break;
+        
+    case ERR_INFO_ID_PC_LOST:{
+        add2Display(_T("错误:与PC连接失败!!!\r\n"));
+    }break;
+        
+    case ERR_INFO_ID_DPM_LOST:{
+        add2Display(_T("错误:与DPM压力表连接失败\r\n"));
+    }break;
 
     default:
         break;
