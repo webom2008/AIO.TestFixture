@@ -64,7 +64,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Lib\lib\msc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Lib\lib\msc;..\Lib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -110,11 +110,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Lib\Include\visa.h" />
+    <ClInclude Include="..\Lib\Include\visatype.h" />
+    <ClInclude Include="..\Lib\Include\vpptype.h" />
     <ClInclude Include="AioTestFixture.h" />
     <ClInclude Include="configs.h" />
     <ClInclude Include="DefPrintf.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="logfile.h" />
+    <ClInclude Include="MyUsbDevice.h" />
     <ClInclude Include="PageAioTest.h" />
     <ClInclude Include="PageDebug.h" />
     <ClInclude Include="PageDemo.h" />
@@ -131,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="AioTestFixture.cpp" />
     <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="MyUsbDevice.cpp" />
     <ClCompile Include="PageAioTest.cpp" />
     <ClCompile Include="PageDebug.cpp" />
     <ClCompile Include="PageDemo.cpp" />
@@ -149,6 +154,8 @@
     <ResourceCompile Include="AioTestFixture.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Lib\Include\visa32.bas" />
+    <None Include="..\Lib\Include\vpptype.bas" />
     <None Include="res\AioTestFixture.rc2" />
   </ItemGroup>
   <ItemGroup>

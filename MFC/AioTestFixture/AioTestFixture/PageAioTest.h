@@ -1,7 +1,6 @@
 #pragma once
 #include <map>
 #include "Update.h"
-#include "WaveformDriver.h"
 #include "afxwin.h"
 
 // CPageAioTest ¶Ô»°¿ò
@@ -29,7 +28,6 @@ private:
     CBitmapButton m_BtnTestStatus;
     std::map<BYTE, CString> m_Target;
     CUpdate                 *m_pUpdate;
-    CWaveformDriver         *m_pWaveformDev;
 
     void    setTestResultFlag(void);
     void    clearTestResultFlag(void);

@@ -24,4 +24,6 @@ public:
     afx_msg void OnBnClickedBtnResetDlCnt();
     afx_msg void OnBnClickedBtnDecDlCnt();
     afx_msg void OnBnClickedBtnResetFlash();
+    afx_msg void OnBnClickedBtnWave1();
+    afx_msg void OnBnClickedBtnWave2();
 };

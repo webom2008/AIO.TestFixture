@@ -1,17 +1,21 @@
 // ToolSheet.cpp : 实现文件
 //
-
 #include "stdafx.h"
-#include "AioTestFixture.h"
-#include "ToolSheet.h"
 
 #include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "AioTestFixture.h"
+#include "ToolSheet.h"
+
+#include "WaveformDriver.h"
+
+
 const char VERSION[] = "V0.0.1";
 
 extern CSerialProtocol *g_pSerialProtocol;
+extern CWaveformDriver *gpWaveformDev;
 
 IMPLEMENT_DYNAMIC(CToolSheet, CPropertySheet)
 
@@ -29,7 +33,21 @@ CToolSheet::CToolSheet(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectPage)
     {
         g_pSerialProtocol->initApplication();
     }
+    else
+    {
+        TRACE("new CSerialProtocol ERROR!!!!\r\n");
+    }
     
+    gpWaveformDev  = new CWaveformDriver;
+    if (NULL !=  gpWaveformDev)
+    {
+        gpWaveformDev->initApplication();
+    }
+    else
+    {
+        TRACE("new CWaveformDriver ERROR!!!!\r\n");
+    }
+
     this->m_psh.dwFlags |= PSH_NOAPPLYNOW;
     this->m_psh.dwFlags &= ~(PSH_HASHELP);
 
@@ -55,6 +73,12 @@ CToolSheet::~CToolSheet()
     {
         delete g_pSerialProtocol;
         g_pSerialProtocol = NULL;
+    }
+
+    if (NULL != gpWaveformDev)
+    {
+        delete gpWaveformDev;
+        gpWaveformDev = NULL;
     }
 }
 

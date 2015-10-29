@@ -3,17 +3,20 @@
 #include <string.h>
 
 #include "WaveformDriver.h"
-#include "visa.h"
 
 #pragma comment(lib, "visa32.lib")
 
+CWaveformDriver *gpWaveformDev = NULL;
+
 CWaveformDriver::CWaveformDriver(void)
+    :m_bIsDeviceOpen(false)
 {
 }
 
 
 CWaveformDriver::~CWaveformDriver(void)
 {
+    closeDevice();
 }
 
 
@@ -23,57 +26,217 @@ int CWaveformDriver::initApplication(void)
 }
 
 
-//const char DEVICE_NAME[] = "USB0::2391::11015::MY52700871::0::INSTR";
-const char DEVICE_NAME[] = "USB0::0x0957::0x2C07::MY52802529::0::INSTR";
-
-int CWaveformDriver::openDevice(void)
+bool CWaveformDriver::checkIsDeviceOpen(void)
 {
-    //控制函数发生器产生矩形波 
-    ViSession rm;  
-    ViSession Function_Generator_33522B;
+    return m_bIsDeviceOpen;
+}
+
+int CWaveformDriver::openDevice(const char *pUsbDevName)
+{
     ViUInt16 intfType;  
-    ViString intfName[512];  
-  
+    ViString intfName[512]; 
+    ViBoolean viFlag = VI_FALSE;  
+    ViStatus ret = -1;
+
     //打开总的资源管理器，初始化资源管理器  
-    viOpenDefaultRM(&rm);  
+    ret = viOpenDefaultRM(&m_ViSessionRM); 
+    if (VI_SUCCESS != ret)
+    {
+        TRACE("viOpenDefaultRM Error!!!\r\n");
+        return -1;
+    }
+    else
+    {
+        TRACE("viOpenDefaultRM successfully!!!\r\n");
+    }
   
-    //打开指定的USB接口控制的函数发生器  
-    viOpen(rm, (ViRsrc)DEVICE_NAME, VI_NULL, VI_NULL, &Function_Generator_33522B);  
+    //打开指定的USB接口控制的函数发生器
+    ret = viOpen(m_ViSessionRM, (ViRsrc)pUsbDevName, VI_NULL, VI_NULL, &m_ViSession33522B);  
+    if (VI_SUCCESS == ret)
+    {
+        TRACE("viOpen>>Operation completed successfully!!!\r\n");
+    }
+    else if (VI_WARN_CONFIG_NLOADED == ret)
+    {
+        TRACE("viOpen>>The specified configuration either does not exist or "
+            "could not be loaded using VISA-specified defaults.\r\n");
+    }
+    else
+    {
+        TRACE("viOpenDefaultRM Error!!!\r\n");
+        AfxMessageBox("无法建立连接，请选择正确的USB口！");
+        viClose(m_ViSessionRM);
+        return -2;
+    }
   
     //确认默认的函数发生器命令否以\n结束，这里定义的SCPI语言是必须以\n结尾的  
-    ViBoolean termDefaultFunction_Generator_33500B = VI_FALSE;  
-    if((VI_SUCCESS == viGetAttribute(Function_Generator_33522B, VI_ATTR_RSRC_CLASS, intfName)) &&   
+    if((VI_SUCCESS == viGetAttribute(m_ViSession33522B, VI_ATTR_RSRC_CLASS, intfName)) &&   
        (0 == strcmp("SOCKET", (ViString)intfName)))  
     {  
-        termDefaultFunction_Generator_33500B = VI_TRUE;  
+        viFlag = VI_TRUE;  
     }  
-    else if((VI_SUCCESS == viGetAttribute(Function_Generator_33522B, VI_ATTR_INTF_TYPE, &intfType)) &&   
+    else if((VI_SUCCESS == viGetAttribute(m_ViSession33522B, VI_ATTR_INTF_TYPE, &intfType)) &&   
             (intfType == VI_INTF_ASRL))  
     {  
-        termDefaultFunction_Generator_33500B = VI_TRUE;  
-    }  
-    viSetAttribute(Function_Generator_33522B, VI_ATTR_TERMCHAR_EN, termDefaultFunction_Generator_33500B);  
-  
-    //具体的命令操作语句，注意SCPI的写法和\n结尾  
-    viPrintf(Function_Generator_33522B, ":SOURce:FUNCtion %s\n", "SQUare");                     //方波  
-    viPrintf(Function_Generator_33522B, ":SOURce:VOLTage:LIMit:HIGH %@3lf\n", 5.0);             //最大输出电压  
-    viPrintf(Function_Generator_33522B, ":SOURce:VOLTage:LIMit:LOW %@3lf\n", -5.0);             //最小输出电压  
-    viPrintf(Function_Generator_33522B, ":SOURce:VOLTage:LIMit:STATe %@1d\n", 1);                 
-    viPrintf(Function_Generator_33522B, ":SOURce:FREQuency %@3lf\n", 100.0);                    //频率(kHz)  
-    viPrintf(Function_Generator_33522B, ":SOURce:VOLTage %@3lf\n", 4.0);                        //幅值(V)  
-    viPrintf(Function_Generator_33522B, ":SOURce:VOLTage:OFFSet %@3lf\n", 1.0);                 //偏移值(V)  
-    viPrintf(Function_Generator_33522B, ":SOURce:FUNCtion:SQUare:DCYCle %@3lf\n", 20.0);        //占空比(%)  
-    viPrintf(Function_Generator_33522B, ":OUTPut %@1d\n", 1);                                   //开启输出  
-  
-    //关闭到指定的USB接口控制的函数发生器的连接  
-    viClose(Function_Generator_33522B);  
-  
-    //关闭总的资源管理器  
-    viClose(rm);  
+        viFlag = VI_TRUE;  
+    }
+
+    ret = viSetAttribute(m_ViSession33522B, VI_ATTR_TERMCHAR_EN, viFlag);
+    if (VI_SUCCESS == ret)
+    {
+        TRACE("viSetAttribute>> Attribute value set successfully!!!\r\n");
+    }
+    else if (VI_WARN_NSUP_ATTR_STATE == ret)
+    {
+        TRACE("viSetAttribute>> Although the specified attribute state is valid, "
+            "it is not supported by this resource implementation. \r\n");
+    }
+    else 
+    {
+        TRACE("viSetAttribute>> Error!!!\r\n");
+    }
+
+    m_bIsDeviceOpen = true;
     return 0;
 }
 
 int CWaveformDriver::closeDevice(void)
 {
+    if (m_bIsDeviceOpen)
+    {
+        //关闭到指定的USB接口控制的函数发生器的连接  
+        viClose(m_ViSession33522B);  
+        //关闭总的资源管理器  
+        viClose(m_ViSessionRM);
+        m_bIsDeviceOpen = false;
+    }
+    return 0;
+}
+
+
+
+int CWaveformDriver::getDeviceIDN(void)
+{
+    if (!m_bIsDeviceOpen) return -1;
+    char buf [256] = {0};
+
+    /* Initialize device */
+    if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*RST\n"))
+    {
+        TRACE(">>getDeviceIDN RST error\r\n");
+    }
+
+    /* Send an *IDN? string to the device */
+    if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*IDN?\n"))
+    {
+        TRACE(">>getDeviceIDN IDN error\r\n");
+    }
+  
+    /* Read results */
+    if (VI_SUCCESS != viScanf (m_ViSession33522B, "%t", &buf))
+    {
+        TRACE(">>getDeviceIDN viScanf error\r\n");
+    }
+
+    /* Print results */
+    TRACE ("Instrument identification string: %s\n", buf); 
+    return 0;
+}
+
+
+//控制函数发生器产生矩形波 
+int CWaveformDriver::testSampleCh1(void)
+{
+    if (!m_bIsDeviceOpen) return -1;
+
+    //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion %s\n", "SQUare");                     //方波  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:LIMit:HIGH %@3lf\n", 5.0);             //最大输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:LIMit:LOW %@3lf\n", -5.0);             //最小输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:LIMit:STATe %@1d\n", 1);                 
+    viPrintf(m_ViSession33522B, ":SOURce1:FREQuency %@3lf\n", 100.0);                    //频率(kHz)  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage %@3lf\n", 4.0);                        //幅值(V)  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:OFFSet %@3lf\n", 1.0);                 //偏移值(V)  
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:SQUare:DCYCle %@3lf\n", 20.0);        //占空比(%)  
+    viPrintf(m_ViSession33522B, ":OUTPut1 %@1d\n", 1);                                   //开启输出  
+
+    return 0;
+}
+
+
+//控制函数发生器产生矩形波 
+int CWaveformDriver::testSampleCh2(void)
+{
+    if (!m_bIsDeviceOpen) return -1;
+    //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion %s\n", "SQUare");                     //方波  
+    viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:HIGH %@3lf\n", 5.0);             //最大输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:LOW %@3lf\n", -5.0);             //最小输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:STATe %@1d\n", 1);                 
+    viPrintf(m_ViSession33522B, ":SOURce2:FREQuency %@3lf\n", 500.0);                    //频率(kHz)  
+    viPrintf(m_ViSession33522B, ":SOURce2:VOLTage %@3lf\n", 4.0);                        //幅值(V)  
+    viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:OFFSet %@3lf\n", 1.0);                 //偏移值(V)  
+    viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion:SQUare:DCYCle %@3lf\n", 20.0);        //占空比(%)  
+    viPrintf(m_ViSession33522B, ":OUTPut2 %@1d\n", 1);                                   //开启输出  
+
+    return 0;
+}
+
+
+
+/*
+下面的代码可加载和修改内置任意波形。
+FUNCtion ARB
+VOLTage +3
+VOLTage:OFFSet +1
+FUNC:ARB:SRAT 1E5
+FUNCtion:ARBitrary "INT:\BUILTIN\EXP_RISE.ARB"
+OUTPut 1
+*/
+int CWaveformDriver::exampleARBFuncCh1InternalFile(void)
+{
+    if (!m_bIsDeviceOpen) return -1;
+
+    //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion %s\n", "ARB");
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage %@3lf\n", 3.0);
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:OFFSet %@3lf\n", 1.0);
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary:SRATe %@3lf\n", 100000.0); //采样率 100KSa/s
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary \"INT:\\BUILTIN\\EXP_RISE.ARB\"\n"))
+    {
+        TRACE("=================FUNCtion:ARBitrary error \r\n");
+    }
+    viPrintf(m_ViSession33522B, ":OUTPut1 %@1d\n", 1);                                   //开启输出  
+
+    return 0;
+}
+
+int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
+{
+    if (!m_bIsDeviceOpen) return -1;
+
+    viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion %s\n", "ARB");
+    //viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:HIGH %@3lf\n", 0.88);             //最大输出电压  
+    //viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:LOW %@3lf\n", -0.13);             //最小输出电压  
+    //viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion:ARBitrary:SRATe %@3lf\n", 10000.0);    //采样率 10KSa/s
+    
+    viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA2 \"USB:\\C01_001.BARB\"\n");
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion:ARBitrary \"USB:\\C01_001.BARB\"\n"))
+    {
+        TRACE("=================FUNCtion:ARBitrary error \r\n");
+    }
+    viPrintf(m_ViSession33522B, ":OUTPut2 %@1d\n", 1);                                   //开启输出  
+    
+    viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion %s\n", "ARB");
+    //viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:HIGH %@3lf\n", 0.88);             //最大输出电压  
+    //viPrintf(m_ViSession33522B, ":SOURce2:VOLTage:LIMit:LOW %@3lf\n", -0.13);             //最小输出电压  
+    //viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion:ARBitrary:SRATe %@3lf\n", 10000.0);    //采样率 10KSa/s
+    
+    viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA2 \"USB:\\C01_002.BARB\"\n");
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion:ARBitrary \"USB:\\C01_002.BARB\"\n"))
+    {
+        TRACE("=================FUNCtion:ARBitrary error \r\n");
+    }
+    viPrintf(m_ViSession33522B, ":OUTPut2 %@1d\n", 1);                                   //开启输出  
     return 0;
 }

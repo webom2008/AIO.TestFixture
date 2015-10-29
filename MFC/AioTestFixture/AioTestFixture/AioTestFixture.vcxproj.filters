@@ -69,6 +69,18 @@
     <ClInclude Include="WaveformDriver.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\Lib\Include\visa.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Lib\Include\visatype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Lib\Include\vpptype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyUsbDevice.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AioTestFixture.cpp">
@@ -107,6 +119,9 @@
     <ClCompile Include="WaveformDriver.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MyUsbDevice.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="AioTestFixture.rc">
@@ -117,6 +132,8 @@
     <None Include="res\AioTestFixture.rc2">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\Lib\Include\visa32.bas" />
+    <None Include="..\Lib\Include\vpptype.bas" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\AioTestFixture.ico">

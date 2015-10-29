@@ -88,7 +88,6 @@ typedef ViStatus (_VI_FUNCH _VI_PTR ViHndlr)
    (ViSession vi, ViEventType eventType, ViEvent event, ViAddr userHandle);
 
 /*- Resource Manager Functions and Operations -------------------------------*/
-
 ViStatus _VI_FUNC  viOpenDefaultRM (ViPSession vi);
 ViStatus _VI_FUNC  viFindRsrc      (ViSession sesn, ViString expr, ViPFindList vi,
                                     ViPUInt32 retCnt, ViChar _VI_FAR desc[]);

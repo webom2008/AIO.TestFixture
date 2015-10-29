@@ -5,8 +5,10 @@
 #include "AioTestFixture.h"
 #include "PageDebug.h"
 #include "afxdialogex.h"
+#include "WaveformDriver.h"
 
 extern CSerialProtocol *g_pSerialProtocol;
+extern CWaveformDriver *gpWaveformDev;
 
 // CPageDebug 对话框
 
@@ -33,6 +35,8 @@ BEGIN_MESSAGE_MAP(CPageDebug, CPropertyPage)
     ON_BN_CLICKED(IDC_BTN_RESET_DL_CNT, &CPageDebug::OnBnClickedBtnResetDlCnt)
     ON_BN_CLICKED(IDC_BTN_DEC_DL_CNT, &CPageDebug::OnBnClickedBtnDecDlCnt)
     ON_BN_CLICKED(IDC_BTN_RESET_FLASH, &CPageDebug::OnBnClickedBtnResetFlash)
+    ON_BN_CLICKED(IDC_BTN_WAVE1, &CPageDebug::OnBnClickedBtnWave1)
+    ON_BN_CLICKED(IDC_BTN_WAVE2, &CPageDebug::OnBnClickedBtnWave2)
 END_MESSAGE_MAP()
 
 
@@ -114,4 +118,17 @@ void CPageDebug::OnBnClickedBtnResetFlash()
     {
         MSG("请确保正确配置串口\r\n");
     }
+}
+
+
+void CPageDebug::OnBnClickedBtnWave1()
+{
+    gpWaveformDev->getDeviceIDN();
+}
+
+
+void CPageDebug::OnBnClickedBtnWave2()
+{
+    gpWaveformDev->exampleARBFuncCh1InternalFile();
+    gpWaveformDev->exampleARBFuncCh2USBDeviceFile();
 }
