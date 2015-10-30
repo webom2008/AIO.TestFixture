@@ -348,16 +348,12 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_NIBP_DEB);
     }
-    else if (AIO_NIBP_VENIPUNCTURE_ID == id)
-    {
-        gpDspAckResult->u8DspAckVenipunctureVal = pPacket->DataAndCRC[0];
-        xEventGroupSetBits( xDspPktAckEventGroup, 
-                            DSP_PKT_ACK_BIT_VENIPUNCTURE);
-    }
     else if (AIO_TX_NIBP_ALARM_ID == id)
     {
+        gpDspAckResult->u8DspAckNibpAlarmType = pPacket->DataAndCRC[0];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_NIBP_ALARM);
+        udprintf("\r\nNIBP alarm Type=%d",gpDspAckResult->u8DspAckNibpAlarmType);
     }
     else if (AIO_TX_NIBP_MMHG_ID == id)
     {
@@ -365,8 +361,15 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         
         gpDspAckResult->u16DspAckMMHG = ((pPacket->DataAndCRC[1]<<8) \
                                         |(pPacket->DataAndCRC[2]));
-        udprintf("MMHG:%d\r\n",gpDspAckResult->u16DspAckMMHG);
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_NIBP_MMHG);
+//        udprintf("MMHG:%d\r\n",gpDspAckResult->u16DspAckMMHG);
 #endif
+    }
+    else if (AIO_NIBP_STOP_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_NIBP_STOP);
     }
     else //do nothing...
     {

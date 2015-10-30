@@ -85,16 +85,6 @@ typedef enum
 
 #define AIOBOARD_POWERON_CURRENT_MAX        ((int)100) //mA
 
-
-
-#define SKIP_STATE_DETECT_OTHER_POWER
-#define SKIP_STATE_DOWNLOAD_AIOSTM_BOOT
-#define SKIP_STATE_DOWNLOAD_AIODSP_APP
-#define SKIP_STATE_DOWNLOAD_AIOSTM_APP
-
-
-
-
 #define _INFO_
 #define _ERROR_
 
@@ -580,7 +570,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_NIBP_VERIFY:{
+#ifndef SKIP_STATE_NIBP_VERIFY
             ret = testNibpVerify();
+#endif
             if (0 == ret){
                 state = STATE_AIOBOARD_MAX_CURRENT;
             }else{
@@ -590,7 +582,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_AIOBOARD_MAX_CURRENT:{
+#ifndef SKIP_STATE_AIOBOARD_MAX_CURRENT
             ret = testAioBoardMaxCurrent();
+#endif
             if (0 == ret){
                 state = STATE_NIBP_GAS_CONTROL;
             }else{
@@ -600,7 +594,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_NIBP_GAS_CONTROL:{
+#ifndef SKIP_STATE_NIBP_GAS_CONTROL
             ret = testNibpGasControl();
+#endif
             if (0 == ret){
                 state = STATE_NIBP_OVER_PRESS;
             }else{

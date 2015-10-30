@@ -27,6 +27,26 @@ extern "C"{
 #endif /* __cplusplus */
 
 
+typedef enum
+{ 
+    CUFF_GAS_LEAKAGE     = 0,//NIBP袖带充气管漏气
+    CUFF_OFF             = 1,
+    PUMP_LEAKAGE         = 2,
+    CUFF_TYPE_ERROR      = 3,
+    AIR_PRESSURE_ERROR   = 4,
+    SIGNAL_TOO_WEAK      = 5,
+    SIGNAL_SATURATION    = 6,
+    OVER_MEASURE_PRESSURE= 7,//not used from 20150122
+    ARM_EXERCISE         = 8,
+    OVER_PROTECT_PRESSURE= 9,
+    MODULE_FAILED        = 10,
+    MEASURE_TIMEOUT      = 11,
+    MEASURE_FAILED       = 12,
+    RESET_ERROR          = 13,
+    SYS_OVER_RANGE,
+    DIA_OVER_RANGE,
+    MAP_OVER_RANGE,
+} NIBP_ALARM_TypeDef;
 
 typedef enum
 {
@@ -177,8 +197,8 @@ typedef struct
     u8 u8DspAckVerifyVal;
     u8 u8DspAck150mmHgVal;
     u8 u8DspAck310mmHgVal[2];
-    u8 u8DspAckVenipunctureVal;
     u16 u16DspAckMMHG;
+    u8 u8DspAckNibpAlarmType;
 } DspAckResult_Typedef;
 
 #define DSP_PKT_ACK_BIT_VERIFY      ((EventBits_t)(1<<0))
@@ -186,7 +206,8 @@ typedef struct
 #define DSP_PKT_ACK_BIT_310MMHG     ((EventBits_t)(1<<2))
 #define DSP_PKT_ACK_BIT_NIBP_DEB    ((EventBits_t)(1<<3))
 #define DSP_PKT_ACK_BIT_NIBP_ALARM  ((EventBits_t)(1<<4))
-#define DSP_PKT_ACK_BIT_VENIPUNCTURE ((EventBits_t)(1<<5))
+#define DSP_PKT_ACK_BIT_NIBP_MMHG   ((EventBits_t)(1<<5))
+#define DSP_PKT_ACK_BIT_NIBP_STOP   ((EventBits_t)(1<<6))
 
 extern DspAckResult_Typedef    *gpDspAckResult;
 

@@ -62,6 +62,8 @@ enum
 
 #define NIBP_DEBUG_CID_PUMP                 (u8)(0x03)
 #define NIBP_DEBUG_CID_RELEASE              (u8)(0x04)
+#define NIBP_DEBUG_CHECK_DSP_PROTECT        (u8)(0x05)
+#define NIBP_DEBUG_CHECK_STM_PROTECT        (u8)(0x06)
 
 #define _INFO_
 #define _ERROR_
@@ -167,6 +169,7 @@ int testPrepareAllReady(void)
         sendComputerPkt(&pkt);
         return -1;
     }
+#ifndef SKIP_CHECK_DPM2200_CONNECT
     if (testDPM2200Connect() < 0)
     {
         i = 0;
@@ -178,6 +181,7 @@ int testPrepareAllReady(void)
         sendComputerPkt(&pkt);
         return -2;
     }
+#endif
     return 0;
 }
 
@@ -317,6 +321,30 @@ int testSpo2Uart(void)
 {
     return 0;
 }
+
+static int sendAndWaitNibpStop(void)
+{
+    char buf = 0x01;
+    EventBits_t uxBits = 0;
+
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_STOP);
+    sendAioDspPktByID(AIO_NIBP_STOP_ID, &buf, 1, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_NIBP_STOP,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & DSP_PKT_ACK_BIT_NIBP_STOP)
+    {
+        udprintf("sendAndWaitNibpStop success!!!\r\n");
+        return 0;
+    }
+    udprintf("sendAndWaitNibpStop failed!!!\r\n");
+    return -1;
+}
+
 
 int testNibpSelfcheck(void)
 {
@@ -1161,8 +1189,136 @@ int testNibpGasControl(void)
     return 0;
 }
 
+static int checkNibpDspProtect(void)
+{
+    u8 pBuf[2] = {0,};
+    EventBits_t uxBits = 0;
+
+    pBuf[0] = NIBP_DEBUG_CHECK_DSP_PROTECT;
+    pBuf[1] = 70;
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+    sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+    {
+        return -1;
+    }
+
+    xEventGroupClearBits(xDspPktAckEventGroup, 
+                        DSP_PKT_ACK_BIT_NIBP_MMHG|DSP_PKT_ACK_BIT_NIBP_ALARM);
+    while(1)
+    {
+        uxBits = xEventGroupWaitBits(
+                xDspPktAckEventGroup,   // The event group being tested.
+                DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+        if (uxBits & DSP_PKT_ACK_BIT_NIBP_MMHG)
+        {
+            udprintf("Current Press:%dmmHg\r\n",gpDspAckResult->u16DspAckMMHG);
+            if (gpDspAckResult->u16DspAckMMHG > 340)
+            {
+                udprintf("protect function failed!!!\r\n");
+                break;
+            }
+        }
+        if (uxBits & DSP_PKT_ACK_BIT_NIBP_ALARM)
+        {
+            if ((u8)OVER_PROTECT_PRESSURE == gpDspAckResult->u8DspAckNibpAlarmType)
+            {
+                udprintf("protect function success!!!\r\n");
+                
+                return 0;
+            }
+            else
+            {
+                udprintf("Nibp Alarm type=%d!!!\r\n", gpDspAckResult->u8DspAckNibpAlarmType);
+                break;
+            }
+        }
+    }
+    sendAndWaitNibpStop();
+    return -1;
+}
+
+static int checkNibpStmProtect(void)
+{
+    u8 pBuf[2] = {0,};
+    EventBits_t uxBits = 0;
+
+    pBuf[0] = NIBP_DEBUG_CHECK_STM_PROTECT;
+    pBuf[1] = 70;
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_NIBP_DEB);
+    sendAioDspPktByID(AIO_RX_NIBP_Debug_ID, (char *)pBuf, 2, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if ((EventBits_t)0x00 == (uxBits & DSP_PKT_ACK_BIT_NIBP_DEB))
+    {
+        return -1;
+    }
+    
+    xEventGroupClearBits(xDspPktAckEventGroup, 
+                        DSP_PKT_ACK_BIT_NIBP_MMHG|DSP_PKT_ACK_BIT_NIBP_ALARM);
+    while(1)
+    {
+        uxBits = xEventGroupWaitBits(
+                xDspPktAckEventGroup,   // The event group being tested.
+                DSP_PKT_ACK_BIT_NIBP_DEB,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+        if (uxBits & DSP_PKT_ACK_BIT_NIBP_MMHG)
+        {
+            udprintf("Current Press:%dmmHg\r\n",gpDspAckResult->u16DspAckMMHG);
+            if (gpDspAckResult->u16DspAckMMHG > 340)
+            {
+                udprintf("protect function failed!!!\r\n");
+                break;
+            }
+        }
+        if (uxBits & DSP_PKT_ACK_BIT_NIBP_ALARM)
+        {
+            if ((u8)OVER_PROTECT_PRESSURE == gpDspAckResult->u8DspAckNibpAlarmType)
+            {
+                udprintf("protect function success!!!\r\n");
+                return 0;
+            }
+            else
+            {
+                udprintf("Nibp Alarm type=%d!!!\r\n", gpDspAckResult->u8DspAckNibpAlarmType);
+                break;
+            }
+        }
+    }
+    sendAndWaitNibpStop();
+    return -1;
+}
+
 int testNibpOverPress(void)
 {
+    if (checkNibpDspProtect() < 0)
+    {
+        udprintf("testNibpOverPress failed!\r\n");
+        return -1;
+    }
+
+    if (checkNibpStmProtect() < 0)
+    {
+        udprintf("testNibpStmProtect failed!\r\n");
+        return -2;
+    }
     return 0;
 }
 
