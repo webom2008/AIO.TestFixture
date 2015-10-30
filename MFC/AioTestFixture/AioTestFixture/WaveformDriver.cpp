@@ -114,6 +114,15 @@ int CWaveformDriver::closeDevice(void)
 }
 
 
+int CWaveformDriver::rset2Default(void)
+{
+    if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*RST\n"))
+    {
+        TRACE(">>getDeviceIDN RST error\r\n");
+        return -1;
+    }
+    return 0;
+}
 
 int CWaveformDriver::getDeviceIDN(void)
 {
@@ -238,5 +247,99 @@ int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
         TRACE("=================FUNCtion:ARBitrary error \r\n");
     }
     viPrintf(m_ViSession33522B, ":OUTPut2 %@1d\n", 1);                                   //开启输出  
+    return 0;
+}
+
+
+
+
+
+int CWaveformDriver::setFuncSin(UINT8 channel, float freq_hz, float amp_V, float high_V, float low_V, float offset_V)
+{
+/*
+SOURce2:FUNCtion SIN
+SOURce2:FREQuency +1.0E+06
+SOURce2:VOLTage +2.0
+SOURce2:VOLTage:OFFSet +0.0
+SOURce2:VOLTage:LIMit:LOW -1.0
+SOURce2:VOLTage:LIMit:HIGH +1.0
+SOURce2:VOLTage:LIMit:STATe 1
+OUTP2 ON
+*/
+    if (!m_bIsDeviceOpen) return -1;
+
+    if ((0 == high_V)&&(0 == low_V))
+    {
+        high_V = amp_V;
+    }
+    //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"SINusoid");      
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FREQuency %@3lf\n", channel,freq_hz);                  //频率(kHz)  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage %@3lf\n", channel,amp_V);                      //幅值(V)  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:LIMit:HIGH %@3lf\n",channel,high_V);           //最大输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:LIMit:LOW %@3lf\n", channel,low_V);            //最小输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:LIMit:STATe %@1d\n", channel,0);               //启用或禁用输出振幅电压限制,默认OFF(0)        
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:OFFSet %@3lf\n", channel,offset_V);            //偏移值(V)
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                           //高阻抗
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);                                  //开启输出  
+    return 0;
+}
+
+int CWaveformDriver::setFuncPULSe (UINT8 channel, float freq_hz, float volt_V, float lead_s, float tra_s, float widt_s, float offset_V)
+{
+/*
+FUNC PULS
+FUNC:PULS:TRAN:LEAD 4E-8
+FUNC:PULS:TRAN:TRA 1E-6
+FUNC:PULS:WIDT 3E-6
+FREQ 2E5
+VOLT 3
+OUTP ON
+*/
+    if (!m_bIsDeviceOpen) return -1;
+
+    //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"PULSe");      
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FREQuency %@3lf\n", channel,freq_hz);                  //频率(kHz)  
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage %@3lf\n", channel,volt_V);                     //幅值(V)        
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:OFFSet %@3lf\n", channel,offset_V);            //偏移值(V)
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:PULSe:WIDTh %@3lf\n", channel,widt_s);
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:PULSe:TRANsition:LEADing %@3lf\n",channel,lead_s);
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:PULSe:TRANsition:TRAiling %@3lf\n", channel,tra_s);     
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);                                           //开启输出  
+    return 0;
+}
+
+int CWaveformDriver::setPaceByEnum(int type)
+{
+    switch (type)
+    {
+    case PACE_A:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.002f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        break;
+    case PACE_B:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.002f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        break;
+    case PACE_C:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.7f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        break;
+    case PACE_D:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.7f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        break;
+    case PACE_E:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.002f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        break;
+    case PACE_F:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.002f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        break;
+    case PACE_G:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.7f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        break;
+    case PACE_H:
+        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.7f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        break;
+    default:
+        break;
+    }
     return 0;
 }

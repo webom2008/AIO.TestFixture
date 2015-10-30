@@ -129,6 +129,22 @@ void CPageDebug::OnBnClickedBtnWave1()
 
 void CPageDebug::OnBnClickedBtnWave2()
 {
-    gpWaveformDev->exampleARBFuncCh1InternalFile();
-    gpWaveformDev->exampleARBFuncCh2USBDeviceFile();
+    gpWaveformDev->rset2Default();
+
+    //test 7.1.2.1 passed
+    gpWaveformDev->setFuncSin(1,10.0f, 1.0f, 0.5f, -0.5f);
+    gpWaveformDev->setFuncSin(1,0.5f, 1.0f, 0.5f, -0.5f);
+    gpWaveformDev->setFuncSin(1,150.0f, 1.0f, 0.5f, -0.5f);
+
+    //test 7.1.3.1 passed
+    gpWaveformDev->setFuncSin(1,2.0f, 16.0f, 8.0f, -8.0f);
+
+    //gpWaveformDev->setPaceByEnum(PACE_A);
+    //gpWaveformDev->setPaceByEnum(PACE_B);
+    //gpWaveformDev->setPaceByEnum(PACE_C);
+    //gpWaveformDev->setPaceByEnum(PACE_D);
+    //gpWaveformDev->setPaceByEnum(PACE_E);
+    //gpWaveformDev->setPaceByEnum(PACE_F);
+    //gpWaveformDev->setPaceByEnum(PACE_G);
+    //gpWaveformDev->setPaceByEnum(PACE_H);
 }
