@@ -359,6 +359,15 @@ static int exeAioTestFixturePkt(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xCompPktAckEventGroup, 
                             COMP_PKT_BIT_CONNECTTED);
     } break;
+    case COMP_ID_WAVEFORM_COMM:{
+        gpComputerReult->u8WaveformCID = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( xCompPktAckEventGroup, 
+                            COMP_PKT_BIT_WAVEFORM_COMM);
+    } break;
+    case COMP_ID_WAVEFORM_CONNECT:{
+        xEventGroupSetBits( xCompPktAckEventGroup, 
+                            COMP_PKT_BIT_WF_CONNECTTED);
+    } break;
     default:
         break;
     }

@@ -337,6 +337,29 @@ int EcgDevCtrl(const ECG_CTRL_CMD cmd, const ECG_CTRL_CMD_VAL val)
             V_LEAD_OFF_HIGH;
         }
     }break;
+    case CMD_ECG_ALL_SEL_ECGOUT:{
+        EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+        EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+        EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+        EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+        EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+    }break;
+    case CMD_ECG_ALL_SEL_PACE:{
+        EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH1);
+        EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH1);
+        EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH1);
+        EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH1);
+        EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH1);
+        
+    }break;
+    case CMD_ECG_ALL_SEL_OFFSET:{
+        EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH2);
+        EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH2);
+        EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH2);
+        EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH2);
+        EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH2);
+        
+    }break;
     default:{
 
     }break;

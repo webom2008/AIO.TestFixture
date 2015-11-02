@@ -126,7 +126,7 @@ int AioBoardCtrl(CTRL_CMD_AIOBOARD cmd, void *pData)
 
     switch(cmd)
     {
-    case CTRL_CMD_AIOBOARD_SET_POWER:
+    case AIOBRD_CTRL_SET_PWR:
         if (NULL == pVal) return -1;
         if (SW_ON == *pVal)
         {

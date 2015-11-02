@@ -29,7 +29,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 
-enum
+typedef enum
 {
     ECG_DEB_CID_UPLOAD_TYPE     = 0x01,
     ECG_DEB_CID_ALGO_RUN        = 0x02,
@@ -39,21 +39,38 @@ enum
     ECG_DEB_CID_ST_TEMP         = 0x06,
     ECG_DEB_CID_ALGO_DEB        = 0x07,
     ECG_DEB_CID_GET_SELFCHECK   = 0x08,
-};
+    ECG_DEB_CID_START_VPP       = 0x09,
+    ECG_DEB_CID_STOP_VPP        = 0x0A,
+
+    ECG_DEB_CID_UNVALID
+}AIOECGDEBCTRL_CMD;
+
+typedef struct
+{
+    u16 VppECG1;
+    u16 VppECG2;
+    u16 VppECG3;
+} EcgDebVppResult;
 
 typedef struct
 {
     EventGroupHandle_t xEventGroup;
     u8 u8SelfcheckResult;
+    EcgDebVppResult ecgVppResult;
 } EcgDebug_Typedef;
 
+
 #define ECG_DEB_PKT_BIT_SELFCHECK       ((EventBits_t)(1<<0))
+#define ECG_DEB_PKT_BIT_START_VPP       ((EventBits_t)(1<<1))
+#define ECG_DEB_PKT_BIT_STOP_VPP        ((EventBits_t)(1<<2))
+
 
 
 extern EcgDebug_Typedef    *gpEcgDebug;
 
 extern int initAioEcgDebugResource(void);
 extern int exeAioEcgDebugPacket(AioDspProtocolPkt *pPacket);
+extern int AioEcgDebugCtrl(const AIOECGDEBCTRL_CMD cmd, void *arg);
 
 #ifdef __cplusplus
 #if __cplusplus

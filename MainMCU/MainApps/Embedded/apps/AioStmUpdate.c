@@ -176,10 +176,10 @@ static void resetAioBoardPower(void)
 {
     char sw = SW_OFF;
     sw = SW_OFF;
-    AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
+    AioBoardCtrl(AIOBRD_CTRL_SET_PWR, &sw);
     vTaskDelay(1000);
     sw = SW_ON;
-    AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER, &sw);
+    AioBoardCtrl(AIOBRD_CTRL_SET_PWR, &sw);
     vTaskDelay(1000);
 }
 

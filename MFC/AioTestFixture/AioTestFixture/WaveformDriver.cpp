@@ -133,18 +133,21 @@ int CWaveformDriver::getDeviceIDN(void)
     if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*RST\n"))
     {
         TRACE(">>getDeviceIDN RST error\r\n");
+        return -2;
     }
 
     /* Send an *IDN? string to the device */
     if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*IDN?\n"))
     {
         TRACE(">>getDeviceIDN IDN error\r\n");
+        return -2;
     }
   
     /* Read results */
     if (VI_SUCCESS != viScanf (m_ViSession33522B, "%t", &buf))
     {
         TRACE(">>getDeviceIDN viScanf error\r\n");
+        return -2;
     }
 
     /* Print results */
@@ -273,6 +276,7 @@ OUTP2 ON
         high_V = amp_V;
     }
     //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                           //高阻抗
     viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"SINusoid");      
     viPrintf(m_ViSession33522B, ":SOURce%@1d:FREQuency %@3lf\n", channel,freq_hz);                  //频率(kHz)  
     viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage %@3lf\n", channel,amp_V);                      //幅值(V)  
@@ -280,7 +284,6 @@ OUTP2 ON
     viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:LIMit:LOW %@3lf\n", channel,low_V);            //最小输出电压  
     viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:LIMit:STATe %@1d\n", channel,0);               //启用或禁用输出振幅电压限制,默认OFF(0)        
     viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage:OFFSet %@3lf\n", channel,offset_V);            //偏移值(V)
-    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                           //高阻抗
     viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);                                  //开启输出  
     return 0;
 }

@@ -3,6 +3,11 @@
 
 #include "visa.h"
 
+#define WF_COMM_CID_SET_SIN_10Hz1Vpp        ((BYTE)0x00)
+#define WF_COMM_CID_SET_SIN_0P5Hz1Vpp       ((BYTE)0x01)
+#define WF_COMM_CID_SET_SIN_150Hz1Vpp       ((BYTE)0x02)
+#define WF_COMM_CID_SET_ARB                 ((BYTE)0x03)
+
 //USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
 const char DEVICE_NAME[] = "USB0::0x0957::0x2C07::MY52802529::0::INSTR";
 

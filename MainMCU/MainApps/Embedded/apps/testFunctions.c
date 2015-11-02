@@ -111,6 +111,35 @@ static int testComputerConnect(void)
     return -1;
 }
 
+static int testWaveformConnect(void)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    EventBits_t uxBits;
+    
+    initComputerPkt(&pkt);
+    pkt.DataAndCRC[i++] = (u8)COMP_ID_WAVEFORM_CONNECT;
+    pkt.Length = i;
+    pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+
+    for (i = 0; i < 3; i++)
+    {
+        sendComputerPkt(&pkt);
+        
+        uxBits = xEventGroupWaitBits(
+                xCompPktAckEventGroup,      // The event group being tested.
+                COMP_PKT_BIT_WF_CONNECTTED,    // The bits within the event group to wait for.
+                pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+                pdFALSE,                    // Don't wait for both bits, either bit will do.
+                1000 );                 // Wait a maximum of for either bit to be set.
+        if (uxBits & COMP_PKT_BIT_WF_CONNECTTED)
+        {
+            return 0;
+        }
+    }
+    return -1;
+}
+
 static int testDPM2200Connect(void)
 {
     DmaUartProtocolPacket txPacket;
@@ -180,6 +209,19 @@ int testPrepareAllReady(void)
         pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
         sendComputerPkt(&pkt);
         return -2;
+    }
+#endif
+#ifndef SKIP_CHECK_WAVEFORM_CONNECT
+    if (testWaveformConnect() < 0)
+    {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_WAVEFORM_LOST;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
+        return -3;
     }
 #endif
     return 0;
@@ -298,8 +340,108 @@ int getEcgSelfcheck(void)
     return -1;
 }
 
+#define ECG_AMP_DELAY_MS           10000
 int testEcgAmplitudeBand(void)
 {
+    //S1:ECG switch to EcgOut
+    if( EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID) < 0)
+    {
+        ERROR("testEcgAmplitudeBand EcgDevCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S2:Set Waveform Device
+    if (WavefromCtrl(WF_CTRL_10Hz_1Vpp_SIN, NULL) < 0)
+    {
+        ERROR("testEcgAmplitudeBand WavefromCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S3:delay
+    vTaskDelay(ECG_AMP_DELAY_MS/portTICK_PERIOD_MS);
+    
+    //S4:Start AIO Factory
+    if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
+    {
+
+    }
+    
+    //S5:delay for 2 cycle
+    WavefromDelay(WAVEFORM_DELAY_10Hz_SIN, 2);
+    
+    //S6:Stop and get AIO result
+    if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
+    {
+
+    }
+
+    udprintf("WF_CTRL_10Hz_1Vpp_SIN Result:\r\n");
+    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+        
+    //S2:Set Waveform Device
+    if (WavefromCtrl(WF_CTRL_0P5Hz_1Vpp_SIN, NULL) < 0)
+    {
+        ERROR("testEcgAmplitudeBand WavefromCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S3:delay
+    vTaskDelay(ECG_AMP_DELAY_MS/portTICK_PERIOD_MS);
+    
+    //S4:Start AIO Factory
+    if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
+    {
+
+    }
+    
+    //S5:delay for 2 cycle
+    WavefromDelay(WAVEFORM_DELAY_0P5Hz_SIN, 2);
+    
+    //S6:Stop and get AIO result
+    if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
+    {
+
+    }
+    
+    udprintf("WF_CTRL_0P5Hz_1Vpp_SIN Result:\r\n");
+    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+
+    
+    //S2:Set Waveform Device
+    if (WavefromCtrl(WF_CTRL_150Hz_1Vpp_SIN, NULL) < 0)
+    {
+        ERROR("testEcgAmplitudeBand WavefromCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S3:delay
+    vTaskDelay(ECG_AMP_DELAY_MS/portTICK_PERIOD_MS);
+    
+    //S4:Start AIO Factory
+    if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
+    {
+
+    }
+    
+    //S5:delay for 2 cycle
+    WavefromDelay(WAVEFORM_DELAY_150Hz_SIN, 2);
+    
+    //S6:Stop and get AIO result
+    if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
+    {
+
+    }
+    
+    udprintf("WF_CTRL_150Hz_1Vpp_SIN Result:\r\n");
+    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    
+    //S7:End
     return 0;
 }
 

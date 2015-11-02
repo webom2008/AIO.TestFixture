@@ -51,6 +51,7 @@ extern "C"{
 #include "driver_secur.h"
 
 #include "driver_ecg.h"
+#include "driver_waveform.h"
 
 int DriverMoudleInit(void);
 

@@ -29,9 +29,9 @@ extern "C"{
 
 typedef enum
 {
-    CTRL_CMD_AIOBOARD_SET_POWER,
+    AIOBRD_CTRL_SET_PWR,
 
-    CTRL_CMD_AIOBOARD_UNVALID
+    AIOBRD_CTRL_UNVALID
 }CTRL_CMD_AIOBOARD;
 
 int AioBoardInit(void);

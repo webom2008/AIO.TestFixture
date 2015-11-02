@@ -768,6 +768,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_ecg.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_waveform.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_waveform.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

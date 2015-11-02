@@ -204,7 +204,12 @@ int CPageAioTest::PktHandlePowerResult(LPVOID pParam, UartProtocolPacket *pPacke
     case COMP_ID_CONNECT_TEST:{
         pDlgTest->PktHandleConnectted(pPacket);
     }break;
-
+    case COMP_ID_WAVEFORM_COMM:{
+        pDlgTest->PktHandleWaveformComm(pPacket);
+    }break;
+    case COMP_ID_WAVEFORM_CONNECT:{
+        pDlgTest->PktHandleWaveformConnect(pPacket);
+    }break;
     default:
         break;
     }
@@ -294,6 +299,10 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
     case ERR_INFO_ID_DPM_LOST:{
         add2Display(_T("错误:与DPM压力表连接失败\r\n"));
     }break;
+        
+    case ERR_INFO_ID_WAVEFORM_LOST:{
+        add2Display(_T("错误:与波形信号发生器连接失败\r\n"));
+    }break;
 
     default:
         break;
@@ -304,6 +313,48 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
 int CPageAioTest::PktHandleConnectted(UartProtocolPacket *pPacket)
 {
     g_pSerialProtocol->sendOnePacket(pPacket->PacketID, 0, &pPacket->DataAndCRC[0], 1);
+    return 0;
+}
+
+int CPageAioTest::PktHandleWaveformConnect(UartProtocolPacket *pPacket)
+{
+    if (gpWaveformDev->getDeviceIDN() < 0)
+    {
+        TRACE("Waveform Connect failed!!\r\n");
+    }
+    else
+    {
+        g_pSerialProtocol->sendOnePacket(pPacket->PacketID, 0,  &pPacket->DataAndCRC[0], 1);
+    }
+    return 0;
+}
+
+int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
+{
+    BYTE cid = pPacket->DataAndCRC[1];
+    int ret = -1;
+    switch (pPacket->DataAndCRC[1])
+    {
+    case WF_COMM_CID_SET_SIN_10Hz1Vpp:{
+        ret = gpWaveformDev->setFuncSin(1,10.0f, 1.0f, 0.5f, -0.5f);
+    } break;
+    case WF_COMM_CID_SET_SIN_0P5Hz1Vpp:{
+        ret = gpWaveformDev->setFuncSin(1,0.5f, 1.0f, 0.5f, -0.5f);
+    } break;
+    case WF_COMM_CID_SET_SIN_150Hz1Vpp:{
+        ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f, 0.5f, -0.5f);
+    } break;
+    default:
+        break;
+    }
+    if (ret < 0)
+    {
+        TRACE("PktHandleWaveformComm Operation failed!!\r\n");
+    }
+    else
+    {
+        g_pSerialProtocol->sendOnePacket(pPacket->PacketID, 0, &pPacket->DataAndCRC[0], 2);
+    }
     return 0;
 }
 

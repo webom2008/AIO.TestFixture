@@ -34,6 +34,8 @@ private:
     int     PktHandleErrorInfo(UartProtocolPacket *pPacket);
     int     PktHandleProcessState(UartProtocolPacket *pPacket);
     int     PktHandleConnectted(UartProtocolPacket *pPacket);
+    int     PktHandleWaveformComm(UartProtocolPacket *pPacket);
+    int     PktHandleWaveformConnect(UartProtocolPacket *pPacket);
     int     checkAndPrintPowerInfo(void *arg);
     int     detectBinFile(const char *wildcard,CString &name);
     int     updateTask(BYTE &CID, CString &name);

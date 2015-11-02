@@ -248,10 +248,10 @@ static int sendAndWaitAIODspApp(void)
 //        vTaskDelay(DELAY_MAX_WAIT);
 //        //Reset AIO power
 //        s8Val = SW_OFF;
-//        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+//        AioBoardCtrl(AIOBRD_CTRL_SET_PWR,&s8Val);
 //        vTaskDelay(2000 / portTICK_PERIOD_MS);
 //        s8Val = SW_ON;
-//        AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+//        AioBoardCtrl(AIOBRD_CTRL_SET_PWR,&s8Val);
 //        vTaskDelay(1000 / portTICK_PERIOD_MS);
 //        
         sendComputerPkt(&pkt);
@@ -378,7 +378,7 @@ static void MainProcessTask(void *pvParameters)
         
         case STATE_AIOBOARD_POWERUP:{
             s8Val = SW_ON;
-            AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+            AioBoardCtrl(AIOBRD_CTRL_SET_PWR,&s8Val);
             vTaskDelay(2000 / portTICK_PERIOD_MS); //delay 2s for power stable
             state = STATE_AIOBOARD_DETECT_CURRENT;
         }break;
@@ -606,7 +606,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_NIBP_OVER_PRESS:{
+#ifndef SKIP_STATE_NIBP_OVER_PRESS
             ret = testNibpOverPress();
+#endif
             if (0 == ret){
                 state = STATE_IBP_SELFCHECK;
             }else{
@@ -668,7 +670,7 @@ static void MainProcessTask(void *pvParameters)
 
     // power-off aio board
     s8Val = SW_OFF;
-    AioBoardCtrl(CTRL_CMD_AIOBOARD_SET_POWER,&s8Val);
+    AioBoardCtrl(AIOBRD_CTRL_SET_PWR,&s8Val);
     
     INFO("MainProcessTask[%d] delete...\r\n",u32CreateAppCount);
     xMainProcessTaskHandle = NULL;
