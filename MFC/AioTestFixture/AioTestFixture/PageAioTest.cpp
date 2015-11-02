@@ -303,6 +303,51 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
     case ERR_INFO_ID_WAVEFORM_LOST:{
         add2Display(_T("错误:与波形信号发生器连接失败\r\n"));
     }break;
+        
+    case ERR_INFO_ID_ECG_AMP:{
+        if(pPacket->DataAndCRC[2] & (0x01 << 0))
+        {
+            add2Display(_T("E07-01:ECG1 导联幅度异常\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 1))
+        {
+            add2Display(_T("E07-01:ECG2 导联幅度异常\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 2))
+        {
+            add2Display(_T("E07-01:ECG3 导联幅度异常\r\n"));
+        }
+    }break;
+
+    case ERR_INFO_ID_ECG_0P5HZ:{
+        if(pPacket->DataAndCRC[2] & (0x01 << 0))
+        {
+            add2Display(_T("E07-01:ECG1 导联0.5Hz带宽不足\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 1))
+        {
+            add2Display(_T("E07-01:ECG2 导联0.5Hz带宽不足\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 2))
+        {
+            add2Display(_T("E07-01:ECG3 导联0.5Hz带宽不足\r\n"));
+        }
+    }break;
+
+    case ERR_INFO_ID_ECG_150HZ:{
+        if(pPacket->DataAndCRC[2] & (0x01 << 0))
+        {
+            add2Display(_T("E07-01:ECG1 导联150Hz带宽不足\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 1))
+        {
+            add2Display(_T("E07-01:ECG2 导联150Hz带宽不足\r\n"));
+        }
+        if(pPacket->DataAndCRC[2] & (0x01 << 2))
+        {
+            add2Display(_T("E07-01:ECG3 导联150Hz带宽不足\r\n"));
+        }
+    }break;
 
     default:
         break;
@@ -336,13 +381,13 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     switch (pPacket->DataAndCRC[1])
     {
     case WF_COMM_CID_SET_SIN_10Hz1Vpp:{
-        ret = gpWaveformDev->setFuncSin(1,10.0f, 1.0f, 0.5f, -0.5f);
+        ret = gpWaveformDev->setFuncSin(1,10.0f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_0P5Hz1Vpp:{
-        ret = gpWaveformDev->setFuncSin(1,0.5f, 1.0f, 0.5f, -0.5f);
+        ret = gpWaveformDev->setFuncSin(1,0.5f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_150Hz1Vpp:{
-        ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f, 0.5f, -0.5f);
+        ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f);
     } break;
     default:
         break;

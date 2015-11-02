@@ -67,6 +67,40 @@ enum
 
 #define ECG_AMP_DELAY_MS                    2000
 
+
+
+#define ECG_AMP_U1_1            ((u16)500) //uV
+#define ECG_AMP_U1_1_RANGE      ((u8)1)    //%
+#define ECG_AMP_U1_1_MAX        (u16)(ECG_AMP_U1_1 * (100 + ECG_AMP_U1_1_RANGE) / 100)
+#define ECG_AMP_U1_1_MIN        (u16)(ECG_AMP_U1_1 * (100 - ECG_AMP_U1_1_RANGE) / 100)
+
+#define ECG_AMP_U1_2            ((u16)1000) //uV
+#define ECG_AMP_U1_2_RANGE      ((u8)1)    //%
+#define ECG_AMP_U1_2_MAX        (u16)(ECG_AMP_U1_2 * (100 + ECG_AMP_U1_2_RANGE) / 100)
+#define ECG_AMP_U1_2_MIN        (u16)(ECG_AMP_U1_2 * (100 - ECG_AMP_U1_2_RANGE) / 100)
+
+#define ECG_AMP_U1_3            ((u16)500) //uV
+#define ECG_AMP_U1_3_RANGE      ((u8)1)    //%
+#define ECG_AMP_U1_3_MAX        (u16)(ECG_AMP_U1_3 * (100 + ECG_AMP_U1_3_RANGE) / 100)
+#define ECG_AMP_U1_3_MIN        (u16)(ECG_AMP_U1_3 * (100 - ECG_AMP_U1_3_RANGE) / 100)
+
+#define ECG_AMP_U2_1_MAX        (u16)(500) //uV
+#define ECG_AMP_U2_1_MIN        (u16)(375) //uV
+#define ECG_AMP_U2_2_MAX        (u16)(1000) //uV
+#define ECG_AMP_U2_2_MIN        (u16)(750) //uV
+#define ECG_AMP_U2_3_MAX        (u16)(500) //uV
+#define ECG_AMP_U2_3_MIN        (u16)(375) //uV
+
+
+#define ECG_AMP_U3_1_MAX        (u16)(500) //uV
+#define ECG_AMP_U3_1_MIN        (u16)(375) //uV
+#define ECG_AMP_U3_2_MAX        (u16)(1000) //uV
+#define ECG_AMP_U3_2_MIN        (u16)(750) //uV
+#define ECG_AMP_U3_3_MAX        (u16)(500) //uV
+#define ECG_AMP_U3_3_MIN        (u16)(375) //uV
+
+
+
 #define _INFO_
 #define _ERROR_
 
@@ -342,8 +376,120 @@ int getEcgSelfcheck(void)
     return -1;
 }
 
+static int checkEcgAmplitudeU1(const u16 ecg1, const u16 ecg2, const u16 ecg3)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    u8 alarm = 0;
+
+    if ((ecg1 > ECG_AMP_U1_1_MAX) || (ecg1 < ECG_AMP_U1_1_MIN))
+    {
+        alarm |= (0x01 << 0);
+    }
+
+    if ((ecg2 > ECG_AMP_U1_2_MAX) || (ecg2 < ECG_AMP_U1_2_MIN))
+    {
+        alarm |= (0x01 << 1);
+    }
+    
+    if ((ecg3 > ECG_AMP_U1_3_MAX) || (ecg3 < ECG_AMP_U1_3_MIN))
+    {
+        alarm |= (0x01 << 2);
+    }
+    
+    if (0 != alarm)
+    {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_ECG_AMP;
+        pkt.DataAndCRC[i++] = alarm;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
+        return -1;
+    }
+    return 0;
+}
+
+static int checkEcgAmplitudeU2(const u16 ecg1, const u16 ecg2, const u16 ecg3)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    u8 alarm = 0;
+
+    if ((ecg1 > ECG_AMP_U2_1_MAX) || (ecg1 < ECG_AMP_U2_1_MIN))
+    {
+        alarm |= (0x01 << 0);
+    }
+
+    if ((ecg2 > ECG_AMP_U2_2_MAX) || (ecg2 < ECG_AMP_U2_2_MIN))
+    {
+        alarm |= (0x01 << 1);
+    }
+    
+    if ((ecg3 > ECG_AMP_U2_3_MAX) || (ecg3 < ECG_AMP_U2_3_MIN))
+    {
+        alarm |= (0x01 << 2);
+    }
+    
+    if (0 != alarm)
+    {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_ECG_0P5HZ;
+        pkt.DataAndCRC[i++] = alarm;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
+        return -1;
+    }
+    return 0;
+}
+
+static int checkEcgAmplitudeU3(const u16 ecg1, const u16 ecg2, const u16 ecg3)
+{
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    u8 alarm = 0;
+
+    if ((ecg1 > ECG_AMP_U3_1_MAX) || (ecg1 < ECG_AMP_U3_1_MIN))
+    {
+        alarm |= (0x01 << 0);
+    }
+
+    if ((ecg2 > ECG_AMP_U3_2_MAX) || (ecg2 < ECG_AMP_U3_2_MIN))
+    {
+        alarm |= (0x01 << 1);
+    }
+    
+    if ((ecg3 > ECG_AMP_U3_3_MAX) || (ecg3 < ECG_AMP_U3_3_MIN))
+    {
+        alarm |= (0x01 << 2);
+    }
+      
+    if (0 != alarm)
+    {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_ECG_150HZ;
+        pkt.DataAndCRC[i++] = alarm;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
+        return -1;
+    }
+    return 0;
+}
+
 int testEcgAmplitudeBand(void)
 {
+    u16 u1_ecg1, u1_ecg2, u1_ecg3;
+    u16 u2_ecg1, u2_ecg2, u2_ecg3;
+    u16 u3_ecg1, u3_ecg2, u3_ecg3;
+    int ret = 0;
     //S1:ECG switch to EcgOut
     if( EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID) < 0)
     {
@@ -378,10 +524,13 @@ int testEcgAmplitudeBand(void)
         return -1;
     }
 
+    u1_ecg1 = gpEcgDebug->ecgVppResult.VppECG1;
+    u1_ecg2 = gpEcgDebug->ecgVppResult.VppECG2;
+    u1_ecg3 = gpEcgDebug->ecgVppResult.VppECG3;
     udprintf("WF_CTRL_10Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("u1_ecg1 = %d uV\r\n",u1_ecg1);
+    udprintf("u1_ecg2 = %d uV\r\n",u1_ecg2);
+    udprintf("u1_ecg3 = %d uV\r\n",u1_ecg3);
         
     //S2:Set Waveform Device
     if (WavefromCtrl(WF_CTRL_0P5Hz_1Vpp_SIN, NULL) < 0)
@@ -410,10 +559,13 @@ int testEcgAmplitudeBand(void)
         return -1;
     }
     
+    u2_ecg1 = gpEcgDebug->ecgVppResult.VppECG1;
+    u2_ecg2 = gpEcgDebug->ecgVppResult.VppECG2;
+    u2_ecg3 = gpEcgDebug->ecgVppResult.VppECG3;
     udprintf("WF_CTRL_0P5Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("u2_ecg1 = %d uV\r\n",u2_ecg1);
+    udprintf("u2_ecg2 = %d uV\r\n",u2_ecg2);
+    udprintf("u2_ecg3 = %d uV\r\n",u2_ecg3);
 
     
     //S2:Set Waveform Device
@@ -443,13 +595,18 @@ int testEcgAmplitudeBand(void)
         return -1;
     }
     
+    u3_ecg1 = gpEcgDebug->ecgVppResult.VppECG1;
+    u3_ecg2 = gpEcgDebug->ecgVppResult.VppECG2;
+    u3_ecg3 = gpEcgDebug->ecgVppResult.VppECG3;
     udprintf("WF_CTRL_150Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("u3_ecg1 = %d uV\r\n",u3_ecg1);
+    udprintf("u3_ecg2 = %d uV\r\n",u3_ecg2);
+    udprintf("u3_ecg3 = %d uV\r\n",u3_ecg3);
     
-    //S7:End
-    return 0;
+    ret |= checkEcgAmplitudeU1(u1_ecg1, u1_ecg2, u1_ecg3);
+    ret |= checkEcgAmplitudeU2(u2_ecg1, u2_ecg2, u2_ecg3);
+    ret |= checkEcgAmplitudeU3(u3_ecg1, u3_ecg2, u3_ecg3);
+    return ret;
 }
 
 int testEcgProbeOff(void)

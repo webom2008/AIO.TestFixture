@@ -55,6 +55,9 @@ typedef enum
     ERR_INFO_ID_PC_LOST         = 0x04,
     ERR_INFO_ID_DPM_LOST        = 0x05,
     ERR_INFO_ID_WAVEFORM_LOST   = 0x06,
+    ERR_INFO_ID_ECG_AMP         = 0x07,
+    ERR_INFO_ID_ECG_0P5HZ       = 0x08,
+    ERR_INFO_ID_ECG_150HZ       = 0x09,
 
     ERR_INFO_ID_UNVALID,
 } ERROR_INFO_CID;

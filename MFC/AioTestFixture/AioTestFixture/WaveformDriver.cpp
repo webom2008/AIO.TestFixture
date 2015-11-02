@@ -273,7 +273,8 @@ OUTP2 ON
 
     if ((0 == high_V)&&(0 == low_V))
     {
-        high_V = amp_V;
+        high_V = amp_V / 2;
+        low_V =  - amp_V / 2;
     }
     //具体的命令操作语句，注意SCPI的写法和\n结尾  
     viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                           //高阻抗
