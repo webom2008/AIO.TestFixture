@@ -85,7 +85,12 @@ int exeAioEcgDebugPacket(AioDspProtocolPkt *pPacket)
                             ECG_DEB_PKT_BIT_START_VPP);
     }break;
     case (u8)ECG_DEB_CID_STOP_VPP:{
-        gpEcgDebug->ecgVppResult = *(EcgDebVppResult *)&pPacket->DataAndCRC[1];
+        gpEcgDebug->ecgVppResult.VppECG1 = (u16)((pPacket->DataAndCRC[1] << 8) \
+                                            |pPacket->DataAndCRC[2]);
+        gpEcgDebug->ecgVppResult.VppECG2 = (u16)((pPacket->DataAndCRC[3] << 8) \
+                                            |pPacket->DataAndCRC[4]);
+        gpEcgDebug->ecgVppResult.VppECG3 = (u16)((pPacket->DataAndCRC[5] << 8) \
+                                            |pPacket->DataAndCRC[6]);
         xEventGroupSetBits( gpEcgDebug->xEventGroup, 
                             ECG_DEB_PKT_BIT_STOP_VPP);
     }break;

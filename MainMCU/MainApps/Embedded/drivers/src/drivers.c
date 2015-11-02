@@ -79,6 +79,7 @@ int DriverMoudleInit(void)
     ret |= LedsDisplayOpen();
     ret |= SecurFlashInit();
     ret |= SecurFlashOpen();
+    ret |= EcgDevInit();
     while (ret < 0); //error hanppen
     return 0;
 }

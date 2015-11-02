@@ -65,6 +65,8 @@ enum
 #define NIBP_DEBUG_CHECK_DSP_PROTECT        (u8)(0x05)
 #define NIBP_DEBUG_CHECK_STM_PROTECT        (u8)(0x06)
 
+#define ECG_AMP_DELAY_MS                    2000
+
 #define _INFO_
 #define _ERROR_
 
@@ -340,7 +342,6 @@ int getEcgSelfcheck(void)
     return -1;
 }
 
-#define ECG_AMP_DELAY_MS           10000
 int testEcgAmplitudeBand(void)
 {
     //S1:ECG switch to EcgOut
@@ -359,11 +360,12 @@ int testEcgAmplitudeBand(void)
     
     //S3:delay
     vTaskDelay(ECG_AMP_DELAY_MS/portTICK_PERIOD_MS);
-    
+
     //S4:Start AIO Factory
     if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
     
     //S5:delay for 2 cycle
@@ -372,13 +374,14 @@ int testEcgAmplitudeBand(void)
     //S6:Stop and get AIO result
     if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
 
     udprintf("WF_CTRL_10Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
         
     //S2:Set Waveform Device
     if (WavefromCtrl(WF_CTRL_0P5Hz_1Vpp_SIN, NULL) < 0)
@@ -393,7 +396,8 @@ int testEcgAmplitudeBand(void)
     //S4:Start AIO Factory
     if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
     
     //S5:delay for 2 cycle
@@ -402,13 +406,14 @@ int testEcgAmplitudeBand(void)
     //S6:Stop and get AIO result
     if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
     
     udprintf("WF_CTRL_0P5Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
 
     
     //S2:Set Waveform Device
@@ -424,7 +429,8 @@ int testEcgAmplitudeBand(void)
     //S4:Start AIO Factory
     if (AioEcgDebugCtrl(ECG_DEB_CID_START_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
     
     //S5:delay for 2 cycle
@@ -433,13 +439,14 @@ int testEcgAmplitudeBand(void)
     //S6:Stop and get AIO result
     if (AioEcgDebugCtrl(ECG_DEB_CID_STOP_VPP, NULL) < 0)
     {
-
+        ERROR("testEcgAmplitudeBand AioEcgDebugCtrl!!!\r\n");
+        return -1;
     }
     
     udprintf("WF_CTRL_150Hz_1Vpp_SIN Result:\r\n");
-    udprintf("VppECG1 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
-    udprintf("VppECG2 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
-    udprintf("VppECG3 = %d mV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
+    udprintf("VppECG1 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG1);
+    udprintf("VppECG2 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG2);
+    udprintf("VppECG3 = %d uV\r\n",gpEcgDebug->ecgVppResult.VppECG3);
     
     //S7:End
     return 0;
