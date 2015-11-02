@@ -763,6 +763,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_secur.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_ecg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_ecg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -832,6 +837,11 @@
               <FileName>testFunctions.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\testFunctions.c</FilePath>
+            </File>
+            <File>
+              <FileName>EcgDebug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\EcgDebug.c</FilePath>
             </File>
           </Files>
         </Group>

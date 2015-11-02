@@ -264,6 +264,7 @@ int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, cons
 int initAioDspResource(void)
 {
     int ret = 0;
+    ret = initAioEcgDebugResource();
     xDspPktAckEventGroup = xEventGroupCreate();
     do{} while (NULL == xDspPktAckEventGroup);
 
@@ -281,6 +282,7 @@ int createAioDspUnpackTask(void)
     return 0;
 }
 
+
 #define _NIBP_INFO_
 
 static int exePacket(AioDspProtocolPkt *pPacket)
@@ -294,8 +296,7 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     
     if ((SF_SPO2_UPDATE == id) \
         || (SF_AIO_STM_UPDATE == id) \
-        || (SF_AIO_DSP_UPDATE == id)\
-        || (COM_SOFTWARE_VERSION_ID == id))
+        || (SF_AIO_DSP_UPDATE == id))
     {
         //change packet header
         pPacket->DR_Addr = PC_ADDR;
@@ -370,6 +371,10 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_NIBP_STOP);
+    }
+    else if (AIO_RX_ECG_Debug_ID == id)
+    {
+        exeAioEcgDebugPacket(pPacket);
     }
     else //do nothing...
     {

@@ -50,6 +50,8 @@ extern "C"{
 #include "driver_dpy.h"
 #include "driver_secur.h"
 
+#include "driver_ecg.h"
+
 int DriverMoudleInit(void);
 
 #ifdef __cplusplus

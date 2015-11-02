@@ -269,7 +269,33 @@ int testAioBoardMaxCurrent(void)
 
 int getEcgSelfcheck(void)
 {
-    return 0;
+    u8 pBuf[1] = {0,};
+    EventBits_t uxBits = 0;
+
+    pBuf[0] = (u8)ECG_DEB_CID_GET_SELFCHECK;
+    xEventGroupClearBits(gpEcgDebug->xEventGroup, ECG_DEB_PKT_BIT_SELFCHECK);
+    sendAioDspPktByID(AIO_RX_ECG_Debug_ID, (char *)pBuf, 1, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            gpEcgDebug->xEventGroup,   // The event group being tested.
+            ECG_DEB_PKT_BIT_SELFCHECK,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & ECG_DEB_PKT_BIT_SELFCHECK)
+    {
+        if (0x00 == gpEcgDebug->u8SelfcheckResult)
+        {
+            INFO("EcgSelfcheck OK!!\r\n");
+        }
+        else
+        {
+            ERROR("EcgSelfcheck Error!!\r\n");
+        }
+        return 0;
+    }
+    ERROR("getEcgSelfcheck timeout!!!\r\n");
+    return -1;
 }
 
 int testEcgAmplitudeBand(void)

@@ -139,7 +139,7 @@ void Send_Byte(uint8_t data)
 }
 
 int LedsDisplayInit(void)
-    {
+{
     GPIO_InitTypeDef GPIO_InitStructure;
 
     RCC_APB2PeriphClockCmd(DIG_SDA_RCC | DIG_SCL_RCC,ENABLE);
