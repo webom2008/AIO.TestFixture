@@ -74,6 +74,21 @@ typedef enum
     STATE_PROCESS_UNVALID,
 } MainProcessState_Typedef;
 
+
+typedef enum
+{
+    CHECK_LL_OFF = 0x00,
+    CHECK_LA_OFF,
+    CHECK_RA_OFF,
+    CHECK_RL_OFF,
+    CHECK_V_OFF,
+    CHECK_LL_LA_OFF,
+    CHECK_LA_RA_OFF,
+    CHECK_LL_RA_OFF,
+    CHECK_LL_LA_RA_OFF,
+    CHECK_ALL_OFF,
+} CHECK_ECG_PROBE;
+
 static const char* MainProcessStateInfo[STATE_PROCESS_UNVALID];
 static const char AIO_DSP_APP_BIN_NAME[] = "aPM12_AIO_DSPAPP*.ldr";
 static const char AIO_STM_APP_BIN_NAME[] = "aPM12_AIO_STMAPP*.bin";
@@ -349,6 +364,10 @@ int CPageAioTest::PktHandleErrorInfo(UartProtocolPacket *pPacket)
         }
     }break;
 
+    case ERR_INFO_ID_ECG_PROBE:{
+        displayProbeErrorInfo(pPacket->DataAndCRC[2]);
+    }break;
+
     default:
         break;
     }
@@ -388,6 +407,9 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     } break;
     case WF_COMM_CID_SET_SIN_150Hz1Vpp:{
         ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f);
+    } break;
+    case WF_COMM_CID_SET_SIN_2Hz16Vpp:{
+        ret = gpWaveformDev->setFuncSin(1,2.0f, 16.0f);
     } break;
     default:
         break;
@@ -758,4 +780,45 @@ void CPageAioTest::createAioDspStmUpdateThread(void)
 void CPageAioTest::OnBnClickedBtnClean()
 {
     clearDisplay();
+}
+
+int CPageAioTest::displayProbeErrorInfo(BYTE type)
+{
+    CHECK_ECG_PROBE info = (CHECK_ECG_PROBE)type;
+    switch (info)
+    {
+    case CHECK_LL_OFF:{
+        add2Display(_T("E07-01:LL导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_LA_OFF:{
+        add2Display(_T("E07-01:LA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_RA_OFF:{
+        add2Display(_T("E07-01:RA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_RL_OFF:{
+        add2Display(_T("E07-01:RL导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_V_OFF:{
+        add2Display(_T("E07-01:V导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_LL_LA_OFF:{
+        add2Display(_T("E07-01:LL_LA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_LA_RA_OFF:{
+        add2Display(_T("E07-01:LA_RA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_LL_RA_OFF:{
+        add2Display(_T("E07-01:LL_RA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_LL_LA_RA_OFF:{
+        add2Display(_T("E07-01:LL_LA_RA导联脱落检测异常\r\n"));
+    }break;
+    case CHECK_ALL_OFF:{
+        add2Display(_T("E07-01:ALL导联脱落检测异常\r\n"));
+    }break;
+    default:
+        break;
+    }
+    return 0;
 }

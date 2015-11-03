@@ -145,12 +145,12 @@ int LedsDisplayInit(void)
     RCC_APB2PeriphClockCmd(DIG_SDA_RCC | DIG_SCL_RCC,ENABLE);
 
     GPIO_InitStructure.GPIO_Pin = DIG_SDA_PIN;      
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
     GPIO_Init(DIG_SDA_PORT, &GPIO_InitStructure);	
 
     GPIO_InitStructure.GPIO_Pin = DIG_SCL_PIN;  
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(DIG_SCL_PORT, &GPIO_InitStructure);
     return 0;

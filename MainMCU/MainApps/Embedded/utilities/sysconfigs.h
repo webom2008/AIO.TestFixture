@@ -59,6 +59,8 @@ extern "C"{
 #define SKIP_STATE_AIOBOARD_MAX_CURRENT
 #define SKIP_STATE_NIBP_GAS_CONTROL
 #define SKIP_STATE_NIBP_OVER_PRESS
+#define SKIP_STATE_ECG_AMPLITUDE_BAND
+//#define SKIP_STATE_ECG_PROBE_OFF
 
 #ifdef __cplusplus
 #if __cplusplus

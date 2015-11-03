@@ -39,6 +39,7 @@ private:
     int     checkAndPrintPowerInfo(void *arg);
     int     detectBinFile(const char *wildcard,CString &name);
     int     updateTask(BYTE &CID, CString &name);
+    int     displayProbeErrorInfo(BYTE type);
     
     static UINT AioDspAppUpdateThread(LPVOID pParam);
     static UINT AioDspStmUpdateThread(LPVOID pParam);

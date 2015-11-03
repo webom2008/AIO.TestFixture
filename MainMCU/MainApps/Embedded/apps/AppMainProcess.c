@@ -464,7 +464,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_ECG_AMPLITUDE_BAND:{
+#ifndef SKIP_STATE_ECG_AMPLITUDE_BAND
             ret = testEcgAmplitudeBand();
+#endif
             if (0 == ret){
                 state = STATE_ECG_PROBE_OFF;
             }else{
@@ -474,11 +476,13 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_ECG_PROBE_OFF:{
+#ifndef SKIP_STATE_ECG_PROBE_OFF
             ret = testEcgProbeOff();
+#endif
             if (0 == ret){
                 state = STATE_ECG_POLARITY;
             }else{
-                ERROR("E06-02:STATE_ECG_PROBE_OFF!!\r\n");
+                ERROR("E07-03:STATE_ECG_PROBE_OFF!!\r\n");
                 running = false;
             }
         }break;

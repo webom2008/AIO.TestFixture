@@ -161,7 +161,7 @@ int EcgDevInit(void)
                             | LL_LEAD_OFF_RCC,
                             ENABLE);
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     
     GPIO_InitStructure.GPIO_Pin = V_LEAD_SEL_S0_PIN;      
@@ -184,6 +184,7 @@ int EcgDevInit(void)
     GPIO_Init(RL_LEAD_SEL_S0_PORT, &GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = RL_LEAD_SEL_S1_PIN;      
     GPIO_Init(RL_LEAD_SEL_S1_PORT, &GPIO_InitStructure);
+    
     GPIO_InitStructure.GPIO_Pin = RA_LEAD_OFF_PIN;      
     GPIO_Init(RA_LEAD_OFF_PORT, &GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = RL_LEAD_OFF_PIN;      
@@ -359,6 +360,74 @@ int EcgDevCtrl(const ECG_CTRL_CMD cmd, const ECG_CTRL_CMD_VAL val)
         EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH2);
         EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH2);
         
+    }break;
+    case CMD_ECG_LL_LA_OFF:{
+        if (CMD_VAL_OFF_NORMAL == val)
+        {
+            LL_LEAD_OFF_LOW;
+            LA_LEAD_OFF_LOW;
+        }
+        else if (CMD_VAL_OFF_LEADOFF == val)
+        {
+            LL_LEAD_OFF_HIGH;
+            LA_LEAD_OFF_HIGH;
+        }
+    }break;
+    case CMD_ECG_LA_RA_OFF:{
+        if (CMD_VAL_OFF_NORMAL == val)
+        {
+            RA_LEAD_OFF_LOW;
+            LA_LEAD_OFF_LOW;
+        }
+        else if (CMD_VAL_OFF_LEADOFF == val)
+        {
+            RA_LEAD_OFF_HIGH;
+            LA_LEAD_OFF_HIGH;
+        }
+    }break;
+    case CMD_ECG_LL_RA_OFF:{
+        if (CMD_VAL_OFF_NORMAL == val)
+        {
+            LL_LEAD_OFF_LOW;
+            RA_LEAD_OFF_LOW;
+        }
+        else if (CMD_VAL_OFF_LEADOFF == val)
+        {
+            LL_LEAD_OFF_HIGH;
+            RA_LEAD_OFF_HIGH;
+        }
+    }break;
+    case CMD_ECG_LL_LA_RA_OFF:{
+        if (CMD_VAL_OFF_NORMAL == val)
+        {
+            LL_LEAD_OFF_LOW;
+            LA_LEAD_OFF_LOW;
+            RA_LEAD_OFF_LOW;
+        }
+        else if (CMD_VAL_OFF_LEADOFF == val)
+        {
+            LL_LEAD_OFF_HIGH;
+            LA_LEAD_OFF_HIGH;
+            RA_LEAD_OFF_HIGH;
+        }
+    }break;
+    case CMD_ECG_ALL_OFF:{
+        if (CMD_VAL_OFF_NORMAL == val)
+        {
+            LL_LEAD_OFF_LOW;
+            LA_LEAD_OFF_LOW;
+            RA_LEAD_OFF_LOW;
+            RL_LEAD_OFF_LOW;
+            V_LEAD_OFF_LOW;
+        }
+        else if (CMD_VAL_OFF_LEADOFF == val)
+        {
+            LL_LEAD_OFF_HIGH;
+            LA_LEAD_OFF_HIGH;
+            RA_LEAD_OFF_HIGH;
+            RL_LEAD_OFF_HIGH;
+            V_LEAD_OFF_HIGH;
+        }
     }break;
     default:{
 

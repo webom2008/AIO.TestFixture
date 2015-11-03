@@ -65,8 +65,9 @@ enum
 #define NIBP_DEBUG_CHECK_DSP_PROTECT        (u8)(0x05)
 #define NIBP_DEBUG_CHECK_STM_PROTECT        (u8)(0x06)
 
+#define NIBP_VERIFY_DELAY_MS                100
 #define ECG_AMP_DELAY_MS                    2000
-
+#define ECG_PROBE_OFF_DELAY_MS              2000
 
 
 #define ECG_AMP_U1_1            ((u16)500) //uV
@@ -99,6 +100,33 @@ enum
 #define ECG_AMP_U3_3_MAX        (u16)(500) //uV
 #define ECG_AMP_U3_3_MIN        (u16)(375) //uV
 
+
+typedef enum
+{
+    CHECK_LL_OFF = 0x00,
+    CHECK_LA_OFF,
+    CHECK_RA_OFF,
+    CHECK_RL_OFF,
+    CHECK_V_OFF,
+    CHECK_LL_LA_OFF,
+    CHECK_LA_RA_OFF,
+    CHECK_LL_RA_OFF,
+    CHECK_LL_LA_RA_OFF,
+    CHECK_ALL_OFF,
+} CHECK_ECG_PROBE;
+
+//#define PROBE_INFO_MASK_ALL     (u16)(0x3FF << 2)
+#define PROBE_INFO_MASK_ALL     (u16)(0x1F << 2)
+#define PROBE_INFO_MASK_LA      (u16)(0x01 << 2)
+#define PROBE_INFO_MASK_RA      (u16)(0x01 << 3)
+#define PROBE_INFO_MASK_LL      (u16)(0x01 << 4)
+#define PROBE_INFO_MASK_RL      (u16)(0x01 << 5)
+#define PROBE_INFO_MASK_V1      (u16)(0x01 << 6)
+#define PROBE_INFO_MASK_V2      (u16)(0x01 << 7)
+#define PROBE_INFO_MASK_V3      (u16)(0x01 << 8)
+#define PROBE_INFO_MASK_V4      (u16)(0x01 << 9)
+#define PROBE_INFO_MASK_V5      (u16)(0x01 << 10)
+#define PROBE_INFO_MASK_V6      (u16)(0x01 << 11)
 
 
 #define _INFO_
@@ -609,9 +637,203 @@ int testEcgAmplitudeBand(void)
     return ret;
 }
 
+static int waitAndCheckProbeInfo(CHECK_ECG_PROBE type)
+{
+    EventBits_t uxBits = 0;
+    u8 alarm = 0x01;
+    u16 info;
+    AioDspProtocolPkt pkt;
+    int i = 0;
+    
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_ECG_PROBE);
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_ECG_PROBE,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
+    {
+        info = gpDspAckResult->u16EcgProbeInfo;
+        udprintf("u16EcgProbeInfo = 0x%04x\r\n",info);
+        info = info & PROBE_INFO_MASK_ALL;
+        switch(type)
+        {
+        case CHECK_LL_OFF:{
+            if (info & PROBE_INFO_MASK_LL) alarm = 0;
+        }break;
+        case CHECK_LA_OFF:{
+            if (info & PROBE_INFO_MASK_LA) alarm = 0;
+        }break;
+        case CHECK_RA_OFF:{
+            if (info & PROBE_INFO_MASK_RA) alarm = 0;
+        }break;
+        case CHECK_RL_OFF:{
+            if (info & PROBE_INFO_MASK_RL) alarm = 0;
+        }break;
+        case CHECK_V_OFF:{
+            if (info & PROBE_INFO_MASK_V1) alarm = 0;
+        }break;
+        case CHECK_LL_LA_OFF:{
+            if ((info & PROBE_INFO_MASK_LL) && (info & PROBE_INFO_MASK_LA))
+            {
+                alarm = 0;
+            }
+        }break;
+        case CHECK_LA_RA_OFF:{
+            if ((info & PROBE_INFO_MASK_LA) && (info & PROBE_INFO_MASK_RA))
+            {
+                alarm = 0;
+            }
+        }break;
+        case CHECK_LL_RA_OFF:{
+            if ((info & PROBE_INFO_MASK_LL) && (info & PROBE_INFO_MASK_RA))
+            {
+                alarm = 0;
+            }
+        }break;
+        case CHECK_LL_LA_RA_OFF:{
+            if (info & PROBE_INFO_MASK_RL)
+            {
+                alarm = 0;
+            }
+        }break;
+        case CHECK_ALL_OFF:{
+            if (info & PROBE_INFO_MASK_RL)
+            {
+                alarm = 0;
+            }
+        }break;
+        default:{
+
+        }break;
+        } // End of switch(type)
+    } //End of if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
+    
+    if (alarm)
+    {
+        i = 0;
+        initComputerPkt(&pkt);
+        pkt.DataAndCRC[i++] = (u8)COMP_ID_ERROR_INFO;
+        pkt.DataAndCRC[i++] = (u8)ERR_INFO_ID_ECG_PROBE;
+        pkt.DataAndCRC[i++] = (u8)type;
+        pkt.Length = i;
+        pkt.DataAndCRC[pkt.Length] = crc8ComputerPkt(&pkt);
+        sendComputerPkt(&pkt);
+        return -1;
+    }
+    return 0;
+}
+
 int testEcgProbeOff(void)
 {
-    return 0;
+    int error = 0;
+    
+    //S1:ECG switch to EcgOut
+    EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID);
+    
+    //S2:Set Waveform Device
+    if (WavefromCtrl(WF_CTRL_2Hz_16Vpp_SIN, NULL) < 0)
+    {
+        ERROR("testEcgProbeOff WavefromCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S3:delay
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+
+    EcgDevCtrl(CMD_ECG_LL_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LL_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LL_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LL_OFF, CMD_VAL_OFF_NORMAL);
+    
+    EcgDevCtrl(CMD_ECG_LA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LA_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_RA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_RA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_RA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_RA_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_RL_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_RL_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_RL_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_RL_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_V_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_V_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_V_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_V_OFF, CMD_VAL_OFF_NORMAL);
+    
+    EcgDevCtrl(CMD_ECG_LL_LA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LL_LA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LL_LA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LL_LA_OFF, CMD_VAL_OFF_NORMAL);
+    
+    EcgDevCtrl(CMD_ECG_LA_RA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LA_RA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LA_RA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LA_RA_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_LL_RA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LL_RA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LL_RA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LL_RA_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_LL_LA_RA_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_LL_LA_RA_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_LL_LA_RA_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_LL_LA_RA_OFF, CMD_VAL_OFF_NORMAL);
+
+    EcgDevCtrl(CMD_ECG_ALL_OFF, CMD_VAL_OFF_LEADOFF);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+    if (waitAndCheckProbeInfo(CHECK_ALL_OFF) < 0)
+    {
+        ERROR("testEcgProbeOff CHECK_ALL_OFF!!!\r\n");
+        error++;
+    }
+    EcgDevCtrl(CMD_ECG_ALL_OFF, CMD_VAL_OFF_NORMAL);
+
+    if (error) return -1;
+    else return 0;
 }
 
 int testEcgPolarity(void)
@@ -791,8 +1013,6 @@ static int getPressure(int *pGetVal)
     }
     return -1;
 }
-
-#define NIBP_VERIFY_DELAY_MS        100
 
 /*****************************************************************************
  Prototype    : verify310mmHgPoint

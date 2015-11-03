@@ -166,6 +166,7 @@ typedef enum
     ERR_INFO_ID_ECG_AMP         = 0x07,
     ERR_INFO_ID_ECG_0P5HZ       = 0x08,
     ERR_INFO_ID_ECG_150HZ       = 0x09,
+    ERR_INFO_ID_ECG_PROBE       = 0x0A,
 
     ERR_INFO_ID_UNVALID,
 } ERROR_INFO_CID;

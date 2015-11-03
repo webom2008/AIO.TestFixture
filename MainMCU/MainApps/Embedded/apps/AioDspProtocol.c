@@ -376,6 +376,13 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     {
         exeAioEcgDebugPacket(pPacket);
     }
+    else if (AIO_TX_ECG_LEAD_INFO_ID == id)
+    {
+        gpDspAckResult->u16EcgProbeInfo = (u16)((pPacket->DataAndCRC[1]<<8) \
+                                        |(pPacket->DataAndCRC[0]));
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_ECG_PROBE);
+    }
     else //do nothing...
     {
         if (gTestAioRxCheck[id] != pPacket->PacketNum)
