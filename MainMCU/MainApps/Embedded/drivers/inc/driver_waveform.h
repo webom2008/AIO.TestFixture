@@ -43,6 +43,7 @@ typedef enum
     WF_CTRL_PACE_F,
     WF_CTRL_PACE_G,
     WF_CTRL_PACE_H,
+    WF_CTRL_QRS_A,
     
     WF_CTRL_UNVALID,
 } WAVEFORM_CTRL_CMD;
@@ -70,6 +71,7 @@ typedef enum
 #define WF_COMM_CID_SET_PACE_F              ((u8)0x0A)
 #define WF_COMM_CID_SET_PACE_G              ((u8)0x0B)
 #define WF_COMM_CID_SET_PACE_H              ((u8)0x0C)
+#define WF_COMM_CID_SET_QRS_A               ((u8)0x0D)
 #define WF_COMM_CID_SET_ARB                 ((u8)0xFF)
 
 

@@ -993,8 +993,72 @@ int testEcgPace(void)
     else return 0;
 }
 
+
+static int checkQRSTempA(void)
+{
+    int err_cnt = 0;
+    EventBits_t uxBits = 0;
+    
+    if (WavefromCtrl(WF_CTRL_QRS_A, NULL) < 0)
+    {
+        ERROR("checkQRSTempA WF_CTRL_QRS_A!!!\r\n");
+        return -1;
+    }
+    vTaskDelay(5000/portTICK_PERIOD_MS); //wait for waveform stable
+    
+    if (getAioPaceCountAt5s() < 8) //120bpm(2pcs), 5s must >= 8pcs
+    {
+        ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
+        err_cnt++;
+    }
+    
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_HR_RR);
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_HR_RR,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & DSP_PKT_ACK_BIT_HR_RR)
+    {
+        INFO("checkECG1Pace HR=%d!!!\r\n", gpDspAckResult->u16HR);
+        if (gpDspAckResult->u16HR < 115) || (gpDspAckResult->u16HR > 125) //120bpm
+        {
+            err_cnt++;
+        }
+    }
+    else
+    {
+        ERROR("checkECG1Pace HR_RR timeout!!!\r\n");
+        err_cnt++;
+    }
+    
+    if (err_cnt) return -1;
+    else return 0;
+}
+
 int testEcgQuickQRS(void)
 {
-    return 0;
+    int err_cnt = 0;
+    
+    setPaceChannelAndSW(PACE_RA_LL_II, U8_FLAG_TRUE);
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH1);
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH1);
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+
+    if (checkQRSTempA() < 0)
+    {
+        ERROR("testEcgQuickQRS checkQRSTempA!!!\r\n");
+        err_cnt++;
+    }
+    
+    //restore default
+    setPaceChannelAndSW(PACE_RA_LL_II, U8_FLAG_FALT);
+    EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID);
+    
+    if (err_cnt) return -1;
+    else return 0;
 }
 

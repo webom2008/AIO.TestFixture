@@ -195,11 +195,13 @@ typedef struct
 typedef struct
 {
     u16 u16DspAckMMHG;
+    u16 u16HR;
     u16 u16EcgProbeInfo;
     u8 u8DspAckVerifyVal;
     u8 u8DspAck150mmHgVal;
     u8 u8DspAck310mmHgVal[2];
     u8 u8DspAckNibpAlarmType;
+    u8 u8RR;
     
 } DspAckResult_Typedef;
 
@@ -213,6 +215,7 @@ typedef struct
 #define DSP_PKT_ACK_BIT_ECG_PROBE   ((EventBits_t)(1<<7))
 #define DSP_PKT_ACK_BIT_PACE_CH     ((EventBits_t)(1<<8))
 #define DSP_PKT_ACK_BIT_PACE_SW     ((EventBits_t)(1<<9))
+#define DSP_PKT_ACK_BIT_HR_RR       ((EventBits_t)(1<<10))
 
 extern DspAckResult_Typedef    *gpDspAckResult;
 

@@ -128,6 +128,9 @@ int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg)
     case WF_CTRL_PACE_H:{
         ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_H);
     }break;
+    case WF_CTRL_QRS_A:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_QRS_A);
+    }break;
     default:{}break;
     }
     return ret;

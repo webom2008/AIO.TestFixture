@@ -438,6 +438,9 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     case WF_COMM_CID_SET_PACE_H:{
         ret = gpWaveformDev->setPaceByEnum(PACE_H);
     } break;
+    case WF_COMM_CID_SET_QRS_A:{
+        ret = gpWaveformDev->setFuncARB(1, PATH_QRS_A);
+    } break;
     default:
         break;
     }
