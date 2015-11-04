@@ -55,12 +55,12 @@ extern "C"{
 #define PWRDOWN_CMD_Z_GND       ((uint32_t)((0x04 << 24)|(0x03 << 8)))
 
 //Internal Reference Commands
-#define	RefPowerDown_StaticMode		0x08000000//Power down internal reference - static mode (default), must use external reference to operate device
-#define RefPowerUpDAC_StaticMode  	0x08000001//Power up internal reference - static mode,when all DACs power down,the reference power down,when  any dac  power up,the reference  power up
+#define RefPowerDown_StaticMode     0x08000000//Power down internal reference - static mode (default), must use external reference to operate device
+#define RefPowerUpDAC_StaticMode    0x08000001//Power up internal reference - static mode,when all DACs power down,the reference power down,when  any dac  power up,the reference  power up
 #define RefPowerUpDAC_FlexibleMode  0x09080000//Power up internal reference - flexible mode,when all DACs power down,the reference power down,when  any dac  power up,the reference  power up
-#define RefPowerUp_FlexibleMode		0x090A0000//Power up internal reference all the time regardless of state of DACs - flexible mode,
-#define RefPowerDown_FlexibleMode	0x090C0000//Power down internal reference all the time regardless of state of DACs - flexible mode,must use external reference to operate device
-#define RefFlexibleToStatic			0x09000000//switching internal reference mode from flexible  mode to static  mode
+#define RefPowerUp_FlexibleMode     0x090A0000//Power up internal reference all the time regardless of state of DACs - flexible mode,
+#define RefPowerDown_FlexibleMode   0x090C0000//Power down internal reference all the time regardless of state of DACs - flexible mode,must use external reference to operate device
+#define RefFlexibleToStatic         0x09000000//switching internal reference mode from flexible  mode to static  mode
 
 typedef enum
 {
@@ -90,6 +90,7 @@ int Dac8568Open(void);
 /*int Dac8568Write(void);*/
 int Dac8568Ctrl(const DacCtrlCmd_TypeDef cmd, void *paramter);
 int Dac8568Close(void);
+uint16_t Dac8568mV2Dac(uint16_t mV);
 
 #ifdef __cplusplus
 #if __cplusplus

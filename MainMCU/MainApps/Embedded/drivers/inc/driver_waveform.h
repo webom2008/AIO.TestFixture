@@ -34,6 +34,7 @@ typedef enum
     WF_CTRL_0P5Hz_1Vpp_SIN,
     WF_CTRL_150Hz_1Vpp_SIN,
     WF_CTRL_2Hz_16Vpp_SIN,
+    WF_CTRL_2Hz_16mVpp_SIN,
     
     WF_CTRL_UNVALID,
 } WAVEFORM_CTRL_CMD;
@@ -52,7 +53,8 @@ typedef enum
 #define WF_COMM_CID_SET_SIN_0P5Hz1Vpp       ((u8)0x01)
 #define WF_COMM_CID_SET_SIN_150Hz1Vpp       ((u8)0x02)
 #define WF_COMM_CID_SET_SIN_2Hz16Vpp        ((u8)0x03)
-#define WF_COMM_CID_SET_ARB                 ((u8)0x04)
+#define WF_COMM_CID_SET_SIN_2Hz16mVpp       ((u8)0x04)
+#define WF_COMM_CID_SET_ARB                 ((u8)0xFF)
 
 
 extern int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg);

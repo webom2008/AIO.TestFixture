@@ -65,6 +65,8 @@ static int spi_write_byte(const u8 byte);
 
 #define DAC_CTRL_WRITE_INPUT_REG        ((uint8_t) 0x00)
 #define DAC_CTRL_UPDATE_REG             ((uint8_t) 0x01)
+#define DAC_CTRL_W_UPDATE_ALL_REG       ((uint8_t) 0x02) //Write to Selected DAC Input Register and Update All DAC Registers
+#define DAC_CTRL_W_UPDATE_SPEC_REG      ((uint8_t) 0x03) //Write to Selected DAC Input Register and Update Respective DAC Register
 #define DAC_CTRL_WRITE_CLEAR_CODE_REG   ((uint8_t) 0x05)
 #define DAC_CTRL_WRITE_LDAC             ((uint8_t) 0x06)
 #define DAC_CTRL_SF_RESET               ((uint8_t) 0x07)
@@ -81,6 +83,8 @@ static int spi_write_byte(const u8 byte);
 #define DAC_VAL_MAX                     ((uint16_t) 0xFFFF)
 #define DAC_FRAME_DATA_OFFSET           ((uint8_t) 4)
 #endif  
+
+#define DAC_REFIN_VOLT_MV               ((uint32_t)(2500))
 
 #define DAC_VAL_MID                     ((uint16_t) (DAC_VAL_MAX / 2))
 #define DAC_VAL_MIN                     ((uint16_t) 0)
@@ -117,17 +121,25 @@ static int spi_write_byte(const u8 byte);
  * routines' implementations                    *
  *----------------------------------------------*/
 
+static __INLINE void delay_ns(const u32 ns)
+{
+    u32 i;
+    for(i= 0; i < ns; i++);
+}
+
 static void SPIx_ConfigureInit(void)
 {
     SPI_InitTypeDef  SPI_InitStructure;
     
-    SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Tx; 
+    SPI_Cmd(DAC_8568_SPIx, DISABLE);
+    
+    SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Tx;
     SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
     SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
     SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
     SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;                           //Note@: software NSS
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; //72MHz /16 = 4.5Mhz, 50MHz max
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256; //72MHz /256 = 281Khz, 50MHz max
     SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
     SPI_InitStructure.SPI_CRCPolynomial = 7;
     SPI_Init(DAC_8568_SPIx, &SPI_InitStructure);
@@ -177,14 +189,15 @@ int Dac8568Init(void)
 static void Dac8568PowerupInit(void)
 {
     uint32_t val = 0;
+//    uint8_t u8Val = 0;
     OpDacRegister_TypeDef OpDacReg;
 
     DAC_8568_LDAC_HIGH();
     DAC_8568_CLR_HIGH();
     Dac8568Ctrl(DAC_CTRL_CLR_PULSE, NULL);
-//  ac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
-//  ac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
-
+    Dac8568Ctrl(DAC_CTRL_W_SF_RESET, NULL);
+    delay_ns(10000);
+    
     OpDacReg.channel = DAC_CH_ALL;
     OpDacReg.val = PWRDOWN_CMD_UP;
     Dac8568Ctrl(DAC_CTRL_W_PWRDOWN, &OpDacReg); //enable DAC out
@@ -192,12 +205,14 @@ static void Dac8568PowerupInit(void)
     val = RefPowerUpDAC_StaticMode;
     Dac8568Ctrl(DAC_CTRL_W_INT_REF, &val);//DAC reference enable
 
-//  ac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_IGNORE_PIN);
-//  ac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, DAC_CLEAR_TO_MID);
+//    u8Val = DAC_CLEAR_IGNORE_PIN;
+//    Dac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, &u8Val);
+//    u8Val = DAC_CLEAR_TO_MID;
+//    Dac8568Ctrl(DAC_CTRL_W_CLEAR_CODE_REG, &u8Val);
 
     OpDacReg.channel = DAC_CH_ALL;
     OpDacReg.val = DAC_VAL_MID;
-    Dac8568Ctrl(DAC_CTRL_W_UPDATE_REG, &OpDacReg);
+    Dac8568Ctrl(DAC_CTRL_W_IN_UP_RES, &OpDacReg);
 }
 
 int Dac8568Open(void)
@@ -211,12 +226,6 @@ int Dac8568Open(void)
 //    return 0;
 //}
 
-static __INLINE void delay_ns(const u32 ns)
-{
-    u32 i;
-    for(i= 0; i < ns; i++);
-}
-
 static int Dac8568Write(const uint32_t oneFrame)
 {
     DAC_8568_SYNC_LOW();
@@ -225,6 +234,8 @@ static int Dac8568Write(const uint32_t oneFrame)
     spi_write_byte((u8)((oneFrame>>16)&0xFF));
     spi_write_byte((u8)((oneFrame>>8)&0xFF));
     spi_write_byte((u8)(oneFrame&0xFF));
+    
+    delay_ns(500);          //@note: Wait for SPI send last byte
     delay_ns(10);           //t8 at least 10ns 
     DAC_8568_SYNC_HIGH();
     delay_ns(80);           // Minimum SYNC HIGH time at least 80ns 
@@ -246,15 +257,18 @@ int Dac8568Ctrl(const DacCtrlCmd_TypeDef cmd, void *paramter)
         if (NULL == pOpDacReg) return -1;
         oneFrame = (uint32_t)(DAC_CTRL_WRITE_INPUT_REG << DAC_FRAME_CTRL_OFFSET);
         oneFrame |= (uint32_t)(pOpDacReg->channel << DAC_FRAME_ADDR_OFFSET);
-        oneFrame |= (uint32_t)(pOpDacReg->val << DAC_FRAME_DATA_OFFSET);
+        oneFrame |= (uint32_t)((pOpDacReg->val&0xFFFF) << DAC_FRAME_DATA_OFFSET);
         Dac8568Write(oneFrame);
+        DAC_8568_LDAC_LOW();
+        delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
+        DAC_8568_LDAC_HIGH();
     }
         break;
     case DAC_CTRL_W_UPDATE_REG:{
         if (NULL == pOpDacReg) return -1;
         oneFrame = (uint32_t)(DAC_CTRL_UPDATE_REG << DAC_FRAME_CTRL_OFFSET);
         oneFrame |= (uint32_t)(pOpDacReg->channel << DAC_FRAME_ADDR_OFFSET);
-        oneFrame |= (uint32_t)(pOpDacReg->val << DAC_FRAME_DATA_OFFSET);
+        oneFrame |= (uint32_t)((pOpDacReg->val&0xFFFF) << DAC_FRAME_DATA_OFFSET);
         Dac8568Write(oneFrame);
         DAC_8568_LDAC_LOW();
         delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
@@ -278,10 +292,26 @@ int Dac8568Ctrl(const DacCtrlCmd_TypeDef cmd, void *paramter)
     }
         break;
     case DAC_CTRL_W_IN_UP_ALL:{
+        if (NULL == pOpDacReg) return -1;
+        oneFrame = (uint32_t)(DAC_CTRL_W_UPDATE_ALL_REG << DAC_FRAME_CTRL_OFFSET);
+        oneFrame |= (uint32_t)(pOpDacReg->channel << DAC_FRAME_ADDR_OFFSET);
+        oneFrame |= (uint32_t)((pOpDacReg->val & 0xFFFF) << DAC_FRAME_DATA_OFFSET);
+        Dac8568Write(oneFrame);
+        DAC_8568_LDAC_LOW();
+        delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
+        DAC_8568_LDAC_HIGH();
 
     }
         break;
     case DAC_CTRL_W_IN_UP_RES:{
+        if (NULL == pOpDacReg) return -1;
+        oneFrame = (uint32_t)(DAC_CTRL_W_UPDATE_SPEC_REG << DAC_FRAME_CTRL_OFFSET);
+        oneFrame |= (uint32_t)(pOpDacReg->channel << DAC_FRAME_ADDR_OFFSET);
+        oneFrame |= (uint32_t)((pOpDacReg->val&0xFFFF) << DAC_FRAME_DATA_OFFSET);
+        Dac8568Write(oneFrame);
+        DAC_8568_LDAC_LOW();
+        delay_ns(80);       //LDAC pulse width LOW time,t12 at least 80ns 
+        DAC_8568_LDAC_HIGH();
 
     }
         break;
@@ -326,7 +356,19 @@ int Dac8568Close(void)
     return 0;
 }
 
+//0xFFFF -- 5V
+//0x0000 -- 2.5V
 
+uint16_t Dac8568mV2Dac(uint16_t mV)
+{
+    uint32_t dac;
+    if (mV > DAC_VAL_MAX)
+    {
+        mV = DAC_VAL_MAX;
+    }
+    dac = DAC_VAL_MAX / DAC_REFIN_VOLT_MV *mV;
+    return (uint16_t)dac;
+}
 
 //SPI interrface
 static int spi_write_byte(const u8 byte)
@@ -334,15 +376,18 @@ static int spi_write_byte(const u8 byte)
     /*!< Loop while DR register in not emplty */
     while (RESET == SPI_I2S_GetFlagStatus(DAC_8568_SPIx, SPI_I2S_FLAG_TXE));
 
-    /*!< Send byte through the SPI2 peripheral */
+    /*!< Send byte through the SPI1 peripheral */
     SPI_I2S_SendData(DAC_8568_SPIx, byte);
 
+    /*!< Loop while DR register in not emplty */
+    while (RESET == SPI_I2S_GetFlagStatus(DAC_8568_SPIx, SPI_I2S_FLAG_TXE));
+    
     return 0;
-    //SPI_Direction_1Line_Tx not need to receive
-    /*!< Wait to receive a byte */
+//    //SPI_Direction_1Line_Tx not need to receive
+//    /*!< Wait to receive a byte */
 //    while (RESET == SPI_I2S_GetFlagStatus(DAC_8568_SPIx, SPI_I2S_FLAG_RXNE));
 
-    /*!< Return the byte read from the SPI bus */
+//    /*!< Return the byte read from the SPI bus */
 //    return SPI_I2S_ReceiveData(DAC_8568_SPIx);
 }
 

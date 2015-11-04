@@ -68,6 +68,7 @@ enum
 #define NIBP_VERIFY_DELAY_MS                100
 #define ECG_AMP_DELAY_MS                    2000
 #define ECG_PROBE_OFF_DELAY_MS              2000
+#define ECG_POLARITY_DELAY_MS               2000
 
 
 #define ECG_AMP_U1_1            ((u16)500) //uV
@@ -836,9 +837,163 @@ int testEcgProbeOff(void)
     else return 0;
 }
 
+
+static uint16_t convPolarityVolt2Dac(int volt_mV)
+{
+    int volt = 2500;//2.5V REF
+    volt += volt_mV;
+    return Dac8568mV2Dac((uint16_t)volt);
+}
+
+static int waitAndCheckEcgOverLoad(void)
+{
+    EventBits_t uxBits = 0;
+    
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_ECG_PROBE);
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_ECG_PROBE,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
+    {
+        if(gpDspAckResult->u16EcgProbeInfo & PROBE_INFO_MASK_RL)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+        
+    } //End of if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
+    
+    return -1;
+}
+
+static int checkPolarityByVolt(int volt_mV, const int alarm)
+{
+    int ret = 0;
+    int err_cnt = 0;
+    OpDacRegister_TypeDef OpDacReg;
+    
+    OpDacReg.channel = DAC_CH_ALL;
+    OpDacReg.val = convPolarityVolt2Dac(volt_mV);
+    Dac8568Ctrl(DAC_CTRL_W_IN_UP_RES, &OpDacReg);
+
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH2);
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+    ret = waitAndCheckEcgOverLoad();
+    if (alarm != ret)
+    {
+        ERROR("checkPositive500mVPolarity CMD_ECG_LL_SEL\r\n");
+        err_cnt++;
+    }
+    
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH2);
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+    ret = waitAndCheckEcgOverLoad();
+    if (alarm != ret)
+    {
+        ERROR("checkPositive500mVPolarity CMD_ECG_RA_SEL\r\n");
+        err_cnt++;
+    }
+    
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH2);
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+    ret = waitAndCheckEcgOverLoad();
+    if (alarm != ret)
+    {
+        ERROR("checkPositive500mVPolarity CMD_ECG_LA_SEL\r\n");
+        err_cnt++;
+    }
+    
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH2);
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+    ret = waitAndCheckEcgOverLoad();
+    if (alarm != ret)
+    {
+        ERROR("checkPositive500mVPolarity CMD_ECG_RL_SEL\r\n");
+        err_cnt++;
+    }
+    
+    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH2);
+    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH0);
+    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+    ret = waitAndCheckEcgOverLoad();
+    if (alarm != ret)
+    {
+        ERROR("checkPositive500mVPolarity CMD_ECG_V_SEL\r\n");
+        err_cnt++;
+    }
+
+    if (err_cnt > 0) return -1;
+    else return 0;
+}
+
 int testEcgPolarity(void)
 {
-    return 0;
+    int error = 0;
+    
+    //S1:ECG switch to EcgOut
+    EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID);
+    
+    //S2:Set Waveform Device
+    if (WavefromCtrl(WF_CTRL_2Hz_16mVpp_SIN, NULL) < 0)
+    {
+        ERROR("testEcgPolarity WavefromCtrl!!!\r\n");
+        return -1;
+    }
+    
+    //S3:delay
+    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+
+    if (checkPolarityByVolt(500, 0) < 0)
+    {
+        ERROR("testEcgPolarity checkPositive500mVPolarity!!!\r\n");
+        error++;
+    }
+    
+    if (checkPolarityByVolt(-500, 0) < 0)
+    {
+        ERROR("testEcgPolarity checkNegative500mVPolarity!!!\r\n");
+        error++;
+    }
+    
+    if (checkPolarityByVolt(540, 1) < 0)
+    {
+        ERROR("testEcgPolarity checkPositive540mVPolarity!!!\r\n");
+        error++;
+    }
+    
+    if (checkPolarityByVolt(-540, 1) < 0)
+    {
+        ERROR("testEcgPolarity checkNegative540mVPolarity!!!\r\n");
+        error++;
+    }
+    
+    if (error) return -1;
+    else return 0;
 }
 
 int testEcgPace(void)

@@ -411,6 +411,9 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     case WF_COMM_CID_SET_SIN_2Hz16Vpp:{
         ret = gpWaveformDev->setFuncSin(1,2.0f, 16.0f);
     } break;
+    case WF_COMM_CID_SET_SIN_2Hz16mVpp:{
+        ret = gpWaveformDev->setFuncSin(1,2.0f, 0.016f);
+    } break;
     default:
         break;
     }
