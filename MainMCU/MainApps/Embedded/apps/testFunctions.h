@@ -28,25 +28,17 @@ extern "C"{
 #endif /* __cplusplus */
 
 extern int testPrepareAllReady(void);
-extern int getEcgSelfcheck(void);
 extern int testAioBoardMaxCurrent(void);
-extern int testEcgAmplitudeBand(void);
-extern int testEcgPace(void);
-extern int testEcgPolarity(void);
-extern int testEcgProbeOff(void);
-extern int testEcgQuickQRS(void);
 extern int testIbpAmplitudeBand(void);
 extern int testIbpProbeOff(void);
 extern int testIbpSelfcheck(void);
-extern int testNibpGasControl(void);
-extern int testNibpOverPress(void);
-extern int testNibpSelfcheck(void);
-extern int testNibpVerify(void);
 extern int testRespAmplitudeBand(void);
 extern int testSpo2Uart(void);
 extern int testTempPrecision(void);
 extern int testTempProbeOff(void);
 extern int testTempSelfcheck(void);
+
+extern int refreshMaxAioBoardCurrent(void);
 
 #ifdef __cplusplus
 #if __cplusplus

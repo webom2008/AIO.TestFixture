@@ -94,6 +94,15 @@ int exeAioEcgDebugPacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( gpEcgDebug->xEventGroup, 
                             ECG_DEB_PKT_BIT_STOP_VPP);
     }break;
+    case (u8)ECG_DEB_CID_START_PACE_CNT:{
+        xEventGroupSetBits( gpEcgDebug->xEventGroup, 
+                            ECG_DEB_PKT_BIT_START_PACE_CNT);
+    }break;
+    case (u8)ECG_DEB_CID_STOP_PACE_CNT:{
+        gpEcgDebug->u8PaceCount = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( gpEcgDebug->xEventGroup, 
+                            ECG_DEB_PKT_BIT_STOP_PACE_CNT);
+    }break;
     default:{
 
     }break;
@@ -115,6 +124,14 @@ int AioEcgDebugCtrl(const AIOECGDEBCTRL_CMD cmd, void *arg)
     case ECG_DEB_CID_STOP_VPP:{
         cid = (char)cmd;
         waitBits = ECG_DEB_PKT_BIT_STOP_VPP;
+    }break;
+    case ECG_DEB_CID_START_PACE_CNT:{
+        cid = (char)cmd;
+        waitBits = ECG_DEB_PKT_BIT_START_PACE_CNT;
+    }break;
+    case ECG_DEB_CID_STOP_PACE_CNT:{
+        cid = (char)cmd;
+        waitBits = ECG_DEB_PKT_BIT_STOP_PACE_CNT;
     }break;
     default:{
 

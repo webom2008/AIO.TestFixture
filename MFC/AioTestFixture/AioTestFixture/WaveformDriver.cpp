@@ -6,6 +6,7 @@
 
 #pragma comment(lib, "visa32.lib")
 
+
 CWaveformDriver *gpWaveformDev = NULL;
 
 CWaveformDriver::CWaveformDriver(void)
@@ -303,6 +304,7 @@ OUTP ON
     if (!m_bIsDeviceOpen) return -1;
 
     //具体的命令操作语句，注意SCPI的写法和\n结尾  
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                           //高阻抗
     viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"PULSe");      
     viPrintf(m_ViSession33522B, ":SOURce%@1d:FREQuency %@3lf\n", channel,freq_hz);                  //频率(kHz)  
     viPrintf(m_ViSession33522B, ":SOURce%@1d:VOLTage %@3lf\n", channel,volt_V);                     //幅值(V)        
@@ -314,36 +316,58 @@ OUTP ON
     return 0;
 }
 
+int CWaveformDriver::setFuncARB (UINT8 channel, const char *pathName)
+{
+    if (!m_bIsDeviceOpen) return -1;
+    
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                   //高阻抗
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"ARB");
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA%@1d %s\n",channel,pathName))
+    {
+        TRACE("=================:MMEMory:LOAD error \r\n");
+        return -2;
+    }
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:ARBitrary %s\n", channel, pathName))
+    {
+        TRACE("=================FUNCtion:ARBitrary error \r\n");
+        return -3;
+    }
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);                                   //开启输出  
+    
+    return 0;
+}
+
 int CWaveformDriver::setPaceByEnum(int type)
 {
+    int ret = -1;
     switch (type)
     {
     case PACE_A:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.002f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1,PATH_PACE_A);
         break;
     case PACE_B:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.002f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_B);
         break;
     case PACE_C:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.7f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_C);
         break;
     case PACE_D:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.7f, 0.0000001f, 0.0000001f, 0.002f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_D);
         break;
     case PACE_E:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.002f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_E);
         break;
     case PACE_F:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.002f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_F);
         break;
     case PACE_G:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, 0.7f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_G);
         break;
     case PACE_H:
-        gpWaveformDev->setFuncPULSe(1, 1.0f, -0.7f, 0.0000001f, 0.0000001f, 0.0001f, 0.0f);
+        ret = gpWaveformDev->setFuncARB(1, PATH_PACE_H);
         break;
     default:
         break;
     }
-    return 0;
+    return ret;
 }

@@ -848,6 +848,16 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\EcgDebug.c</FilePath>
             </File>
+            <File>
+              <FileName>testFuncEcg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\testFuncEcg.c</FilePath>
+            </File>
+            <File>
+              <FileName>testFuncNibp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\testFuncNibp.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

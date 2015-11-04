@@ -41,6 +41,8 @@ typedef enum
     ECG_DEB_CID_GET_SELFCHECK   = 0x08,
     ECG_DEB_CID_START_VPP       = 0x09,
     ECG_DEB_CID_STOP_VPP        = 0x0A,
+    ECG_DEB_CID_START_PACE_CNT  = 0x0B,
+    ECG_DEB_CID_STOP_PACE_CNT   = 0x0C,
 
     ECG_DEB_CID_UNVALID
 }AIOECGDEBCTRL_CMD;
@@ -56,6 +58,7 @@ typedef struct
 {
     EventGroupHandle_t xEventGroup;
     u8 u8SelfcheckResult;
+    u8 u8PaceCount;
     EcgDebVppResult ecgVppResult;
 } EcgDebug_Typedef;
 
@@ -63,6 +66,8 @@ typedef struct
 #define ECG_DEB_PKT_BIT_SELFCHECK       ((EventBits_t)(1<<0))
 #define ECG_DEB_PKT_BIT_START_VPP       ((EventBits_t)(1<<1))
 #define ECG_DEB_PKT_BIT_STOP_VPP        ((EventBits_t)(1<<2))
+#define ECG_DEB_PKT_BIT_START_PACE_CNT  ((EventBits_t)(1<<3))
+#define ECG_DEB_PKT_BIT_STOP_PACE_CNT   ((EventBits_t)(1<<4))
 
 
 

@@ -414,6 +414,30 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     case WF_COMM_CID_SET_SIN_2Hz16mVpp:{
         ret = gpWaveformDev->setFuncSin(1,2.0f, 0.016f);
     } break;
+    case WF_COMM_CID_SET_PACE_A:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_A);
+    } break;
+    case WF_COMM_CID_SET_PACE_B:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_B);
+    } break;
+    case WF_COMM_CID_SET_PACE_C:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_C);
+    } break;
+    case WF_COMM_CID_SET_PACE_D:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_D);
+    } break;
+    case WF_COMM_CID_SET_PACE_E:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_E);
+    } break;
+    case WF_COMM_CID_SET_PACE_F:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_F);
+    } break;
+    case WF_COMM_CID_SET_PACE_G:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_G);
+    } break;
+    case WF_COMM_CID_SET_PACE_H:{
+        ret = gpWaveformDev->setPaceByEnum(PACE_H);
+    } break;
     default:
         break;
     }

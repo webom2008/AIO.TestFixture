@@ -104,6 +104,30 @@ int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg)
     case WF_CTRL_2Hz_16mVpp_SIN:{
         ret = setAndWaitByPC(WF_COMM_CID_SET_SIN_2Hz16mVpp);
     }break;
+    case WF_CTRL_PACE_A:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_A);
+    }break;
+    case WF_CTRL_PACE_B:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_B);
+    }break;
+    case WF_CTRL_PACE_C:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_C);
+    }break;
+    case WF_CTRL_PACE_D:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_D);
+    }break;
+    case WF_CTRL_PACE_E:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_E);
+    }break;
+    case WF_CTRL_PACE_F:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_F);
+    }break;
+    case WF_CTRL_PACE_G:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_G);
+    }break;
+    case WF_CTRL_PACE_H:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_PACE_H);
+    }break;
     default:{}break;
     }
     return ret;

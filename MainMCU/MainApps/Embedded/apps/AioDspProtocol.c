@@ -383,6 +383,16 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_ECG_PROBE);
     }
+    else if (AIO_ECG_PACE_SW_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_PACE_SW);
+    }
+    else if (AIO_ECG_PACE_CHANNEL_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_PACE_CH);
+    }
     else //do nothing...
     {
         if (gTestAioRxCheck[id] != pPacket->PacketNum)
