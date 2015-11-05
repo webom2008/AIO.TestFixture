@@ -191,17 +191,20 @@ typedef struct
 #define PC_ADDR                     0x99
 
 
-
 typedef struct
 {
     u16 u16DspAckMMHG;
     u16 u16HR;
     u16 u16EcgProbeInfo;
+    u16 u16Temp1Val;
+    u16 u16Temp2Val;
+    
     u8 u8DspAckVerifyVal;
     u8 u8DspAck150mmHgVal;
     u8 u8DspAck310mmHgVal[2];
     u8 u8DspAckNibpAlarmType;
     u8 u8RR;
+    u8 u8TempProbeInfo;
     
 } DspAckResult_Typedef;
 
@@ -217,8 +220,9 @@ typedef struct
 #define DSP_PKT_ACK_BIT_PACE_SW     ((EventBits_t)(1<<9))
 #define DSP_PKT_ACK_BIT_HR_RR       ((EventBits_t)(1<<10))
 #define DSP_PKT_ACK_BIT_RESP_CH     ((EventBits_t)(1<<11))
+#define DSP_PKT_ACK_BIT_TEMP_DATA   ((EventBits_t)(1<<12))
 
-extern DspAckResult_Typedef    *gpDspAckResult;
+extern DspAckResult_Typedef     *gpDspAckResult;
 
 int createAioDspUnpackTask(void);
 

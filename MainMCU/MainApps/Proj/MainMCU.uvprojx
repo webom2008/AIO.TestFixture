@@ -778,6 +778,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_resp.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_temp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_temp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -867,6 +872,11 @@
               <FileName>testFuncResp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\testFuncResp.c</FilePath>
+            </File>
+            <File>
+              <FileName>testFuncTemp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\testFuncTemp.c</FilePath>
             </File>
           </Files>
         </Group>

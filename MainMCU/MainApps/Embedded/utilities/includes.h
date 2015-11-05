@@ -68,6 +68,7 @@ extern "C"{
 #include "../apps/testFuncEcg.h"
 #include "../apps/testFuncNibp.h"
 #include "../apps/testFuncResp.h"
+#include "../apps/testFuncTemp.h"
 #include "../apps/testFunctions.h"
 #include "../apps/EcgDebug.h"
 //includes others

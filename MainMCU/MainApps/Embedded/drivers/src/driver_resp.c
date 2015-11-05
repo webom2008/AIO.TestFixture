@@ -174,7 +174,7 @@ int AioRESPDebugCtrl(const AIORESPDEBCTRL_CMD cmd, void *arg)
     }break;
     }
     
-    if ((char )ECG_DEB_CID_UNVALID == cid)
+    if ((char )RESP_DEB_CID_UNVALID == cid)
     {
         return -1;
     }

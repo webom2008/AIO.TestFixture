@@ -34,9 +34,8 @@
  * project-wide global variables                *
  *----------------------------------------------*/
 EventGroupHandle_t xDspPktAckEventGroup = NULL;
-DspAckResult_Typedef    gDspAckResult;
-DspAckResult_Typedef    *gpDspAckResult = &gDspAckResult;
-
+DspAckResult_Typedef        gDspAckResult;
+DspAckResult_Typedef        *gpDspAckResult = &gDspAckResult;
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
@@ -264,8 +263,10 @@ int sendAioDspPktByID(const UART_PacketID id, char* pData, const u8 lenght, cons
 int initAioDspResource(void)
 {
     int ret = 0;
+    
     ret = initAioEcgDebugResource();
     xDspPktAckEventGroup = xEventGroupCreate();
+    
     do{} while (NULL == xDspPktAckEventGroup);
 
     return ret;
@@ -301,6 +302,27 @@ static int exeAioRespDebugPacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( gpRespDebug->xEventGroup, 
                             RESP_DEB_PKT_BIT_STOP_VPP);
     }break;
+    default:{
+
+    }break;
+    } //End of switch
+    return 0;
+}
+
+
+static int exeAioTempDebugPacket(AioDspProtocolPkt *pPacket)
+{
+    switch(pPacket->DataAndCRC[0])
+    {
+    case (u8)TEMP_DEB_CID_SELFCHECK:{
+        gpTempDebug->u8SelfcheckResult = pPacket->DataAndCRC[1];
+        xEventGroupSetBits( gpTempDebug->xEventGroup, 
+                            TEMP_DEB_PKT_BIT_SELFCHECK);
+    }break;
+    
+    case (u8)TEMP_DEB_CID_UPLOAD_TYPE:{
+    }break;
+    
     default:{
 
     }break;
@@ -434,6 +456,20 @@ static int exePacket(AioDspProtocolPkt *pPacket)
     else if (AIO_RX_RESP_Debug_ID == id)
     {
         exeAioRespDebugPacket(pPacket);
+    }
+    else if (AIO_RX_TEMP_Debug_ID == id)
+    {
+        exeAioTempDebugPacket(pPacket);
+    }
+    else if (AIO_TX_TEMP_REALTIME_ID == id)
+    {
+        gpDspAckResult->u8TempProbeInfo = pPacket->DataAndCRC[0];
+        gpDspAckResult->u16Temp1Val = (u16)((pPacket->DataAndCRC[1]<<8) \
+                                |(pPacket->DataAndCRC[2]));
+        gpDspAckResult->u16Temp2Val = (u16)((pPacket->DataAndCRC[3]<<8) \
+                                |(pPacket->DataAndCRC[4]));
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_TEMP_DATA);
     }
     else //do nothing...
     {

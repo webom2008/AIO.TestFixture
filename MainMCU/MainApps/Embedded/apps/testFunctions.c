@@ -296,21 +296,6 @@ int testAioBoardMaxCurrent(void)
     return 0;
 }
 
-int testTempSelfcheck(void)
-{
-    return 0;
-}
-
-int testTempProbeOff(void)
-{
-    return 0;
-}
-
-int testTempPrecision(void)
-{
-    return 0;
-}
-
 int testSpo2Uart(void)
 {
     return 0;

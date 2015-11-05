@@ -53,6 +53,7 @@ extern "C"{
 #include "driver_ecg.h"
 #include "driver_waveform.h"
 #include "driver_resp.h"
+#include "driver_temp.h"
 
 int DriverMoudleInit(void);
 
