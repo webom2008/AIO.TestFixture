@@ -471,6 +471,11 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_TEMP_DATA);
     }
+    else if (SpO2_MODEL_VERSION_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_SPO2_VER);
+    }
     else //do nothing...
     {
         if (gTestAioRxCheck[id] != pPacket->PacketNum)

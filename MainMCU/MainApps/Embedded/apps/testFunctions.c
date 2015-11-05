@@ -298,21 +298,22 @@ int testAioBoardMaxCurrent(void)
 
 int testSpo2Uart(void)
 {
-    return 0;
-}
-
-int testIbpSelfcheck(void)
-{
-    return 0;
-}
-
-int testIbpProbeOff(void)
-{
-    return 0;
-}
-
-int testIbpAmplitudeBand(void)
-{
-    return 0;
+    EventBits_t uxBits = 0;
+    
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_SPO2_VER);
+    sendAioDspPktByID(SpO2_MODEL_VERSION_ID, NULL, 0, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,       // The event group being tested.
+            DSP_PKT_ACK_BIT_SPO2_VER,   // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if (uxBits & DSP_PKT_ACK_BIT_SPO2_VER)
+    {
+        return 0;
+    }
+    ERROR("testSpo2Uart timeout!!!\r\n");
+    return -1;
 }
 

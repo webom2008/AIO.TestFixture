@@ -52,17 +52,17 @@ typedef enum
 {
   
     /*----------- SpO2 Start ------------*/
-    SpO2_MODEL_VERSION_ID	    = 0x10,
-    SpO2_ALARM_INFO_ID		    = 0x11,
-    SpO2_SELF_CHECK_ID		    = 0x12,
+    SpO2_MODEL_VERSION_ID       = 0x10,
+    SpO2_ALARM_INFO_ID          = 0x11,
+    SpO2_SELF_CHECK_ID          = 0x12,
     SpO2_PATIENT_SPEED_ID       = 0x13,
     SpO2_WORK_MODE_ID           = 0x14,
     SpO2_MODEL_LOWPOWER_ID      = 0x16,//only for debug
-    SpO2_POWER_DETECT_ID  	    = 0x17,
-    SpO2_SPO2_REALTIME_ID  	    = 0x19,//only for debug
+    SpO2_POWER_DETECT_ID        = 0x17,
+    SpO2_SPO2_REALTIME_ID       = 0x19,//only for debug
     SPO2_NORMALIZED_ID          = 0x1A,
-    SPO2_CALC_RESULT_ID 	 	= 0x1B,
-    SPO2_DEBUG_INTERFACE_ID 	= 0x1F,
+    SPO2_CALC_RESULT_ID         = 0x1B,
+    SPO2_DEBUG_INTERFACE_ID     = 0x1F,
     /*----------- SpO2 Stop ------------*/
 
     /*----------- AIO Start ------------*/
@@ -221,6 +221,7 @@ typedef struct
 #define DSP_PKT_ACK_BIT_HR_RR       ((EventBits_t)(1<<10))
 #define DSP_PKT_ACK_BIT_RESP_CH     ((EventBits_t)(1<<11))
 #define DSP_PKT_ACK_BIT_TEMP_DATA   ((EventBits_t)(1<<12))
+#define DSP_PKT_ACK_BIT_SPO2_VER    ((EventBits_t)(1<<13))
 
 extern DspAckResult_Typedef     *gpDspAckResult;
 

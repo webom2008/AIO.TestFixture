@@ -878,6 +878,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\testFuncTemp.c</FilePath>
             </File>
+            <File>
+              <FileName>testFuncIbp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\testFuncIbp.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
