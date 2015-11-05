@@ -131,6 +131,18 @@ int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg)
     case WF_CTRL_QRS_A:{
         ret = setAndWaitByPC(WF_COMM_CID_SET_QRS_A);
     }break;
+    case WF_CTRL_1Hz_1Vpp_QRS:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_QRS_1Hz1Vpp);
+    }break;
+    case WF_CTRL_0P333Hz_100mVpp_SIN:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_SIN_0P333Hz100mVpp);
+    }break;
+    case WF_CTRL_0P117Hz_100mVpp_SIN:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_SIN_0P117Hz100mVpp);
+    }break;
+    case WF_CTRL_2P5Hz_100mVpp_SIN:{
+        ret = setAndWaitByPC(WF_COMM_CID_SET_SIN_2P5Hz100mVpp);
+    }break;
     default:{}break;
     }
     return ret;

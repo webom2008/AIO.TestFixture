@@ -17,6 +17,10 @@
 #define WF_COMM_CID_SET_PACE_G              ((BYTE)0x0B)
 #define WF_COMM_CID_SET_PACE_H              ((BYTE)0x0C)
 #define WF_COMM_CID_SET_QRS_A               ((BYTE)0x0D)
+#define WF_COMM_CID_SET_QRS_1Hz1Vpp         ((BYTE)0x0E)
+#define WF_COMM_CID_SET_SIN_0P333Hz100mVpp  ((BYTE)0x0F)
+#define WF_COMM_CID_SET_SIN_0P117Hz100mVpp  ((BYTE)0x10)
+#define WF_COMM_CID_SET_SIN_2P5Hz100mVpp    ((BYTE)0x11)
 #define WF_COMM_CID_SET_ARB                 ((BYTE)0xFF)
 
 //USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
@@ -31,7 +35,7 @@ const char PATH_PACE_F[] = "\"USB:\\PACE_F.BARB\"";
 const char PATH_PACE_G[] = "\"USB:\\PACE_G.BARB\"";
 const char PATH_PACE_H[] = "\"USB:\\PACE_H.BARB\"";
 const char PATH_QRS_A[] = "\"USB:\\QRS_A.BARB\"";
-
+const char PATH_QRS_1Hz1Vpp[] = "\"USB:\\QRS_1Hz1Vpp.BARB\"";
 
 enum 
 {

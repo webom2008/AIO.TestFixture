@@ -283,6 +283,31 @@ int createAioDspUnpackTask(void)
 }
 
 
+static int exeAioRespDebugPacket(AioDspProtocolPkt *pPacket)
+{
+    switch(pPacket->DataAndCRC[0])
+    {
+    case (u8)RESP_DEB_CID_SAMPLE_SW:{
+    }break;
+    case (u8)RESP_DEB_CID_START_VPP:{
+        xEventGroupSetBits( gpRespDebug->xEventGroup, 
+                            RESP_DEB_PKT_BIT_START_VPP);
+    }break;
+    case (u8)RESP_DEB_CID_STOP_VPP:{
+        gpRespDebug->RespVppResult = (int)((pPacket->DataAndCRC[1] << 24) \
+                                            | (pPacket->DataAndCRC[2] << 16) \
+                                            | (pPacket->DataAndCRC[3] << 8) \
+                                            | pPacket->DataAndCRC[4]);
+        xEventGroupSetBits( gpRespDebug->xEventGroup, 
+                            RESP_DEB_PKT_BIT_STOP_VPP);
+    }break;
+    default:{
+
+    }break;
+    } //End of switch
+    return 0;
+}
+
 #define _NIBP_INFO_
 
 static int exePacket(AioDspProtocolPkt *pPacket)
@@ -400,6 +425,15 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         gpDspAckResult->u8RR  = pPacket->DataAndCRC[2];
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_HR_RR);
+    }
+    else if (AIO_RESP_CHANNEL_SEL_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_RESP_CH);
+    }
+    else if (AIO_RX_RESP_Debug_ID == id)
+    {
+        exeAioRespDebugPacket(pPacket);
     }
     else //do nothing...
     {

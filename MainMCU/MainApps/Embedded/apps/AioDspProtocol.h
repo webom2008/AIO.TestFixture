@@ -216,6 +216,7 @@ typedef struct
 #define DSP_PKT_ACK_BIT_PACE_CH     ((EventBits_t)(1<<8))
 #define DSP_PKT_ACK_BIT_PACE_SW     ((EventBits_t)(1<<9))
 #define DSP_PKT_ACK_BIT_HR_RR       ((EventBits_t)(1<<10))
+#define DSP_PKT_ACK_BIT_RESP_CH     ((EventBits_t)(1<<11))
 
 extern DspAckResult_Typedef    *gpDspAckResult;
 

@@ -44,6 +44,10 @@ typedef enum
     WF_CTRL_PACE_G,
     WF_CTRL_PACE_H,
     WF_CTRL_QRS_A,
+    WF_CTRL_1Hz_1Vpp_QRS,
+    WF_CTRL_0P333Hz_100mVpp_SIN,
+    WF_CTRL_0P117Hz_100mVpp_SIN,
+    WF_CTRL_2P5Hz_100mVpp_SIN,
     
     WF_CTRL_UNVALID,
 } WAVEFORM_CTRL_CMD;
@@ -72,6 +76,10 @@ typedef enum
 #define WF_COMM_CID_SET_PACE_G              ((u8)0x0B)
 #define WF_COMM_CID_SET_PACE_H              ((u8)0x0C)
 #define WF_COMM_CID_SET_QRS_A               ((u8)0x0D)
+#define WF_COMM_CID_SET_QRS_1Hz1Vpp         ((u8)0x0E)
+#define WF_COMM_CID_SET_SIN_0P333Hz100mVpp  ((u8)0x0F)
+#define WF_COMM_CID_SET_SIN_0P117Hz100mVpp  ((u8)0x10)
+#define WF_COMM_CID_SET_SIN_2P5Hz100mVpp    ((u8)0x11)
 #define WF_COMM_CID_SET_ARB                 ((u8)0xFF)
 
 

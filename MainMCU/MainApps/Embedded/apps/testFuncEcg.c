@@ -1022,7 +1022,7 @@ static int checkQRSTempA(void)
     if (uxBits & DSP_PKT_ACK_BIT_HR_RR)
     {
         INFO("checkECG1Pace HR=%d!!!\r\n", gpDspAckResult->u16HR);
-        if (gpDspAckResult->u16HR < 115) || (gpDspAckResult->u16HR > 125) //120bpm
+        if ((gpDspAckResult->u16HR < 115) || (gpDspAckResult->u16HR > 125)) //120bpm
         {
             err_cnt++;
         }

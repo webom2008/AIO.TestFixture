@@ -773,6 +773,11 @@
               <FileType>1</FileType>
               <FilePath>..\Embedded\drivers\src\driver_waveform.c</FilePath>
             </File>
+            <File>
+              <FileName>driver_resp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\drivers\src\driver_resp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -857,6 +862,11 @@
               <FileName>testFuncNibp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Embedded\apps\testFuncNibp.c</FilePath>
+            </File>
+            <File>
+              <FileName>testFuncResp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Embedded\apps\testFuncResp.c</FilePath>
             </File>
           </Files>
         </Group>

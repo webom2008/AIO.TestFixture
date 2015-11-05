@@ -16,7 +16,7 @@
     Modification: Created file
 
 ******************************************************************************/
-#include "drivers.h"
+#include "includes.h"
 
 /*----------------------------------------------*
  * external variables                           *
@@ -80,6 +80,8 @@ int DriverMoudleInit(void)
     ret |= SecurFlashInit();
     ret |= SecurFlashOpen();
     ret |= EcgDevInit();
+    ret |= RespDevInit();
+    
     while (ret < 0); //error hanppen
     return 0;
 }

@@ -296,11 +296,6 @@ int testAioBoardMaxCurrent(void)
     return 0;
 }
 
-int testRespAmplitudeBand(void)
-{
-    return 0;
-}
-
 int testTempSelfcheck(void)
 {
     return 0;
