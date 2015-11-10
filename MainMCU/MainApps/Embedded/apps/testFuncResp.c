@@ -53,7 +53,7 @@ typedef enum
  * macros                                       *
  *----------------------------------------------*/
 
-#define RESP_AMP_DELAY_MS                    2000
+#define RESP_AMP_DELAY_MS                    10000
 
 #define _INFO_
 #define _ERROR_
@@ -140,6 +140,7 @@ static int checkRespByChannel(  const RESP_CHANNEL channel,
         ERROR("checkRespByChannel set AIO failed!!!\r\n");
         return -1;
     }
+    INFO("setAndWaitRespChannel OK!\r\n");
     
     //set Wave ch2 = 100mVpp 0.333Hz SIN, 20bpm
     if (WavefromCtrl(WF_CTRL_0P333Hz_100mVpp_SIN, NULL) < 0)
@@ -156,6 +157,7 @@ static int checkRespByChannel(  const RESP_CHANNEL channel,
         ERROR("checkRespByChannel getVppFromAIO 0P333Hz!!!\r\n");
         return -1;
     }
+    INFO("getVppFromAIO 0P333Hz =%d!\r\n",*pGetU1);
 
     //set Wave ch2 = 100mVpp 0.117Hz SIN, 7bpm
     if (WavefromCtrl(WF_CTRL_0P117Hz_100mVpp_SIN, NULL) < 0)
@@ -172,6 +174,7 @@ static int checkRespByChannel(  const RESP_CHANNEL channel,
         ERROR("checkRespByChannel getVppFromAIO 0P117Hz!!!\r\n");
         return -1;
     }
+    INFO("getVppFromAIO 0P117Hz =%d!\r\n",*pGetU2);
 
     //set Wave ch2 = 100mVpp 2.5Hz SIN, 150bpm
     if (WavefromCtrl(WF_CTRL_2P5Hz_100mVpp_SIN, NULL) < 0)
@@ -188,6 +191,7 @@ static int checkRespByChannel(  const RESP_CHANNEL channel,
         ERROR("checkRespByChannel getVppFromAIO 2P5Hz!!!\r\n");
         return -1;
     }
+    INFO("getVppFromAIO 2P5Hz =%d!\r\n",*pGetU3);
 
     return 0;
 }
@@ -213,6 +217,7 @@ int testRespAmplitudeBand(void)
         return -1;
     }
 
+//while(1){
     //test channel I
     if (checkRespByChannel(RESP_I, &u1_I, &u2_I, &u3_I) < 0)
     {
@@ -224,7 +229,7 @@ int testRespAmplitudeBand(void)
     udprintf("I:U1 = %d uV\r\n", u1_I);
     udprintf("I:U2 = %d uV\r\n", u2_I);
     udprintf("I:U3 = %d uV\r\n", u3_I);
-    
+//vTaskDelay(2000);}
     //test channel II
     if (checkRespByChannel(RESP_II, &u1_II, &u2_II, &u3_II) < 0)
     {

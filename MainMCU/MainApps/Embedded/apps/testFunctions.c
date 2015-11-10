@@ -296,7 +296,7 @@ int testAioBoardMaxCurrent(void)
     return 0;
 }
 
-int testSpo2Uart(void)
+static int checkSpp2Communicate(void)
 {
     EventBits_t uxBits = 0;
     
@@ -308,12 +308,32 @@ int testSpo2Uart(void)
             DSP_PKT_ACK_BIT_SPO2_VER,   // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
-            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & DSP_PKT_ACK_BIT_SPO2_VER)
     {
         return 0;
     }
     ERROR("testSpo2Uart timeout!!!\r\n");
     return -1;
+
+}
+
+
+int testSpo2Uart(void)
+{
+    int err_cnt = 0;
+    int ret = 0;
+
+    do 
+    {
+        err_cnt++;
+        ret = checkSpp2Communicate();
+    } while((ret < 0 ) || (err_cnt < 20));
+    
+    if (err_cnt < 20)
+    {
+        INFO("testSpo2Uart OK!\r\n");
+    }
+    return ret;
 }
 

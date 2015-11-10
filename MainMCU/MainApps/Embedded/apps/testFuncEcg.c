@@ -72,6 +72,7 @@ typedef enum
 #define ECG_AMP_DELAY_MS                    2000
 #define ECG_PROBE_OFF_DELAY_MS              2000
 #define ECG_POLARITY_DELAY_MS               2000
+#define WAIT_FOR_WAVEFORM_STABLE_MS         4000
 
 
 #define ECG_AMP_U1_1            ((u16)500) //uV
@@ -413,7 +414,7 @@ static int waitAndCheckProbeInfo(CHECK_ECG_PROBE type)
             DSP_PKT_ACK_BIT_ECG_PROBE,    // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
-            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
     {
         info = gpDspAckResult->u16EcgProbeInfo;
@@ -471,6 +472,10 @@ static int waitAndCheckProbeInfo(CHECK_ECG_PROBE type)
         }break;
         } // End of switch(type)
     } //End of if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
+    else
+    {
+        udprintf("u16EcgProbeInfo timeout\r\n");
+    }
     
     if (alarm)
     {
@@ -493,6 +498,7 @@ int testEcgProbeOff(void)
     
     //S1:ECG switch to EcgOut
     EcgDevCtrl(CMD_ECG_ALL_SEL_ECGOUT, CMD_VAL_UNVALID);
+    EcgDevCtrl(CMD_ECG_ALL_OFF, CMD_VAL_OFF_NORMAL);
     
     //S2:Set Waveform Device
     if (WavefromCtrl(WF_CTRL_2Hz_16Vpp_SIN, NULL) < 0)
@@ -503,16 +509,24 @@ int testEcgProbeOff(void)
     
     //S3:delay
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+//while(1){
 
     EcgDevCtrl(CMD_ECG_LL_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
     if (waitAndCheckProbeInfo(CHECK_LL_OFF) < 0)
     {
-        ERROR("testEcgProbeOff CHECK_LL_OFF!!!\r\n");
+        //ERROR("testEcgProbeOff CHECK_LL_OFF!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LL_OFF, CMD_VAL_OFF_NORMAL);
-    
+
+//vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
+//if (waitAndCheckProbeInfo(CHECK_LL_OFF) < 0)
+//{
+ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
+//error++;
+//}
+//}
     EcgDevCtrl(CMD_ECG_LA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
     if (waitAndCheckProbeInfo(CHECK_LA_OFF) < 0)
@@ -641,6 +655,7 @@ static int checkPolarityByVolt(int volt_mV, const int alarm)
     
     OpDacReg.channel = DAC_CH_ALL;
     OpDacReg.val = convPolarityVolt2Dac(volt_mV);
+    INFO("DAC val =%d\r\n",OpDacReg.val);
     Dac8568Ctrl(DAC_CTRL_W_IN_UP_RES, &OpDacReg);
 
     EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH2);
@@ -652,7 +667,7 @@ static int checkPolarityByVolt(int volt_mV, const int alarm)
     ret = waitAndCheckEcgOverLoad();
     if (alarm != ret)
     {
-        ERROR("checkPositive500mVPolarity CMD_ECG_LL_SEL\r\n");
+        ERROR("CMD_ECG_LL_SEL %d\r\n",ret);
         err_cnt++;
     }
     
@@ -665,7 +680,7 @@ static int checkPolarityByVolt(int volt_mV, const int alarm)
     ret = waitAndCheckEcgOverLoad();
     if (alarm != ret)
     {
-        ERROR("checkPositive500mVPolarity CMD_ECG_RA_SEL\r\n");
+        ERROR("CMD_ECG_RA_SEL %d\r\n",ret);
         err_cnt++;
     }
     
@@ -678,22 +693,22 @@ static int checkPolarityByVolt(int volt_mV, const int alarm)
     ret = waitAndCheckEcgOverLoad();
     if (alarm != ret)
     {
-        ERROR("checkPositive500mVPolarity CMD_ECG_LA_SEL\r\n");
+        ERROR("CMD_ECG_LA_SEL %d\r\n",ret);
         err_cnt++;
     }
     
-    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH2);
-    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
-    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
-    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
-    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
-    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
-    ret = waitAndCheckEcgOverLoad();
-    if (alarm != ret)
-    {
-        ERROR("checkPositive500mVPolarity CMD_ECG_RL_SEL\r\n");
-        err_cnt++;
-    }
+//    EcgDevCtrl(CMD_ECG_RL_SEL, CMD_VAL_SEL_CH2);
+//    EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
+//    EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
+//    EcgDevCtrl(CMD_ECG_LL_SEL, CMD_VAL_SEL_CH0);
+//    EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
+//    vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
+//    ret = waitAndCheckEcgOverLoad();
+//    if (alarm != ret)
+//    {
+//        ERROR("CMD_ECG_RL_SEL %d\r\n",ret);
+//        err_cnt++;
+//    }
     
     EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH2);
     EcgDevCtrl(CMD_ECG_RA_SEL, CMD_VAL_SEL_CH0);
@@ -704,7 +719,7 @@ static int checkPolarityByVolt(int volt_mV, const int alarm)
     ret = waitAndCheckEcgOverLoad();
     if (alarm != ret)
     {
-        ERROR("checkPositive500mVPolarity CMD_ECG_V_SEL\r\n");
+        ERROR("CMD_ECG_V_SEL %d\r\n",ret);
         err_cnt++;
     }
 
@@ -734,23 +749,39 @@ int testEcgPolarity(void)
         ERROR("testEcgPolarity checkPositive500mVPolarity!!!\r\n");
         error++;
     }
+    else
+    {
+        INFO("testEcgPolarity +500mV OK\r\n");
+    }
     
     if (checkPolarityByVolt(-500, 0) < 0)
     {
         ERROR("testEcgPolarity checkNegative500mVPolarity!!!\r\n");
         error++;
     }
-    
-    if (checkPolarityByVolt(540, 1) < 0)
+    else
     {
-        ERROR("testEcgPolarity checkPositive540mVPolarity!!!\r\n");
+        INFO("testEcgPolarity -500mV OK\r\n");
+    }
+
+    if (checkPolarityByVolt(560, 1) < 0)
+    {
+        ERROR("testEcgPolarity checkPositive560mVPolarity!!!\r\n");
         error++;
     }
-    
-    if (checkPolarityByVolt(-540, 1) < 0)
+    else
     {
-        ERROR("testEcgPolarity checkNegative540mVPolarity!!!\r\n");
+        INFO("testEcgPolarity +560mV OK\r\n");
+    }
+    
+    if (checkPolarityByVolt(-560, 1) < 0)
+    {
+        ERROR("testEcgPolarity checkNegative560mVPolarity!!!\r\n");
         error++;
+    }
+    else
+    {
+        INFO("testEcgPolarity -560mV OK\r\n");
     }
     
     if (error) return -1;
@@ -819,6 +850,7 @@ static int getAioPaceCountAt5s(void)
     }
 
     count = gpEcgDebug->u8PaceCount;
+    INFO("getAioPaceCountAt5s count =%d\r\n",count);
     return  count;
 }
 
@@ -831,7 +863,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_A!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_A\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS);
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -843,7 +879,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_B!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_B\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS);
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -855,7 +895,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_C!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_C\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -867,7 +911,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_D!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_D\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -879,7 +927,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_E!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_E\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -891,7 +943,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_F!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_F\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -903,7 +959,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_G!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_G\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -915,7 +975,11 @@ static int checkPaceA2PaceH(void)
         ERROR("checkECG1Pace WF_CTRL_PACE_H!!!\r\n");
         return -1;
     }
-    vTaskDelay(2000/portTICK_PERIOD_MS); //wait for waveform stable
+    else
+    {
+        INFO("WF_CTRL_PACE_H\r\n");
+    }
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
     if (getAioPaceCountAt5s() < 4) //60bpm(1pcs), 5s must >= 4pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
@@ -993,25 +1057,30 @@ int testEcgPace(void)
     else return 0;
 }
 
-
+#define DELAY_QRS_TEMPA_MAX             30000
 static int checkQRSTempA(void)
 {
+    int ret = 0;
     int err_cnt = 0;
     EventBits_t uxBits = 0;
     
     if (WavefromCtrl(WF_CTRL_QRS_A, NULL) < 0)
+//    if (WavefromCtrl(WF_CTRL_1Hz_1Vpp_QRS, NULL) < 0) //test
     {
         ERROR("checkQRSTempA WF_CTRL_QRS_A!!!\r\n");
         return -1;
     }
-    vTaskDelay(5000/portTICK_PERIOD_MS); //wait for waveform stable
-    
-    if (getAioPaceCountAt5s() < 8) //120bpm(2pcs), 5s must >= 8pcs
+    vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
+
+    ret = getAioPaceCountAt5s();
+    if ((ret < 0)||(ret > 6)) //30bpm, 5s must >= 2.5pcs
     {
         ERROR("checkECG1Pace getAioPaceCountAt5s!!!\r\n");
         err_cnt++;
     }
-    
+
+    INFO("Waiting for QRS result!!! 30s...\r\n");
+    vTaskDelay(DELAY_QRS_TEMPA_MAX/portTICK_PERIOD_MS); //wait for waveform stable
     xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_HR_RR);
     uxBits = xEventGroupWaitBits(
             xDspPktAckEventGroup,   // The event group being tested.
@@ -1022,7 +1091,7 @@ static int checkQRSTempA(void)
     if (uxBits & DSP_PKT_ACK_BIT_HR_RR)
     {
         INFO("checkECG1Pace HR=%d!!!\r\n", gpDspAckResult->u16HR);
-        if ((gpDspAckResult->u16HR < 115) || (gpDspAckResult->u16HR > 125)) //120bpm
+        if ((gpDspAckResult->u16HR < 55) || (gpDspAckResult->u16HR > 65)) //60bpm
         {
             err_cnt++;
         }
@@ -1032,7 +1101,8 @@ static int checkQRSTempA(void)
         ERROR("checkECG1Pace HR_RR timeout!!!\r\n");
         err_cnt++;
     }
-    
+
+//    INFO("u16EcgProbeInfo = 0x%04x\r\n",gpDspAckResult->u16EcgProbeInfo);
     if (err_cnt) return -1;
     else return 0;
 }

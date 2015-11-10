@@ -409,7 +409,7 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
         ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_2Hz16Vpp:{
-        ret = gpWaveformDev->setFuncSin(1,2.0f, 16.0f);
+        ret = gpWaveformDev->setFuncSin(1,2.0f, 8.0f);
     } break;
     case WF_COMM_CID_SET_SIN_2Hz16mVpp:{
         ret = gpWaveformDev->setFuncSin(1,2.0f, 0.016f);
@@ -445,13 +445,13 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
         ret = gpWaveformDev->setFuncARB(1, PATH_QRS_1Hz1Vpp);
     } break;
     case WF_COMM_CID_SET_SIN_0P333Hz100mVpp:{
-        ret = gpWaveformDev->setFuncSin(1,0.333f, 0.1f);
+        ret = gpWaveformDev->setFuncSin(2,0.333f, 0.1f);
     } break;
     case WF_COMM_CID_SET_SIN_0P117Hz100mVpp:{
-        ret = gpWaveformDev->setFuncSin(1,0.117f, 0.1f);
+        ret = gpWaveformDev->setFuncSin(2,0.117f, 0.1f);
     } break;
     case WF_COMM_CID_SET_SIN_2P5Hz100mVpp:{
-        ret = gpWaveformDev->setFuncSin(1,2.5f, 0.1f);
+        ret = gpWaveformDev->setFuncSin(2,2.5f, 0.1f);
     } break;
     default:
         break;

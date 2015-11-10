@@ -9,6 +9,37 @@
 
 CWaveformDriver *gpWaveformDev = NULL;
 
+
+
+
+
+
+ViStatus __stdcall myExceptionHandler (
+    ViSession vi,
+    ViEventType eventType,
+    ViEvent context,
+    ViAddr usrHandle
+    ) 
+{
+        ViStatus exceptionErrNbr; char     nameBuffer[256];
+        ViString functionName = nameBuffer; char     errStrBuffer[256];
+        /* Get the error value from the exception context */
+        viGetAttribute( context, VI_ATTR_STATUS, &exceptionErrNbr );
+        /* Get the function name from the exception context */
+        viGetAttribute( context, VI_ATTR_OPER_NAME, functionName );
+        errStrBuffer[0] = 0;
+        viStatusDesc( vi, exceptionErrNbr, errStrBuffer );
+
+        printf("ERROR: Exception Handler reports\n"
+            "(%s)\n","VISA function '%s' failed witherror 0x%lx\n", 
+            functionName,
+            exceptionErrNbr, 
+            errStrBuffer );
+        return VI_SUCCESS;
+}
+
+
+
 CWaveformDriver::CWaveformDriver(void)
     :m_bIsDeviceOpen(false)
 {
@@ -32,16 +63,101 @@ bool CWaveformDriver::checkIsDeviceOpen(void)
     return m_bIsDeviceOpen;
 }
 
+
+
+void CWaveformDriver::BinaryArb(void)
+{
+    const char noErrString[] = "+0,\"No error\"\n";
+
+    const int NUM_DATA_POINTS = 100000;
+    float z[NUM_DATA_POINTS];
+
+    char tBuffer[100];
+    tBuffer[0] = '\0';
+
+    ViRsrc instAddress = "TCPIP0::156.140.113.206::inst0::INSTR";
+    ViSession rm = 0,
+        vi = 0;
+
+    //Open session for instrument.
+    viOpenDefaultRM(&rm);
+    viOpen(rm, instAddress, 0, 0, &vi);
+    viSetAttribute(vi, VI_ATTR_TMO_VALUE, 10000);
+
+    //Query Identity string and report.
+    viPrintf(vi, "*IDN?\n");
+    viScanf(vi, "%t", tBuffer);
+
+    printf("Instrument Identity String: %s\n", tBuffer);
+
+    //Clear and reset instrument
+    viPrintf(vi, "*CLS;*RST\n");
+    viPrintf(vi, "*OPC?\n");
+    viScanf(vi, "%t", tBuffer);
+
+    //Clear volatile memory
+    viPrintf(vi, "SOURce1:DATA:VOLatile:CLEar\n");
+
+    //Create simple ramp waveform
+    for (int i = 0; i < NUM_DATA_POINTS; i++)
+        z[i] = (i-1)/(float)NUM_DATA_POINTS;
+
+    // swap the endian format
+    viPrintf(vi, "FORM:BORD NORM\n");
+
+    //Downloading 
+    printf("Downloading Waveform...\n");
+
+    viPrintf(vi, "SOURce1:DATA:ARBitrary testarb, %*zb\n", NUM_DATA_POINTS, z);
+
+    // wait for the operation to complete before moving on
+    viPrintf(vi, "*WAI\n");
+
+    printf("Download Complete\n");
+
+    //Set desired configuration
+    viPrintf(vi, "SOURce1:FUNCtion:ARBitrary testarb\n"); // set current arb waveform to defined arb pulse
+    viPrintf(vi, "SOURce1:FUNCtion ARB\n"); // turn on arb function
+    viPrintf(vi, "SOURCE1:FUNCtion:ARB:SRATe 400000\n"); // set sample rate
+    viPrintf(vi, "SOURCE1:VOLT 2\n"); // set max waveform amplitude to 2 Vpp
+    viPrintf(vi, "SOURCE1:VOLT:OFFSET 0\n"); // set offset to 0 V
+    viPrintf(vi, "OUTPUT1:LOAD 50\n"); // set output load to 50 ohms
+
+    //Enable Output
+    viPrintf(vi, "OUTPUT1 ON\n"); // turn on channel 1 output
+
+    //Read Error/s
+    viPrintf(vi, "SYSTEM:ERROR?\n");
+    viScanf(vi, "%t", tBuffer);
+
+    if (strcmp(tBuffer, noErrString) == 0)
+    {
+        printf("Output set without any error\n");
+    }
+    else
+    {
+        printf("Error reported: %s\n", tBuffer);
+    }
+
+    //OPTIONAL: Save Arb to USB stick, and/or internal memory titled TEST ARB.barb
+
+    //viPrintf(vi, "MMEM:STOR:DATA \"USB:\TEST ARB.barb\"\n");
+    //viPrintf(vi, "MMEM:STOR:DATA \"INT:\TEST ARB.barb\"\n");
+
+    return;
+}
+
 int CWaveformDriver::openDevice(const char *pUsbDevName)
 {
     ViUInt16 intfType;  
     ViString intfName[512]; 
     ViBoolean viFlag = VI_FALSE;  
     ViStatus ret = -1;
+    ViAddr     myUserHandle = 0;
 
     //打开总的资源管理器，初始化资源管理器  
     ret = viOpenDefaultRM(&m_ViSessionRM); 
-    if (VI_SUCCESS != ret)
+    if (ret < VI_SUCCESS )
     {
         TRACE("viOpenDefaultRM Error!!!\r\n");
         return -1;
@@ -51,6 +167,36 @@ int CWaveformDriver::openDevice(const char *pUsbDevName)
         TRACE("viOpenDefaultRM successfully!!!\r\n");
     }
   
+//================================
+    ///* Install the exception handler and enable events for it */
+    //ret = viInstallHandler(m_ViSessionRM,VI_EVENT_EXCEPTION, myExceptionHandler,myUserHandle);
+    //if ( ret < VI_SUCCESS ) 
+    //{
+    //    printf( "ERROR: viInstallHandler failed with error 0x%lx\n", ret );
+    //}
+
+    //ret = viEnableEvent(m_ViSessionRM, VI_EVENT_EXCEPTION, VI_HNDLR, VI_NULL);
+    //if ( ret < VI_SUCCESS ) {
+    //    printf( "ERROR: viEnableEvent failed with error 0x%lx\n", ret );
+    //}
+
+    ///* Generate an error to demonstrate that the
+    //handler will be called */
+    //ret = viOpen( m_ViSessionRM, "badVisaName", NULL,
+    //    NULL, &vi );
+    //if ( ret < VI_SUCCESS ) {
+
+    //    printf("ERROR: viOpen failed with error 0x%lx\n"
+    //        "Exception Handler should have beencalled\n"
+    //        "before this message was printed.\n",ret
+    //        );
+    //}
+
+//================================
+
+
+
+
     //打开指定的USB接口控制的函数发生器
     ret = viOpen(m_ViSessionRM, (ViRsrc)pUsbDevName, VI_NULL, VI_NULL, &m_ViSession33522B);  
     if (VI_SUCCESS == ret)
@@ -117,11 +263,11 @@ int CWaveformDriver::closeDevice(void)
 
 int CWaveformDriver::rset2Default(void)
 {
-    if (VI_SUCCESS != viPrintf (m_ViSession33522B, "*RST\n"))
-    {
-        TRACE(">>getDeviceIDN RST error\r\n");
-        return -1;
-    }
+	char tBuffer[100];
+	//Clear and reset instrument
+	viPrintf(m_ViSession33522B, "*CLS;*RST\n");
+	viPrintf(m_ViSession33522B, "*OPC?\n");
+    viScanf(m_ViSession33522B, "%t", tBuffer);
     return 0;
 }
 
@@ -224,8 +370,43 @@ int CWaveformDriver::exampleARBFuncCh1InternalFile(void)
     return 0;
 }
 
+void CWaveformDriver::system_err(void)
+{
+    ViStatus err;
+    char buf[1024]={0};
+    int err_no;
+
+    err = viPrintf(m_ViSession33522B, "SYSTEM:ERR?\n");
+    if (err < VI_SUCCESS) err_handler (m_ViSession33522B, err);
+
+    err = viScanf (m_ViSession33522B, "%d%t", &err_no, &buf);
+    if (err < VI_SUCCESS) err_handler (m_ViSession33522B, err);
+
+    while (err_no >0){
+        printf ("Error Found: %d,%s\n", err_no, buf);
+        err = viScanf (m_ViSession33522B, "%d%t", &err_no, &buf);
+    }
+    err = viFlush(m_ViSession33522B, VI_READ_BUF);
+    if (err < VI_SUCCESS) err_handler (m_ViSession33522B, err);
+
+    err = viFlush(m_ViSession33522B, VI_WRITE_BUF);
+    if (err < VI_SUCCESS) err_handler (m_ViSession33522B, err);
+
+}
+
+void CWaveformDriver::err_handler(ViSession vi, ViStatus err)
+{
+    CString str;
+    char err_msg[1024]={0};
+    viStatusDesc (vi, err, err_msg);
+    str.Format("%s",err_msg);
+    MessageBox(NULL, str,"Agilent",MB_OK);
+    return;
+}
+
 int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
 {
+    ViStatus status;
     if (!m_bIsDeviceOpen) return -1;
 
     viPrintf(m_ViSession33522B, ":SOURce2:FUNCtion %s\n", "ARB");
@@ -251,6 +432,50 @@ int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
         TRACE("=================FUNCtion:ARBitrary error \r\n");
     }
     viPrintf(m_ViSession33522B, ":OUTPut2 %@1d\n", 1);                                   //开启输出  
+
+    //==================================
+    //viWriteFromFile();
+    //viWrite();
+    status = viPrintf(m_ViSession33522B, "*CLS\n");
+    status = viPrintf(m_ViSession33522B, "*RST\n");
+    status = viPrintf(m_ViSession33522B, ":SOURce1:DATA:VOLatile:CLEar\n");
+    status = viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA1 \"%s\"\n", PATH_PACE_A);
+    if (status < VI_SUCCESS)
+    {
+        err_handler(m_ViSession33522B, status);
+    }
+    status = viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary \"%s\"\n", PATH_PACE_A);
+    if (status < VI_SUCCESS)
+    {
+        err_handler(m_ViSession33522B, status);
+    }
+    status = viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion %s\n", "ARB");
+    if (status < VI_SUCCESS)
+    {
+        err_handler(m_ViSession33522B, status);
+    }
+    status = viPrintf(m_ViSession33522B, ":OUTPut1 %@1d\n", 1);
+    if (status < VI_SUCCESS)
+    {
+        err_handler(m_ViSession33522B, status);
+    }
+    //==================================
+    
+    viPrintf(m_ViSession33522B, ":OUTPut1 %@1d\n", 0);                                      //关闭输出  
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion %s\n", "ARB");
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:LIMit:HIGH %@3lf\n", 0.002);               //最大输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce1:VOLTage:LIMit:LOW %@3lf\n", 0);                   //最小输出电压  
+    viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary:SRATe %@3lf\n", 1000000.0);    //采样率 1MSa/s
+    //viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary:FREQuency %@3lf\n", 1000000.0);//频率 1MSa/s
+    
+    //MMEM:COPY "INT:\MySetup.sta","INT:\Backup"
+    viPrintf(m_ViSession33522B, ":MMEMory:COPY \"USB:\\PACE_A.BARB\",\"INT:\\MYARB.BARB\"\n");
+    viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA1 \"INT:\\MYARB.BARB\"\n");
+    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce1:FUNCtion:ARBitrary \"INT:\\MYARB.BARB\"\n"))
+    {
+        TRACE("=================FUNCtion:ARBitrary error \r\n");
+    }
+    viPrintf(m_ViSession33522B, ":OUTPut1 %@1d\n", 1);                                   //开启输出  
     return 0;
 }
 
@@ -320,19 +545,29 @@ int CWaveformDriver::setFuncARB (UINT8 channel, const char *pathName)
 {
     if (!m_bIsDeviceOpen) return -1;
     
-    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");                   //高阻抗
-    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"ARB");
-    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA%@1d %s\n",channel,pathName))
+	//Clear volatile memory
+	viPrintf(m_ViSession33522B, "SOURce%@1d:DATA:VOLatile:CLEar\n", channel);
+    
+    if (viPrintf(m_ViSession33522B, ":MMEMory:LOAD:DATA%@1d \"%s\"\n",channel,pathName) < VI_SUCCESS)
     {
         TRACE("=================:MMEMory:LOAD error \r\n");
         return -2;
     }
-    if (VI_SUCCESS != viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:ARBitrary %s\n", channel, pathName))
+	// wait for the operation to complete before moving on
+	viPrintf(m_ViSession33522B, "*WAI\n");
+
+    if (viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:ARBitrary \"%s\"\n", channel, pathName) < VI_SUCCESS)
     {
         TRACE("=================FUNCtion:ARBitrary error \r\n");
         return -3;
     }
-    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);                                   //开启输出  
+	// wait for the operation to complete before moving on
+	viPrintf(m_ViSession33522B, "*WAI\n");
+    
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");   //高阻抗
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"ARB");
+    //viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");   //高阻抗
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);          //开启输出  
     
     return 0;
 }
@@ -371,3 +606,4 @@ int CWaveformDriver::setPaceByEnum(int type)
     }
     return ret;
 }
+

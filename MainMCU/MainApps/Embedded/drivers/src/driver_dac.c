@@ -84,7 +84,7 @@ static int spi_write_byte(const u8 byte);
 #define DAC_FRAME_DATA_OFFSET           ((uint8_t) 4)
 #endif  
 
-#define DAC_REFIN_VOLT_MV               ((uint32_t)(2500))
+#define DAC_MAX_VOLT_MV                 (5000.0f)
 
 #define DAC_VAL_MID                     ((uint16_t) (DAC_VAL_MAX / 2))
 #define DAC_VAL_MIN                     ((uint16_t) 0)
@@ -357,16 +357,16 @@ int Dac8568Close(void)
 }
 
 //0xFFFF -- 5V
-//0x0000 -- 2.5V
+//0x0000 -- 0V
 
 uint16_t Dac8568mV2Dac(uint16_t mV)
 {
     uint32_t dac;
-    if (mV > DAC_VAL_MAX)
+    if (mV > (uint16_t)DAC_MAX_VOLT_MV)
     {
-        mV = DAC_VAL_MAX;
+        mV = (uint16_t)DAC_MAX_VOLT_MV;
     }
-    dac = DAC_VAL_MAX / DAC_REFIN_VOLT_MV *mV;
+    dac = (uint32_t)(DAC_VAL_MAX / DAC_MAX_VOLT_MV *mV);
     return (uint16_t)dac;
 }
 

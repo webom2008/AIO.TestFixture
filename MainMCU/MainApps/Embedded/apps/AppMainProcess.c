@@ -330,6 +330,12 @@ static void MainProcessTask(void *pvParameters)
     /* Just to stop compiler warnings. */
     ( void ) pvParameters;
     
+#ifndef SKIP_BUZZER_ALARM
+    BuzzerCtrl(BUZZER_ON);
+    vTaskDelay(500/portTICK_PERIOD_MS);
+    BuzzerCtrl(BUZZER_OFF);
+#endif
+
     INFO("MainProcessTask[%d] running...\r\n",u32CreateAppCount);
 
     if ((0 != SecurFlashCtrl(SECUR_CTRL_R_DOWNLOAD_CNT, &s32Val))||(0 == s32Val))
@@ -396,6 +402,7 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_DETECT_D3V3E_POWER:{
+#ifndef SKIP_STATE_DETECT_D3V3E_POWER
             ret = testAIOBaordD3V3EPower();
             if (0 == ret){
                 state = STATE_DETECT_OTHER_POWER;
@@ -403,6 +410,11 @@ static void MainProcessTask(void *pvParameters)
                 ERROR("E04-01:D3V3E power!!\r\n");
                 running = false;
             }
+#else
+            INFO("SKIP_STATE_DETECT_D3V3E_POWER\r\n");
+            ret = 0;
+            state = STATE_DETECT_OTHER_POWER;
+#endif
         }break;
         
         case STATE_DETECT_OTHER_POWER:{
@@ -488,7 +500,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_ECG_POLARITY:{
+#ifndef SKIP_STATE_ECG_POLARITY
             ret = testEcgPolarity();
+#endif
             if (0 == ret){
                 state = STATE_ECG_PACE;
             }else{
@@ -498,7 +512,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_ECG_PACE:{
+#ifndef SKIP_STATE_ECG_PACE
             ret = testEcgPace();
+#endif
             if (0 == ret){
                 state = STATE_ECG_QUICK_QRS;
             }else{
@@ -507,7 +523,9 @@ static void MainProcessTask(void *pvParameters)
             }
         }break;
         case STATE_ECG_QUICK_QRS:{
+#ifndef SKIP_STATE_ECG_QUICK_QRS
             ret = testEcgQuickQRS();
+#endif
             if (0 == ret){
                 state = STATE_RESP_AMPLITUDE_BAND;
             }else{
@@ -517,7 +535,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_RESP_AMPLITUDE_BAND:{
+#ifndef SKIP_STATE_RESP_AMPLITUDE_BAND
             ret = testRespAmplitudeBand();
+#endif
             if (0 == ret){
                 state = STATE_TEMP_SELFCHECK;
             }else{
@@ -526,7 +546,9 @@ static void MainProcessTask(void *pvParameters)
             }
         }break;
         case STATE_TEMP_SELFCHECK:{
+#ifndef SKIP_STATE_TEMP_SELFCHECK
             ret = testTempSelfcheck();
+#endif
             if (0 == ret){
                 state = STATE_TEMP_PROBE_OFF;
             }else{
@@ -536,7 +558,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_TEMP_PROBE_OFF:{
+#ifndef SKIP_STATE_TEMP_PROBE_OFF
             ret = testTempProbeOff();
+#endif
             if (0 == ret){
                 state = STATE_TEMP_PRECISION;
             }else{
@@ -545,7 +569,9 @@ static void MainProcessTask(void *pvParameters)
             }
         }break;
         case STATE_TEMP_PRECISION:{
+#ifndef SKIP_STATE_TEMP_PRECISION
             ret = testTempPrecision();
+#endif
             if (0 == ret){
                 state = STATE_SPO2_UART;
             }else{
@@ -555,7 +581,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
         
         case STATE_SPO2_UART:{
+#ifndef SKIP_STATE_SPO2_UART
             ret = testSpo2Uart();
+#endif
             if (0 == ret){
                 state = STATE_NIBP_SELFCHECK;
             }else{
@@ -665,17 +693,30 @@ static void MainProcessTask(void *pvParameters)
     {
         sendErrorHappenForceEnd();
         setLedStatus(LED_STATUS_ERROR);
-        INFO("Error happen!!!\r\n");
+        INFO("Error happen!!!\r\n");  
+#ifndef SKIP_BUZZER_ALARM
+        BuzzerCtrl(BUZZER_ON);
+        vTaskDelay(3000/portTICK_PERIOD_MS);
+        BuzzerCtrl(BUZZER_OFF);
+#endif
     }
     else
     {
-        setLedStatus(LED_STATUS_SUCCESS);
+        setLedStatus(LED_STATUS_SUCCESS);  
+#ifndef SKIP_BUZZER_ALARM
+        BuzzerCtrl(BUZZER_ON);
+        vTaskDelay(500/portTICK_PERIOD_MS);
+        BuzzerCtrl(BUZZER_OFF);
+        vTaskDelay(500/portTICK_PERIOD_MS);
+        BuzzerCtrl(BUZZER_ON);
+        vTaskDelay(500/portTICK_PERIOD_MS);
+        BuzzerCtrl(BUZZER_OFF);
+#endif
     }
 
     // power-off aio board
     s8Val = SW_OFF;
     AioBoardCtrl(AIOBRD_CTRL_SET_PWR,&s8Val);
-    
     INFO("MainProcessTask[%d] delete...\r\n",u32CreateAppCount);
     xMainProcessTaskHandle = NULL;
     vTaskDelete(NULL);

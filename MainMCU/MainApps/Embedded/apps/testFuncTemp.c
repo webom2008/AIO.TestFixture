@@ -54,7 +54,7 @@ enum
  * macros                                       *
  *----------------------------------------------*/
 
-#define TEMP_DELAY_MS                    2000
+#define TEMP_DELAY_MS                    5000
 
 #define _INFO_
 #define _ERROR_
@@ -120,7 +120,10 @@ static int waitTempAlarm(const u8 flag)
             return 0;
         }
     }
-    ERROR("waitTempAlarm timeout!!\r\n");
+    else
+    {
+        ERROR("waitTempAlarm timeout!!\r\n");
+    }
     return -1;
 }
 
@@ -139,6 +142,8 @@ int testTempProbeOff(void)
         ERROR("testTempProbeOff error1 !!!\r\n");
     }
     
+while(1)vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
+
     TempDevCtrl(TEMP_CTRL_CMD_OFF, TEMP_CMD_VAL_UNVALID);
     vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
 
@@ -215,6 +220,7 @@ int testTempPrecision(void)
     TempDevCtrl(TEMP_CTRL_CMD_ON, TEMP_CMD_VAL_UNVALID);
 
     TempDevCtrl(TEMP_CTRL_CMD_25C, TEMP_CMD_VAL_UNVALID);
+    INFO("Ready to TEMP_TEST_25C!!!\r\n");
     vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
     if (checkTempPrecison(TEMP_TEST_25C) < 0)
     {
@@ -224,6 +230,7 @@ int testTempPrecision(void)
 
     
     TempDevCtrl(TEMP_CTRL_CMD_37C, TEMP_CMD_VAL_UNVALID);
+    INFO("Ready to TEMP_CTRL_CMD_37C!!!\r\n");
     vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
     if (checkTempPrecison(TEMP_TEST_37C) < 0)
     {
@@ -233,6 +240,7 @@ int testTempPrecision(void)
 
     
     TempDevCtrl(TEMP_CTRL_CMD_42C, TEMP_CMD_VAL_UNVALID);
+    INFO("Ready to TEMP_CTRL_CMD_42C!!!\r\n");
     vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
     if (checkTempPrecison(TEMP_TEST_42C) < 0)
     {

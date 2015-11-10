@@ -468,6 +468,10 @@ static int exePacket(AioDspProtocolPkt *pPacket)
                                 |(pPacket->DataAndCRC[2]));
         gpDspAckResult->u16Temp2Val = (u16)((pPacket->DataAndCRC[3]<<8) \
                                 |(pPacket->DataAndCRC[4]));
+//        udprintf("status=0X%02X,Temp1 = %d, Temp2 = %d\r\n",
+//            gpDspAckResult->u8TempProbeInfo,
+//            gpDspAckResult->u16Temp1Val,
+//            gpDspAckResult->u16Temp2Val);
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_TEMP_DATA);
     }

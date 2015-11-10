@@ -26,16 +26,16 @@
 //USB[board]::manufacturer ID::model code::serial number[::USB interface number][::INSTR]
 const char DEVICE_NAME[] = "USB0::0x0957::0x2C07::MY52802529::0::INSTR";
 
-const char PATH_PACE_A[] = "\"USB:\\PACE_A.BARB\"";
-const char PATH_PACE_B[] = "\"USB:\\PACE_B.BARB\"";
-const char PATH_PACE_C[] = "\"USB:\\PACE_C.BARB\"";
-const char PATH_PACE_D[] = "\"USB:\\PACE_D.BARB\"";
-const char PATH_PACE_E[] = "\"USB:\\PACE_E.BARB\"";
-const char PATH_PACE_F[] = "\"USB:\\PACE_F.BARB\"";
-const char PATH_PACE_G[] = "\"USB:\\PACE_G.BARB\"";
-const char PATH_PACE_H[] = "\"USB:\\PACE_H.BARB\"";
-const char PATH_QRS_A[] = "\"USB:\\QRS_A.BARB\"";
-const char PATH_QRS_1Hz1Vpp[] = "\"USB:\\QRS_1Hz1Vpp.BARB\"";
+const char PATH_PACE_A[] = "USB:\\AIOTEST\\PACE_A.ARB";
+const char PATH_PACE_B[] = "USB:\\AIOTEST\\PACE_B.ARB";
+const char PATH_PACE_C[] = "USB:\\AIOTEST\\PACE_C.ARB";
+const char PATH_PACE_D[] = "USB:\\AIOTEST\\PACE_D.ARB";
+const char PATH_PACE_E[] = "USB:\\AIOTEST\\PACE_E.ARB";
+const char PATH_PACE_F[] = "USB:\\AIOTEST\\PACE_F.ARB";
+const char PATH_PACE_G[] = "USB:\\AIOTEST\\PACE_G.ARB";
+const char PATH_PACE_H[] = "USB:\\AIOTEST\\PACE_H.ARB";
+const char PATH_QRS_A[] = "USB:\\AIOTEST\\QRS_A.ARB";
+const char PATH_QRS_1Hz1Vpp[] = "USB:\\AIOTEST\\QRS_1Hz1Vpp.ARB";
 
 enum 
 {
@@ -64,6 +64,8 @@ public:
     int     rset2Default(void);
     int     getDeviceIDN(void);
     
+    void    system_err(void);
+
     int     setPaceByEnum(int type);
 
     int     setFuncSin(UINT8 channel, float freq_hz, float amp_V, float high_V = 0, float low_V = 0, float offset_V = 0);
@@ -77,10 +79,13 @@ public:
     int     exampleARBFuncCh2USBDeviceFile(void);
     //<!-- Debug_Interface_End -->
 protected:
+    void err_handler(ViSession vi, ViStatus err);
 
 private:
     bool        m_bIsDeviceOpen;
     ViSession   m_ViSessionRM;  
     ViSession   m_ViSession33522B;
+
+    void BinaryArb(void);//test
 };
 
