@@ -71,6 +71,7 @@ public:
     int     setFuncSin(UINT8 channel, float freq_hz, float amp_V, float high_V = 0, float low_V = 0, float offset_V = 0);
     int     setFuncPULSe (UINT8 channel, float freq_hz, float volt_V, float lead_s, float tra_s, float widt_s, float offset_V = 0);
     int     setFuncARB (UINT8 channel, const char *pathName);
+    int     setFuncARBByRemoteFile (UINT8 channel, const char *fileName);
 
     //<!-- Debug_Interface_Start -->
     int     testSampleCh1(void);
@@ -79,8 +80,10 @@ public:
     int     exampleARBFuncCh2USBDeviceFile(void);
     //<!-- Debug_Interface_End -->
 protected:
-    void err_handler(ViSession vi, ViStatus err);
-
+    void    err_handler(ViSession vi, ViStatus err);
+    void    WaitOperComplete(ViSession oIo);
+    int    myWriteIEEEBlock(const char *head, const INT16 *pDACVal, const UINT32 nDataCount);
+    int    myWriteARBitraryDAC(const char *head, const INT16 *pDACVal, const UINT32 nDataCount);
 private:
     bool        m_bIsDeviceOpen;
     ViSession   m_ViSessionRM;  

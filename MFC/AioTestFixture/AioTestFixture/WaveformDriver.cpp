@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "AioTestFixture.h"
 #include "WaveformDriver.h"
 
 #pragma comment(lib, "visa32.lib")
@@ -10,6 +11,7 @@
 CWaveformDriver *gpWaveformDev = NULL;
 
 
+const char noErrString[256] = {"+0,\"No error\"\n"};
 
 
 
@@ -263,11 +265,12 @@ int CWaveformDriver::closeDevice(void)
 
 int CWaveformDriver::rset2Default(void)
 {
-	char tBuffer[100];
+	//char tBuffer[100];
 	//Clear and reset instrument
 	viPrintf(m_ViSession33522B, "*CLS;*RST\n");
-	viPrintf(m_ViSession33522B, "*OPC?\n");
-    viScanf(m_ViSession33522B, "%t", tBuffer);
+	//viPrintf(m_ViSession33522B, "*OPC?\n");
+ //   viScanf(m_ViSession33522B, "%t", tBuffer);
+    WaitOperComplete(m_ViSession33522B);
     return 0;
 }
 
@@ -402,6 +405,17 @@ void CWaveformDriver::err_handler(ViSession vi, ViStatus err)
     str.Format("%s",err_msg);
     MessageBox(NULL, str,"Agilent",MB_OK);
     return;
+}
+
+void CWaveformDriver::WaitOperComplete(ViSession oIo)
+{
+	char strResult[128] = "";
+	while(1)
+	{
+		viQueryf(oIo,"*OPC?\n","%t",&strResult);
+		if(strResult)
+			break;
+	}
 }
 
 int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
@@ -571,7 +585,360 @@ int CWaveformDriver::setFuncARB (UINT8 channel, const char *pathName)
     
     return 0;
 }
+#if 0
 
+#include <visa.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+static void wait(clock_t wait)
+{
+    clock_t goal;
+    goal = wait + clock();
+    while( goal > clock() )
+        ;
+}
+static void WaitOperComplete(ViSession oIo)
+{
+    char strResult[128] = "";
+    while(1)
+    {
+        viQueryf(oIo,"*OPC?\n","%t",&strResult);
+        if(strResult)
+            break;
+    }
+}
+
+int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName)
+{
+    char strResult[256] = {0};
+    char noErrString[256] = {"+0,\"No error\"\n"};
+    char data[10000];
+    int i;
+
+    //Clear volatile memory
+    viPrintf(m_ViSession33522B,"DATA:VOLatile:CLEar\n");
+
+    // Create arb waveform named "TestArb" with 4000 points of 0-1 data
+    printf("Generating Waveform\n\n");
+    strcpy(data, "SOURce1:DATA:ARBitrary TestArb");
+    for(i = 1; i <= 5; i++)        /* Set rise time (5 points) */
+        sprintf(data, "%s,%3.1f", data, (double)(i - 1)/5);
+
+    for(i = 6; i <= 205; i++)
+        strcat(data, ",1");     /* Set pulse width (200 points) */
+
+    for(i = 206; i <= 210; i++)    /* Set fall time (5 points) */
+        sprintf(data, "%s,%3.1f", data, (double)(210 - i)/5);
+
+    for(i = 211; i <= 4000; i++)
+        strcat(data, ",0");     /* Set remaining points to zero */
+
+    strcat(data,"\n");
+
+    //Send Command to set the desired configuration
+    printf("Downloading Waveform...\n\n");
+    viPrintf(m_ViSession33522B,data);
+    WaitOperComplete(m_ViSession33522B);
+    printf("Download Complete\n\n");
+
+    //Set desired configuration.
+    viPrintf(m_ViSession33522B,"SOURce1:FUNCtion:ARBitrary TestArb\n"); // set current arb waveform to defined arb pulse
+    viPrintf(m_ViSession33522B,"SOURce1:FUNCtion ARB\n"); // turn on arb function
+    viPrintf(m_ViSession33522B,"SOURCE1:VOLT 2\n"); // set max waveform amplitude to 2 Vpp
+    viPrintf(m_ViSession33522B,"SOURCE1:VOLT:OFFSET 0\n"); // set offset to 0 V
+    viPrintf(m_ViSession33522B,"OUTPUT1:LOAD 50\n"); // set output load to 50 ohms
+    viPrintf(m_ViSession33522B,"SOURCE1:FUNCtion:ARB:SRATe 40000\n"); // set sample rate
+
+
+    //Enable Output
+    viPrintf(m_ViSession33522B,"OUTPUT1 ON\n"); // turn on channel 1 output
+
+    //Verify error output.
+    viQueryf(m_ViSession33522B,"SYST:ERR?\n","%t",&strResult);
+
+    if(!(strcmp(strResult,noErrString)))
+    {
+        printf("Arbitrary wave generated without any error\n");
+    }
+    else
+    {
+        printf("Error reported: %s",strResult);
+    }
+    return 0;
+}
+
+#else
+
+int CWaveformDriver::myWriteIEEEBlock(const char *head, const INT16 *pDACVal, const UINT32 nDataCount)
+{
+    UINT32 i = 0;
+    UINT32 newLen = 0;
+    UINT32 dataLenOfBytes = nDataCount*sizeof(INT16);
+    UINT32 offset = 0;
+	char *pDataFrame = NULL;
+    char *pBinValStart = NULL;
+    char pBuf[32];
+    
+    newLen = dataLenOfBytes + 100;
+    pDataFrame = new char[newLen];
+    if (NULL == pDataFrame)
+    {
+        return -1;
+    }
+    
+    //NORMal：每个数据点的最高有效字节 (MSB) 是第一个字节。 
+    //SWAPped：每个数据点的最低有效字节 (LSB) 是第一个字节。大多数计算机使用此字节顺序。
+	viPrintf(m_ViSession33522B, "FORMat:BORDer %s\n", "SWAPped"); //NORMal|SWAPped,default NORMal
+
+    memset(pDataFrame, 0x00, newLen);
+    strcat(pDataFrame, head);
+
+    memset(pBuf, 0x00, sizeof(pBuf));
+    sprintf(pBuf, "%d", dataLenOfBytes);
+    i =0;
+    while(0x00 != pBuf[i++]);
+    sprintf(pBuf, ",#%01d%d", i-1, dataLenOfBytes);
+    strcat(pDataFrame,pBuf);
+#if 0
+    offset = strlen(pDataFrame);
+    for (i=0; i < (offset+10); i++)TRACE("%d:0x%2x\r\n",i,pDataFrame[i]); //test
+
+    pBinValStart = &pDataFrame[offset];
+    
+    memcpy(pBinValStart, (char *)pDACVal, dataLenOfBytes);
+    for (i=0; i < (offset+10); i++)TRACE("%d:0x%2x\r\n",i,pDataFrame[i]);
+    offset += dataLenOfBytes;
+    memcpy(&pDataFrame[offset], "\n", sizeof("\n"));
+    //Send Command to set the desired configuration
+    printf("Downloading Waveform...\n\n");
+
+    viPrintf(m_ViSession33522B,pDataFrame);
+#else
+    //viPrintf(m_ViSession33522B, "%s, %*hb\n",head, nDataCount, pDACVal);
+    viPrintf(m_ViSession33522B, "%s%*hb\n",pDataFrame, nDataCount, pDACVal);
+    //status = visa32.viPrintf(vi, "DATA:ARB:DAC myWave, %*hb" & vbCrLf, arrData.Length(), arrData)
+#endif
+    delete pDataFrame;
+    pDataFrame = NULL;
+    return 0;
+}
+
+int CWaveformDriver::myWriteARBitraryDAC(const char *head, const INT16 *pDACVal, const UINT32 nDataCount)
+{
+    UINT32 i;
+    UINT32 newLen = 0;
+	char *pDataFrame = NULL;
+    char pBuf[10];
+
+    if (nDataCount > 65536)
+    {
+        return -1;
+    }
+
+    newLen = nDataCount*10+100;
+    pDataFrame = new char[newLen];
+    if (NULL == pDataFrame)
+    {
+        return -1;
+    }
+
+    memset(pDataFrame, 0x00, newLen);
+    strcat(pDataFrame, head);
+    for (i = 0; i < nDataCount; i++)
+    {
+        memset(pBuf, 0x00, sizeof(pBuf));
+        sprintf(pBuf, ",%d", pDACVal[i]);
+        strcat(pDataFrame, pBuf);
+    }
+    strcat(pDataFrame,"\n");
+    //Send Command to set the desired configuration
+    printf("Downloading Waveform...\n\n");
+    viPrintf(m_ViSession33522B,pDataFrame);
+    delete pDataFrame;
+    pDataFrame = NULL;
+    return 0;
+}
+
+int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName)
+{
+    CStdioFile file;
+    CString str;
+    UINT32 i, u32DataPoints;
+    char DataFrameHead[100];
+    char oneLineBuf[200];
+    int channel_cnt = 0;
+    int sample_rate = 0;
+    float high_level = 0.0;
+    float low_level = 0.0;
+    INT16 data = 0;
+    INT16 *pDataArray = NULL;
+
+    if (!m_bIsDeviceOpen) return -1;
+    
+    if (FALSE == PathFileExists(fileName))
+    {
+        MSG("请选择正确的文件路径\r\n");
+		return -1;
+    }
+
+    file.Open(fileName, CFile::modeRead);
+    file.SeekToBegin();//移到文件头
+    
+	viPrintf(m_ViSession33522B, "SOURce%@1d:DATA:VOLatile:CLEar\n", channel);
+    
+    if(!file.ReadString(str))   //Line001: File Format:1.10
+    {
+        file.Close();
+		return -1;
+    }
+    if(!file.ReadString(str))   //Line002: Channel Count:1
+    {
+        file.Close();
+        return -1;
+    }
+    else
+    {
+        str = str.Mid(str.Find(':')+1);
+        memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+        strcpy(oneLineBuf, str);
+        channel_cnt = atoi(oneLineBuf);
+    }
+
+    if(!file.ReadString(str))   //Line003: Sample Rate:1000000
+    {
+        file.Close();
+        return -1;
+    }
+    else
+    {
+        str = str.Mid(str.Find(':')+1);
+        memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+        strcpy(oneLineBuf, str);
+        sample_rate = atoi(oneLineBuf);
+    }
+
+    if(!file.ReadString(str))   //Line004: High Level:0.002
+    {
+        file.Close();
+        return -1;
+    }
+    else
+    {
+        str = str.Mid(str.Find(':')+1);
+        memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+        strcpy(oneLineBuf, str);
+        high_level = (float)atof(oneLineBuf);
+    }
+
+    if(!file.ReadString(str))   //Line005: Low Level:0
+    {
+        file.Close();
+        return -1;
+    }
+    else
+    {
+        str = str.Mid(str.Find(':')+1);
+        memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+        strcpy(oneLineBuf, str);
+        low_level = (float)atof(oneLineBuf);
+    }
+
+    if(!file.ReadString(str))   //Line006: Filter:"NORMAL"
+    {
+        file.Close();
+        return -1;
+    }
+
+    if(!file.ReadString(str))   //Line007: Data Points:1000000
+    {
+        file.Close();
+        return -1;
+    }
+    else
+    {
+        str = str.Mid(str.Find(':')+1);
+        memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+        strcpy(oneLineBuf, str);
+        u32DataPoints = (UINT32)atoi(oneLineBuf);
+    }
+    if(!file.ReadString(str))   //Line008: Data:
+    {
+        file.Close();
+        return -1;
+    }
+    
+	// Create arb waveform named "TestArb" 
+	printf("Downloading Waveform...\n\n");
+    
+    memset(DataFrameHead, 0x00, sizeof(DataFrameHead));
+	sprintf(DataFrameHead, ":SOURce%01d:DATA:ARBitrary:DAC TestArb", channel);
+
+    pDataArray = new INT16[u32DataPoints];
+    if (NULL == pDataArray)
+    {
+        file.Close();
+        return -1;
+    }
+    memset(pDataArray, 0x00,sizeof(INT16)*u32DataPoints);
+    for (i = 0; i < u32DataPoints; i++)
+    {
+            if(file.ReadString(str))   //Line009: Data[0],当文件没有读完时，返回TRUE，读到文件尾，返回FALSE
+            {
+                pDataArray[i] = (INT16)atoi(str);
+            }
+            else
+            {
+                break;
+            }
+    }
+
+    //if (u32DataPoints > 65536)
+    {
+        myWriteIEEEBlock(DataFrameHead, pDataArray, u32DataPoints);
+    }
+    //else
+    {
+    //    myWriteARBitraryDAC(DataFrameHead, pDataArray, u32DataPoints);
+    }
+    delete pDataArray;
+    pDataArray = NULL;
+    viPrintf(m_ViSession33522B,"*WAI\n");//Make sure no other commands are exectued until arb is done downloading
+	WaitOperComplete(m_ViSession33522B);
+	printf("Download Complete\n\n");
+    //关闭文件
+    file.Close();
+    
+    //Set desired configuration.
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d:LOAD %s\n", channel, "INF");   //高阻抗
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:ARBitrary TestArb\n", channel);
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion:ARBitrary:FILTer NORM\n", channel); //default
+	//WaitOperComplete(m_ViSession33522B);
+    viPrintf(m_ViSession33522B, ":SOURce%@1d:FUNCtion %s\n", channel,"ARB");// turn on arb function
+    viPrintf(m_ViSession33522B, ":SOURCE%@1d:VOLTage:HIGH %@3lf\n", channel,high_level);
+    viPrintf(m_ViSession33522B, ":SOURCE%@1d:VOLTage:LOW %@3lf\n", channel, low_level);
+    viPrintf(m_ViSession33522B, ":SOURCE%@1d:FUNCtion:ARB:SRATe %@1d\n", channel,sample_rate); // set sample rate
+    //Enable Output
+    viPrintf(m_ViSession33522B, ":OUTPut%@1d %@1d\n", channel, 1);          //开启输出  
+
+    memset(oneLineBuf, 0x00, sizeof(oneLineBuf));
+    //Verify error output.
+    viQueryf(m_ViSession33522B,"SYST:ERR?\n","%t",&oneLineBuf);
+
+    if(!(strcmp(oneLineBuf,noErrString)))
+    {
+        printf("Arbitrary wave generated without any error\n");
+    }
+    else
+    {
+        printf("Error reported: %s",oneLineBuf);
+    }
+
+    return 0;
+}
+#endif
 int CWaveformDriver::setPaceByEnum(int type)
 {
     int ret = -1;

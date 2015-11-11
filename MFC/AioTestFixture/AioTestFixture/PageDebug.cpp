@@ -139,14 +139,24 @@ void CPageDebug::OnBnClickedBtnWave2()
     //test 7.1.3.1 passed
     //gpWaveformDev->setFuncSin(1,2.0f, 16.0f, 8.0f, -8.0f);
 
-    gpWaveformDev->setPaceByEnum(PACE_A);
-    gpWaveformDev->setPaceByEnum(PACE_B);
-    gpWaveformDev->setPaceByEnum(PACE_C);
-    gpWaveformDev->setPaceByEnum(PACE_D);
-    gpWaveformDev->setPaceByEnum(PACE_E);
-    gpWaveformDev->setPaceByEnum(PACE_F);
-    gpWaveformDev->setPaceByEnum(PACE_G);
-    gpWaveformDev->setPaceByEnum(PACE_H);
+    //gpWaveformDev->setPaceByEnum(PACE_A);
+    //gpWaveformDev->setPaceByEnum(PACE_B);
+    //gpWaveformDev->setPaceByEnum(PACE_C);
+    //gpWaveformDev->setPaceByEnum(PACE_D);
+    //gpWaveformDev->setPaceByEnum(PACE_E);
+    //gpWaveformDev->setPaceByEnum(PACE_F);
+    //gpWaveformDev->setPaceByEnum(PACE_G);
+    //gpWaveformDev->setPaceByEnum(PACE_H);
 
-    gpWaveformDev->setFuncARB(2, PATH_QRS_1Hz1Vpp);
+    //gpWaveformDev->setFuncARB(2, PATH_QRS_1Hz1Vpp);
+    gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_A.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_B.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_C.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_D.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_E.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_F.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_G.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_H.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/QRS_1Hz1Vpp.arb");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/QRS_A.arb");
 }
