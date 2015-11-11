@@ -149,14 +149,25 @@ void CPageDebug::OnBnClickedBtnWave2()
     //gpWaveformDev->setPaceByEnum(PACE_H);
 
     //gpWaveformDev->setFuncARB(2, PATH_QRS_1Hz1Vpp);
+    gpWaveformDev->setDISPlay("PACE_A running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_A.arb");
+    gpWaveformDev->setDISPlay("PACE_B running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_B.arb");
+    gpWaveformDev->setDISPlay("PACE_C running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_C.arb");
+    gpWaveformDev->setDISPlay("PACE_D running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_D.arb");
+    gpWaveformDev->setDISPlay("PACE_E running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_E.arb");
+    gpWaveformDev->setDISPlay("PACE_F running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_F.arb");
+    gpWaveformDev->setDISPlay("PACE_G running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/PACE_G.arb");
+    gpWaveformDev->setDISPlay("PACE_H running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/PACE_H.arb");
+    gpWaveformDev->setDISPlay("QRS_1Hz1Vpp running.Please do not touch.");
     gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/QRS_1Hz1Vpp.arb");
-    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/QRS_A.arb");
+    gpWaveformDev->setDISPlay("QRS_A running.Please do not touch.");
+    gpWaveformDev->setFuncARBByRemoteFile(2, "AIOTEST/QRS_A.arb");//Sleep(10000);
+    gpWaveformDev->clearDISPlay();
 }

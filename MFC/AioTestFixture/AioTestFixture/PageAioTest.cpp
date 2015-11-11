@@ -400,57 +400,77 @@ int CPageAioTest::PktHandleWaveformComm(UartProtocolPacket *pPacket)
     switch (pPacket->DataAndCRC[1])
     {
     case WF_COMM_CID_SET_SIN_10Hz1Vpp:{
+        gpWaveformDev->setDISPlay("SIN_10Hz1Vpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(1,10.0f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_0P5Hz1Vpp:{
+        gpWaveformDev->setDISPlay("SIN_0P5Hz1Vpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(1,0.5f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_150Hz1Vpp:{
+        gpWaveformDev->setDISPlay("SIN_150Hz1Vpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(1,150.0f, 1.0f);
     } break;
     case WF_COMM_CID_SET_SIN_2Hz16Vpp:{
+        gpWaveformDev->setDISPlay("SIN_2Hz16Vpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(1,2.0f, 8.0f);
     } break;
     case WF_COMM_CID_SET_SIN_2Hz16mVpp:{
+        gpWaveformDev->setDISPlay("SIN_2Hz16mVpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(1,2.0f, 0.016f);
     } break;
     case WF_COMM_CID_SET_PACE_A:{
+        gpWaveformDev->setDISPlay("PACE_A running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_A);
     } break;
     case WF_COMM_CID_SET_PACE_B:{
+        gpWaveformDev->setDISPlay("PACE_B running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_B);
     } break;
     case WF_COMM_CID_SET_PACE_C:{
+        gpWaveformDev->setDISPlay("PACE_C running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_C);
     } break;
     case WF_COMM_CID_SET_PACE_D:{
+        gpWaveformDev->setDISPlay("PACE_D running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_D);
     } break;
     case WF_COMM_CID_SET_PACE_E:{
+        gpWaveformDev->setDISPlay("PACE_E running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_E);
     } break;
     case WF_COMM_CID_SET_PACE_F:{
+        gpWaveformDev->setDISPlay("PACE_F running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_F);
     } break;
     case WF_COMM_CID_SET_PACE_G:{
+        gpWaveformDev->setDISPlay("PACE_G running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_G);
     } break;
     case WF_COMM_CID_SET_PACE_H:{
+        gpWaveformDev->setDISPlay("PACE_H running.Please do not touch.");
         ret = gpWaveformDev->setPaceByEnum(PACE_H);
     } break;
     case WF_COMM_CID_SET_QRS_A:{
-        ret = gpWaveformDev->setFuncARB(1, PATH_QRS_A);
+        gpWaveformDev->setDISPlay("QRS_A running.Please do not touch.");
+        ret = gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/QRS_A.arb");
+        //ret = gpWaveformDev->setFuncARB(1, PATH_QRS_A);
     } break;
     case WF_COMM_CID_SET_QRS_1Hz1Vpp:{
-        ret = gpWaveformDev->setFuncARB(1, PATH_QRS_1Hz1Vpp);
+        gpWaveformDev->setDISPlay("QRS_1Hz1Vpp running.Please do not touch.");
+        ret = gpWaveformDev->setFuncARBByRemoteFile(1, "AIOTEST/QRS_1Hz1Vpp.arb");
+        //ret = gpWaveformDev->setFuncARB(1, PATH_QRS_1Hz1Vpp);
     } break;
     case WF_COMM_CID_SET_SIN_0P333Hz100mVpp:{
+        gpWaveformDev->setDISPlay("SIN_0P333Hz100mVpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(2,0.333f, 0.1f);
     } break;
     case WF_COMM_CID_SET_SIN_0P117Hz100mVpp:{
+        gpWaveformDev->setDISPlay("SIN_0P117Hz100mVpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(2,0.117f, 0.1f);
     } break;
     case WF_COMM_CID_SET_SIN_2P5Hz100mVpp:{
+        gpWaveformDev->setDISPlay("SIN_2P5Hz100mVpp running.Please do not touch.");
         ret = gpWaveformDev->setFuncSin(2,2.5f, 0.1f);
     } break;
     default:
