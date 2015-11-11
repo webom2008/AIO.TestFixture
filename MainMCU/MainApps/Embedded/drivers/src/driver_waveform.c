@@ -72,7 +72,7 @@ static int setAndWaitByPC(const u8 type)
                 COMP_PKT_BIT_WAVEFORM_COMM, // The bits within the event group to wait for.
                 pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
                 pdFALSE,                    // Don't wait for both bits, either bit will do.
-                1000/portTICK_PERIOD_MS);   // Wait a maximum of for either bit to be set.
+                10000/portTICK_PERIOD_MS);  // Wait a maximum of for either bit to be set.
         if (uxBits & COMP_PKT_BIT_WAVEFORM_COMM)
         {
             if (type == gpComputerReult->u8WaveformCID)
