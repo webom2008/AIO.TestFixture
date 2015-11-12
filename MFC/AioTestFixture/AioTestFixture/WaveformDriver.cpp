@@ -1,3 +1,22 @@
+
+/******************************************************************************
+*
+*                版权所有 (C), 2001-2015, 广州视源电子科技股份有限公司
+*
+*******************************************************************************
+* 文 件 名   : 
+* 版 本 号   : 
+* 生成日期   : 2015年11月12日
+* 最近修改   :
+* 功能描述   : 
+*
+* 修改历史   :
+* 1.日    期   : 
+*   作    者   : 
+*   修改内容   : 
+*
+******************************************************************************/
+
 #include "stdafx.h"
 #include <stdio.h>
 #include <string.h>
@@ -13,7 +32,6 @@ CWaveformDriver *gpWaveformDev = NULL;
 
 
 
-
 ViStatus __stdcall myExceptionHandler (
     ViSession vi,
     ViEventType eventType,
@@ -21,8 +39,10 @@ ViStatus __stdcall myExceptionHandler (
     ViAddr usrHandle
     ) 
 {
-        ViStatus exceptionErrNbr; char     nameBuffer[256];
-        ViString functionName = nameBuffer; char     errStrBuffer[256];
+        ViStatus exceptionErrNbr;
+        char     nameBuffer[256];
+        ViString functionName = nameBuffer;
+        char     errStrBuffer[256];
         /* Get the error value from the exception context */
         viGetAttribute( context, VI_ATTR_STATUS, &exceptionErrNbr );
         /* Get the function name from the exception context */
@@ -30,8 +50,8 @@ ViStatus __stdcall myExceptionHandler (
         errStrBuffer[0] = 0;
         viStatusDesc( vi, exceptionErrNbr, errStrBuffer );
 
-        printf("ERROR: Exception Handler reports\n"
-            "(%s)\n","VISA function '%s' failed witherror 0x%lx\n", 
+        printf("ERROR: Exception Handler reports\n"\
+            "VISA function %s failed with error 0x%lx :%s\n", 
             functionName,
             exceptionErrNbr, 
             errStrBuffer );
@@ -70,7 +90,7 @@ void CWaveformDriver::BinaryArb(void)
     const char noErrString[] = "+0,\"No error\"\n";
 
     const int NUM_DATA_POINTS = 100000;
-    float z[NUM_DATA_POINTS];
+    float *z = new float[NUM_DATA_POINTS];
 
     char tBuffer[100];
     tBuffer[0] = '\0';
@@ -109,6 +129,8 @@ void CWaveformDriver::BinaryArb(void)
     printf("Downloading Waveform...\n");
 
     viPrintf(vi, "SOURce1:DATA:ARBitrary testarb, %*zb\n", NUM_DATA_POINTS, z);
+
+    delete[] z;
 
     // wait for the operation to complete before moving on
     viPrintf(vi, "*WAI\n");
@@ -618,7 +640,7 @@ int CWaveformDriver::myWriteIEEEBlock(const char *head, const INT16 *pDACVal, co
     sprintf(pBuf, ",#%01d%d", i-1, dataLenOfBytes);
     strcat(pDataFrame,pBuf);
     viPrintf(m_ViSession33522B, "%s%*hb\n",pDataFrame, nDataCount, pDACVal);
-    delete pDataFrame;
+    delete[] pDataFrame;
     pDataFrame = NULL;
     return 0;
 }
@@ -654,7 +676,7 @@ int CWaveformDriver::myWriteARBitraryDAC(const char *head, const INT16 *pDACVal,
     //Send Command to set the desired configuration
     printf("Downloading Waveform...\n\n");
     viPrintf(m_ViSession33522B,pDataFrame);
-    delete pDataFrame;
+    delete[] pDataFrame;
     pDataFrame = NULL;
     return 0;
 }
@@ -797,7 +819,7 @@ int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName
     //{
     //    myWriteARBitraryDAC(DataFrameHead, pDataArray, u32DataPoints);
     //}
-    delete pDataArray;
+    delete[] pDataArray;
     pDataArray = NULL;
 
     viPrintf(m_ViSession33522B,"*WAI\n");//Make sure no other commands are exectued until arb is done downloading

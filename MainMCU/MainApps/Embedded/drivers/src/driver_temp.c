@@ -122,8 +122,8 @@ int TempDevCtrl(const TEMP_CTRL_CMD cmd, const TEMP_CTRL_CMD_VAL val)
         TEMP_SEL_CTL0_LOW;
     }break;
     case TEMP_CTRL_CMD_37C:{
-        TEMP_SEL_CTL1_HIGH;
-        TEMP_SEL_CTL0_LOW;
+        TEMP_SEL_CTL1_LOW;
+        TEMP_SEL_CTL0_HIGH;
     }break;
     case TEMP_CTRL_CMD_42C:{
         TEMP_SEL_CTL1_HIGH;

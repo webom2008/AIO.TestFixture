@@ -170,7 +170,7 @@ int CUpdate::SendResetAndUpdateTag(void)
 	g_pSerialProtocol->sendOnePacket(m_BChildID, 0,  (BYTE *)&SOFTWARE_UPDATE_ASK[0], sizeof(SOFTWARE_UPDATE_ASK));
 	
 	//S2:等待DSP的回应
-    timeout = GetTickCount()+1000; //1s
+    timeout = (DWORD)GetTickCount64()+1000; //1s
     while(1)
     {
 		Event = WaitForSingleObject(m_hGetUpdatePacketEvent, 100);
@@ -190,7 +190,7 @@ int CUpdate::SendResetAndUpdateTag(void)
 			}
         }
 
-        if (GetTickCount() >= timeout) // timeout
+        if (GetTickCount64() >= timeout) // timeout
         {
             break;
         }
@@ -227,7 +227,7 @@ int CUpdate::SendUpdateStartOfLenght(const unsigned int file_len)
 	g_pSerialProtocol->sendOnePacket(m_BChildID, 0,  pBuffer, sizeof(pBuffer));
 	
 	//S2:等待DSP的回应
-    timeout = GetTickCount()+1000;
+    timeout = (DWORD)GetTickCount64()+1000;
     while(1)
     {
 		Event = WaitForSingleObject(m_hGetUpdatePacketEvent, 100);
@@ -256,7 +256,7 @@ int CUpdate::SendUpdateStartOfLenght(const unsigned int file_len)
 			}
         }
 
-        if (GetTickCount() >= timeout) // timeout
+        if (GetTickCount64() >= timeout) // timeout
         {
             break;
         }
@@ -383,7 +383,7 @@ int CUpdate::SendUpdateEndOfTransmit(void)
 	g_pSerialProtocol->sendOnePacket(m_BChildID, 0,  pBuffer, sizeof(pBuffer));
 	
 	//S2:等待DSP的回应
-    timeout = GetTickCount()+1000;
+    timeout = (DWORD)GetTickCount64()+1000;
     while(1)
     {
 		Event = WaitForSingleObject(m_hGetUpdatePacketEvent, 100);
@@ -406,7 +406,7 @@ int CUpdate::SendUpdateEndOfTransmit(void)
             TRACE("\r\nID success Timeout!");
         }
 
-        if (GetTickCount() >= timeout) // timeout
+        if (GetTickCount64() >= timeout) // timeout
         {
             break;
         }
@@ -426,7 +426,7 @@ int CUpdate::WaitUpdateWrite2FlashDone(void)
 {
     DWORD	timeout, Event;
 
-    timeout = GetTickCount()+100;
+    timeout = (DWORD)GetTickCount64()+100;
     while(1)
     {
         if (SF_AIO_STM_UPDATE == m_BChildID)
@@ -455,7 +455,7 @@ int CUpdate::WaitUpdateWrite2FlashDone(void)
 			}
         }
 
-        if (GetTickCount() >= timeout) // timeout
+        if (GetTickCount64() >= timeout) // timeout
         {
             break;
         }

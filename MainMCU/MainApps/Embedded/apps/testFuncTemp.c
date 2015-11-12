@@ -141,8 +141,6 @@ int testTempProbeOff(void)
         err_cnt++;
         ERROR("testTempProbeOff error1 !!!\r\n");
     }
-    
-while(1)vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);
 
     TempDevCtrl(TEMP_CTRL_CMD_OFF, TEMP_CMD_VAL_UNVALID);
     vTaskDelay(TEMP_DELAY_MS/portTICK_PERIOD_MS);

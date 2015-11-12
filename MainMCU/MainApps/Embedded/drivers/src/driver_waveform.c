@@ -86,6 +86,7 @@ static int setAndWaitByPC(const u8 type)
 
 int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg)
 {
+#ifndef SKIP_CHECK_WAVEFORM_CONNECT
     int ret = -1;
     switch(cmd)
     {
@@ -146,6 +147,9 @@ int WavefromCtrl(const WAVEFORM_CTRL_CMD cmd, void *arg)
     default:{}break;
     }
     return ret;
+#else
+    return 0;
+#endif
 }
 
 int WavefromDelay(const WAVEFORM_DELAY type, const char times)

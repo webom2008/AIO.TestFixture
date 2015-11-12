@@ -48,8 +48,8 @@ extern "C"{
 
 
 
-#define SKIP_CHECK_DPM2200_CONNECT
-//#define SKIP_CHECK_WAVEFORM_CONNECT
+#define SKIP_CHECK_DPM2200_CONNECT          //屏蔽DPM2200压力计
+#define SKIP_CHECK_WAVEFORM_CONNECT         //屏蔽波形信号发生器
 
 //#define SKIP_BUZZER_ALARM
 #define SKIP_STATE_DETECT_D3V3E_POWER

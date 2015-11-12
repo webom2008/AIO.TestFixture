@@ -209,11 +209,11 @@ int CSerialProtocol::getSerialRxByte(BYTE *pdata, int *pBufLen, int timeout_ms)
 {
     DWORD timeout ,startTime, stopTime;
 
-    startTime = GetTickCount();
+    startTime = (DWORD)GetTickCount64();
     timeout = startTime+timeout_ms;
     while(1)
     {
-        stopTime =  GetTickCount();
+        stopTime =  (DWORD)GetTickCount64();
         if (m_SerialDriver.RxPopResult(pdata) > 0)
         {
             *pBufLen = *pBufLen -1; 

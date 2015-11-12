@@ -166,7 +166,8 @@ void CSerialDrive::ProcessErrorMessage(char* ErrorText)
         NULL    
     );   
    
-    sprintf(Temp, "WARNING:  %s Failed with the following error: \n%s\n", (char*)ErrorText, lpMsgBuf);    
+    sprintf(Temp, "WARNING:  %s Failed with the following error: \n%s\n", 
+        (char*)ErrorText, (char*)lpMsgBuf);    
     MessageBox(NULL, Temp, "Application Error", MB_ICONSTOP);   
    
     LocalFree(lpMsgBuf);   
