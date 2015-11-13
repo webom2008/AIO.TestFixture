@@ -4,16 +4,16 @@
 *                版权所有 (C), 2001-2015, 广州视源电子科技股份有限公司
 *
 *******************************************************************************
-* 文 件 名   : 
-* 版 本 号   : 
+* 文 件 名   : WaveformDriver.cpp
+* 版 本 号   : V1.0.0
 * 生成日期   : 2015年11月12日
-* 最近修改   :
-* 功能描述   : 
+* 最近修改   : 2015年11月12日 20:19:30
+* 功能描述   : 波形信号发生器的API
 *
 * 修改历史   :
-* 1.日    期   : 
-*   作    者   : 
-*   修改内容   : 
+* 1.日    期   : 2015年11月12日 20:20:06
+*   作    者   : QiuWeibo
+*   修改内容   : 首发
 *
 ******************************************************************************/
 
@@ -30,54 +30,60 @@
 CWaveformDriver *gpWaveformDev = NULL;
 
 
-
-
-ViStatus __stdcall myExceptionHandler (
-    ViSession vi,
-    ViEventType eventType,
-    ViEvent context,
-    ViAddr usrHandle
-    ) 
-{
-        ViStatus exceptionErrNbr;
-        char     nameBuffer[256];
-        ViString functionName = nameBuffer;
-        char     errStrBuffer[256];
-        /* Get the error value from the exception context */
-        viGetAttribute( context, VI_ATTR_STATUS, &exceptionErrNbr );
-        /* Get the function name from the exception context */
-        viGetAttribute( context, VI_ATTR_OPER_NAME, functionName );
-        errStrBuffer[0] = 0;
-        viStatusDesc( vi, exceptionErrNbr, errStrBuffer );
-
-        printf("ERROR: Exception Handler reports\n"\
-            "VISA function %s failed with error 0x%lx :%s\n", 
-            functionName,
-            exceptionErrNbr, 
-            errStrBuffer );
-        return VI_SUCCESS;
-}
-
-
-
+/******************************************************************************
+* 函数名称：CWaveformDriver
+* 功    能：构造函数
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月12日
+******************************************************************************/
 CWaveformDriver::CWaveformDriver(void)
     :m_bIsDeviceOpen(false)
 {
 }
 
 
+/******************************************************************************
+* 函数名称：~CWaveformDriver
+* 功    能：虚构函数
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月12日
+******************************************************************************/
 CWaveformDriver::~CWaveformDriver(void)
 {
     closeDevice();
 }
 
 
+/******************************************************************************
+* 函数名称：initApplication
+* 功    能：初始化函数
+* 参    数：void
+* 返 回 值：int, <0 -- error    >=0 success
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月12日
+******************************************************************************/
 int CWaveformDriver::initApplication(void)
 {
     return 0;
 }
 
 
+/******************************************************************************
+* 函数名称：checkIsDeviceOpen
+* 功    能：判断设备是否打开
+* 参    数：void
+* 返 回 值：bool, true -- 设备已打开 false -- 设备尚未打开
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月12日
+******************************************************************************/
 bool CWaveformDriver::checkIsDeviceOpen(void)
 {
     return m_bIsDeviceOpen;
@@ -85,6 +91,15 @@ bool CWaveformDriver::checkIsDeviceOpen(void)
 
 
 
+/******************************************************************************
+* 函数名称：BinaryArb
+* 功    能：一个示例：1.网口通信功能；2.自己产生数据功能
+* 参    数：void
+* 返 回 值：void
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月12日
+******************************************************************************/
 void CWaveformDriver::BinaryArb(void)
 {
     const char noErrString[] = "+0,\"No error\"\n";
@@ -169,6 +184,17 @@ void CWaveformDriver::BinaryArb(void)
     return;
 }
 
+/******************************************************************************
+* 函数名称：openDevice
+* 功    能：打开信号发生器，并且复位机器
+* 参    数：const char *, 符合VASI格式的设备名称，例如
+*           1）USB设备："USB0::0x0957::0x2C07::MY52802529::0::INSTR"
+*           2）网络设备："TCPIP0::156.140.113.206::inst0::INSTR"
+* 返 回 值：int,失败返回负值，成功返回值0
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::openDevice(const char *pUsbDevName)
 {
     ViUInt16 intfType;  
@@ -189,36 +215,6 @@ int CWaveformDriver::openDevice(const char *pUsbDevName)
         TRACE("viOpenDefaultRM successfully!!!\r\n");
     }
   
-//================================
-    ///* Install the exception handler and enable events for it */
-    //ret = viInstallHandler(m_ViSessionRM,VI_EVENT_EXCEPTION, myExceptionHandler,myUserHandle);
-    //if ( ret < VI_SUCCESS ) 
-    //{
-    //    printf( "ERROR: viInstallHandler failed with error 0x%lx\n", ret );
-    //}
-
-    //ret = viEnableEvent(m_ViSessionRM, VI_EVENT_EXCEPTION, VI_HNDLR, VI_NULL);
-    //if ( ret < VI_SUCCESS ) {
-    //    printf( "ERROR: viEnableEvent failed with error 0x%lx\n", ret );
-    //}
-
-    ///* Generate an error to demonstrate that the
-    //handler will be called */
-    //ret = viOpen( m_ViSessionRM, "badVisaName", NULL,
-    //    NULL, &vi );
-    //if ( ret < VI_SUCCESS ) {
-
-    //    printf("ERROR: viOpen failed with error 0x%lx\n"
-    //        "Exception Handler should have beencalled\n"
-    //        "before this message was printed.\n",ret
-    //        );
-    //}
-
-//================================
-
-
-
-
     //打开指定的USB接口控制的函数发生器
     ret = viOpen(m_ViSessionRM, (ViRsrc)pUsbDevName, VI_NULL, VI_NULL, &m_ViSession33522B);  
     if (VI_SUCCESS == ret)
@@ -272,6 +268,16 @@ int CWaveformDriver::openDevice(const char *pUsbDevName)
     return 0;
 }
 
+
+/******************************************************************************
+* 函数名称：closeDevice
+* 功    能：关闭设备
+* 参    数：void
+* 返 回 值：int,0 -- 操作成功；<0 -- 操作失败
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::closeDevice(void)
 {
     if (m_bIsDeviceOpen)
@@ -286,19 +292,33 @@ int CWaveformDriver::closeDevice(void)
 }
 
 
+/******************************************************************************
+* 函数名称：rset2Default
+* 功    能：复位设备
+* 参    数：void
+* 返 回 值：int,0 -- 操作成功；<0 -- 操作失败
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::rset2Default(void)
 {
     if (!m_bIsDeviceOpen) return -1;
-	//char tBuffer[100];
-	//Clear and reset instrument
 	viPrintf(m_ViSession33522B, "*CLS;*RST\n");
-	//viPrintf(m_ViSession33522B, "*OPC?\n");
- //   viScanf(m_ViSession33522B, "%t", tBuffer);
     WaitOperComplete(m_ViSession33522B);
     clearDISPlay();
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：getDeviceIDN
+* 功    能：获取设备IDN信息
+* 参    数：void    ,
+* 返 回 值：int     ,0 -- 操作成功；<0 -- 操作失败
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::getDeviceIDN(void)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -331,7 +351,15 @@ int CWaveformDriver::getDeviceIDN(void)
 }
 
 
-//控制函数发生器产生矩形波 
+/******************************************************************************
+* 函数名称：testSampleCh1
+* 功    能：测试例子1，实现通道1输出方波
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::testSampleCh1(void)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -350,8 +378,15 @@ int CWaveformDriver::testSampleCh1(void)
     return 0;
 }
 
-
-//控制函数发生器产生矩形波 
+/******************************************************************************
+* 函数名称：testSampleCh2
+* 功    能：测试例子，使通道2输出方波
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::testSampleCh2(void)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -369,17 +404,22 @@ int CWaveformDriver::testSampleCh2(void)
     return 0;
 }
 
-
-
-/*
-下面的代码可加载和修改内置任意波形。
-FUNCtion ARB
-VOLTage +3
-VOLTage:OFFSet +1
-FUNC:ARB:SRAT 1E5
-FUNCtion:ARBitrary "INT:\BUILTIN\EXP_RISE.ARB"
-OUTPut 1
-*/
+/******************************************************************************
+* 函数名称：exampleARBFuncCh1InternalFile
+* 功    能：
+*           下面的代码可加载和修改内置任意波形。
+*           FUNCtion ARB
+*           VOLTage +3
+*           VOLTage:OFFSet +1
+*           FUNC:ARB:SRAT 1E5
+*           FUNCtion:ARBitrary "INT:\BUILTIN\EXP_RISE.ARB"
+*           OUTPut 1
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::exampleARBFuncCh1InternalFile(void)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -398,6 +438,15 @@ int CWaveformDriver::exampleARBFuncCh1InternalFile(void)
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：system_err
+* 功    能：判断信号发生器是否发生错误
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 void CWaveformDriver::system_err(void)
 {
     ViStatus err;
@@ -422,6 +471,16 @@ void CWaveformDriver::system_err(void)
 
 }
 
+
+/******************************************************************************
+* 函数名称：err_handler
+* 功    能：根据error number 翻译错误信息
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 void CWaveformDriver::err_handler(ViSession vi, ViStatus err)
 {
     //CString str;
@@ -432,6 +491,15 @@ void CWaveformDriver::err_handler(ViSession vi, ViStatus err)
     return;
 }
 
+/******************************************************************************
+* 函数名称：WaitOperComplete
+* 功    能：等待操作完成
+* 参    数：ViSession ,VI对象
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 void CWaveformDriver::WaitOperComplete(ViSession oIo)
 {
 	char strResult[128] = "";
@@ -443,6 +511,15 @@ void CWaveformDriver::WaitOperComplete(ViSession oIo)
 	}
 }
 
+/******************************************************************************
+* 函数名称：exampleARBFuncCh2USBDeviceFile
+* 功    能：一个控制信号发生器加载USB设备的波形文件
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
 {
     ViStatus status;
@@ -519,9 +596,21 @@ int CWaveformDriver::exampleARBFuncCh2USBDeviceFile(void)
 }
 
 
-
-
-
+/******************************************************************************
+* 函数名称：setFuncSin
+* 功    能：控制输出指定正弦波
+* 参    数：
+*           UINT8 channel   ,输入，指定操作的通道
+*           float freq_hz   ,输入，频率值，单位Hz
+*           float amp_V     ,输入，幅度值，单位V
+*           float high_V    ,输入，高电压限值，单位V
+*           float low_V     ,输入，低电压限值，单位V
+*           float offset_V  ,输入，偏移电压值，单位V
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setFuncSin(UINT8 channel, float freq_hz, float amp_V, float high_V, float low_V, float offset_V)
 {
 /*
@@ -554,6 +643,22 @@ OUTP2 ON
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：setFuncPULSe
+* 功    能：控制输出指定脉冲波
+* 参    数：
+*           UINT8 channel   ,输入，指定操作的通道
+*           float freq_hz   ,输入，频率值，单位Hz
+*           float volt_V    ,输入，幅度值，单位V
+*           float lead_s    ,输入，上升沿时间，单位s
+*           float tra_s     ,输入，下降沿时间，单位s
+*           float widt_s    ,输入，脉冲宽度时间，单位s
+*           float offset_V  ,输入，偏移电压值，单位V
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setFuncPULSe (UINT8 channel, float freq_hz, float volt_V, float lead_s, float tra_s, float widt_s, float offset_V)
 {
 /*
@@ -580,6 +685,17 @@ OUTP ON
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：setFuncARB
+* 功    能：任意波形加载接口。波形文件可以内部存储，也可以在USB存储
+* 参    数：
+*           UINT8 channel           ,输入，指定输出通道
+*           const char *pathName    ，输入，波形文件路径
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setFuncARB (UINT8 channel, const char *pathName)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -611,6 +727,18 @@ int CWaveformDriver::setFuncARB (UINT8 channel, const char *pathName)
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：myWriteIEEEBlock
+* 功    能：通过IEEE块模式传输数据
+* 参    数：
+*           const char *head        ,输入参数,数据流头
+*           const INT16 *pDACVal    ,输入参数,数据缓存区
+*           const UINT32 nDataCount ,输入参数,数据总个数
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::myWriteIEEEBlock(const char *head, const INT16 *pDACVal, const UINT32 nDataCount)
 {
     UINT32 i = 0;
@@ -645,6 +773,18 @@ int CWaveformDriver::myWriteIEEEBlock(const char *head, const INT16 *pDACVal, co
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：myWriteARBitraryDAC
+* 功    能：通过ACSII模式传输数据
+* 参    数：
+*           const char *head        ,输入参数,数据流头
+*           const INT16 *pDACVal    ,输入参数,数据缓存区
+*           const UINT32 nDataCount ,输入参数,数据总个数
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::myWriteARBitraryDAC(const char *head, const INT16 *pDACVal, const UINT32 nDataCount)
 {
     UINT32 i;
@@ -681,6 +821,17 @@ int CWaveformDriver::myWriteARBitraryDAC(const char *head, const INT16 *pDACVal,
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：setFuncARBByRemoteFile
+* 功    能：从PC端读取文件，发送且加载到波形信号发生器
+* 参    数：
+*           UINT8 channel       ,输入参数，指定操作的通道
+*           const char *fileName,输入参数，指定PC端的文件路径及名称
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName)
 {
     CStdioFile file;
@@ -846,6 +997,15 @@ int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：IsErrorOutput
+* 功    能：判断是否操作失败
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 bool CWaveformDriver::IsErrorOutput(void)
 {
     bool flag = false;
@@ -868,6 +1028,16 @@ bool CWaveformDriver::IsErrorOutput(void)
     return flag;
 }
 
+
+/******************************************************************************
+* 函数名称：setPaceByEnum
+* 功    能：输出指定的PACE信号
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setPaceByEnum(int type)
 {
     int ret = -1;
@@ -911,6 +1081,16 @@ int CWaveformDriver::setPaceByEnum(int type)
     return ret;
 }
 
+
+/******************************************************************************
+* 函数名称：setDISPlay
+* 功    能：控制信号发生屏幕显示内容
+* 参    数：const char *pText，需要显示的内容，最大32字节
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::setDISPlay(const char *pText)
 {
     if (!m_bIsDeviceOpen) return -1;
@@ -919,6 +1099,15 @@ int CWaveformDriver::setDISPlay(const char *pText)
     return 0;
 }
 
+/******************************************************************************
+* 函数名称：clearDISPlay
+* 功    能：清楚波形信号发生器屏幕内容
+* 参    数：
+* 返 回 值：
+* 作    者：QiuWeibo
+* 电子邮箱：qiuweibo@cvte.com
+* 日    期：2015年11月13日
+******************************************************************************/
 int CWaveformDriver::clearDISPlay(void)
 {
     if (!m_bIsDeviceOpen) return -1;

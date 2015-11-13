@@ -519,11 +519,12 @@ int testEcgProbeOff(void)
         error++;
     }
     EcgDevCtrl(CMD_ECG_LL_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
 //vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 //if (waitAndCheckProbeInfo(CHECK_LL_OFF) < 0)
 //{
-ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
+//ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
 //error++;
 //}
 //}
@@ -535,6 +536,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_RA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -544,6 +546,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_RA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_RL_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -553,6 +556,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_RL_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_V_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -562,6 +566,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_V_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
     
     EcgDevCtrl(CMD_ECG_LL_LA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -571,6 +576,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LL_LA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
     
     EcgDevCtrl(CMD_ECG_LA_RA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -580,6 +586,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LA_RA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_LL_RA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -589,6 +596,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LL_RA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_LL_LA_RA_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -598,6 +606,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_LL_LA_RA_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     EcgDevCtrl(CMD_ECG_ALL_OFF, CMD_VAL_OFF_LEADOFF);
     vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
@@ -607,6 +616,7 @@ ERROR("testEcgProbeOff CMD_VAL_OFF_NORMAL End!!!\r\n");
         error++;
     }
     EcgDevCtrl(CMD_ECG_ALL_OFF, CMD_VAL_OFF_NORMAL);
+    vTaskDelay(ECG_PROBE_OFF_DELAY_MS/portTICK_PERIOD_MS);
 
     if (error) return -1;
     else return 0;
