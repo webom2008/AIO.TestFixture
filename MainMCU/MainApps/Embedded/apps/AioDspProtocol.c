@@ -480,6 +480,11 @@ static int exePacket(AioDspProtocolPkt *pPacket)
         xEventGroupSetBits( xDspPktAckEventGroup, 
                             DSP_PKT_ACK_BIT_SPO2_VER);
     }
+    else if (COM_PATIENT_TYPE_ID == id)
+    {
+        xEventGroupSetBits( xDspPktAckEventGroup, 
+                            DSP_PKT_ACK_BIT_PATIENT);
+    }
     else //do nothing...
     {
         if (gTestAioRxCheck[id] != pPacket->PacketNum)

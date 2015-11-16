@@ -992,8 +992,10 @@ int CWaveformDriver::setFuncARBByRemoteFile (UINT8 channel, const char *fileName
 
     if (IsErrorOutput())
     {
+        ERROR_INFO("setFuncARBByRemoteFile 设置有错误!!!\r\n");
         return -1;
     }
+    INFO("setFuncARBByRemoteFile 设置成功!!!\r\n");
     return 0;
 }
 
@@ -1019,11 +1021,11 @@ bool CWaveformDriver::IsErrorOutput(void)
     if(!(strcmp(oneLineBuf,noErrString)))
     {
         printf("Arbitrary wave generated without any error\n");
-        flag = true;
     }
     else
     {
         printf("Error reported: %s",oneLineBuf);
+        flag = true;
     }
     return flag;
 }
@@ -1093,9 +1095,11 @@ int CWaveformDriver::setPaceByEnum(int type)
 ******************************************************************************/
 int CWaveformDriver::setDISPlay(const char *pText)
 {
+#if 0
     if (!m_bIsDeviceOpen) return -1;
 	viPrintf(m_ViSession33522B, "DISPlay OFF\n");
 	viPrintf(m_ViSession33522B, "DISPlay:TEXT \"%s\"\n",pText);
+#endif
     return 0;
 }
 

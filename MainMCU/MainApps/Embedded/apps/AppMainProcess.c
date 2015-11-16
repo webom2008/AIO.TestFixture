@@ -466,7 +466,9 @@ static void MainProcessTask(void *pvParameters)
         }break;
                 
         case STATE_ECG_SELFCHECK:{
+#ifndef SKIP_STATE_ECG_SELFCHECK
             ret = testEcgSelfcheck();
+#endif
             if (0 == ret){
                 state = STATE_ECG_AMPLITUDE_BAND;
             }else{

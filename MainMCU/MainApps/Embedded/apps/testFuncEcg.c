@@ -66,6 +66,14 @@ typedef enum
     CHECK_ALL_OFF,
 } CHECK_ECG_PROBE;
 
+
+typedef enum
+{ 
+    ADULT     = 1,     
+    CHILD     = 2,
+    NEWBORN   = 3,
+} PATIENT_TypeDef;
+
 /*----------------------------------------------*
  * macros                                       *
  *----------------------------------------------*/
@@ -414,7 +422,7 @@ static int waitAndCheckProbeInfo(CHECK_ECG_PROBE type)
             DSP_PKT_ACK_BIT_ECG_PROBE,    // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
-            2000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+            10000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & DSP_PKT_ACK_BIT_ECG_PROBE)
     {
         info = gpDspAckResult->u16EcgProbeInfo;
@@ -456,7 +464,9 @@ static int waitAndCheckProbeInfo(CHECK_ECG_PROBE type)
             }
         }break;
         case CHECK_LL_LA_RA_OFF:{
-            if (info & PROBE_INFO_MASK_RL)
+            if ((info & PROBE_INFO_MASK_LL) \
+                && (info & PROBE_INFO_MASK_RA) \
+                && (info & PROBE_INFO_MASK_LA))
             {
                 alarm = 0;
             }
@@ -754,44 +764,44 @@ int testEcgPolarity(void)
     //S3:delay
     vTaskDelay(ECG_POLARITY_DELAY_MS/portTICK_PERIOD_MS);
 
-    if (checkPolarityByVolt(500, 0) < 0)
+    if (checkPolarityByVolt(516, 0) < 0)
     {
-        ERROR("testEcgPolarity checkPositive500mVPolarity!!!\r\n");
+        ERROR("testEcgPolarity checkPositive516mVPolarity!!!\r\n");
         error++;
     }
     else
     {
-        INFO("testEcgPolarity +500mV OK\r\n");
+        INFO("testEcgPolarity +516mV OK\r\n");
     }
     
-    if (checkPolarityByVolt(-500, 0) < 0)
+    if (checkPolarityByVolt(-516, 0) < 0)
     {
-        ERROR("testEcgPolarity checkNegative500mVPolarity!!!\r\n");
+        ERROR("testEcgPolarity checkNegative516mVPolarity!!!\r\n");
         error++;
     }
     else
     {
-        INFO("testEcgPolarity -500mV OK\r\n");
+        INFO("testEcgPolarity -516mV OK\r\n");
     }
 
-    if (checkPolarityByVolt(560, 1) < 0)
+    if (checkPolarityByVolt(566, 1) < 0)
     {
-        ERROR("testEcgPolarity checkPositive560mVPolarity!!!\r\n");
+        ERROR("testEcgPolarity checkPositive566mVPolarity!!!\r\n");
         error++;
     }
     else
     {
-        INFO("testEcgPolarity +560mV OK\r\n");
+        INFO("testEcgPolarity +566mV OK\r\n");
     }
     
-    if (checkPolarityByVolt(-560, 1) < 0)
+    if (checkPolarityByVolt(-566, 1) < 0)
     {
-        ERROR("testEcgPolarity checkNegative560mVPolarity!!!\r\n");
+        ERROR("testEcgPolarity checkNegative566mVPolarity!!!\r\n");
         error++;
     }
     else
     {
-        INFO("testEcgPolarity -560mV OK\r\n");
+        INFO("testEcgPolarity -566mV OK\r\n");
     }
     
     if (error) return -1;
@@ -1066,8 +1076,7 @@ int testEcgPace(void)
     if (err_cnt) return -1;
     else return 0;
 }
-
-#define DELAY_QRS_TEMPA_MAX             30000
+         
 static int checkQRSTempA(void)
 {
     int ret = 0;
@@ -1075,12 +1084,14 @@ static int checkQRSTempA(void)
     EventBits_t uxBits = 0;
     
     if (WavefromCtrl(WF_CTRL_QRS_A, NULL) < 0)
-//    if (WavefromCtrl(WF_CTRL_1Hz_1Vpp_QRS, NULL) < 0) //test
     {
         ERROR("checkQRSTempA WF_CTRL_QRS_A!!!\r\n");
         return -1;
     }
     vTaskDelay(WAIT_FOR_WAVEFORM_STABLE_MS/portTICK_PERIOD_MS); //wait for waveform stable
+
+    INFO("Waiting for QRS result!!! 10s...\r\n");
+    vTaskDelay(10000/portTICK_PERIOD_MS); //wait for waveform stable
 
     ret = getAioPaceCountAt5s();
     if ((ret < 0)||(ret > 6)) //30bpm, 5s must >= 2.5pcs
@@ -1089,19 +1100,17 @@ static int checkQRSTempA(void)
         err_cnt++;
     }
 
-    INFO("Waiting for QRS result!!! 30s...\r\n");
-    vTaskDelay(DELAY_QRS_TEMPA_MAX/portTICK_PERIOD_MS); //wait for waveform stable
     xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_HR_RR);
     uxBits = xEventGroupWaitBits(
-            xDspPktAckEventGroup,   // The event group being tested.
-            DSP_PKT_ACK_BIT_HR_RR,    // The bits within the event group to wait for.
+            xDspPktAckEventGroup,       // The event group being tested.
+            DSP_PKT_ACK_BIT_HR_RR,      // The bits within the event group to wait for.
             pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
             pdFALSE,                    // Don't wait for both bits, either bit will do.
             1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
     if (uxBits & DSP_PKT_ACK_BIT_HR_RR)
     {
         INFO("checkECG1Pace HR=%d!!!\r\n", gpDspAckResult->u16HR);
-        if ((gpDspAckResult->u16HR < 55) || (gpDspAckResult->u16HR > 65)) //60bpm
+        if ((gpDspAckResult->u16HR < 115) || (gpDspAckResult->u16HR > 125)) //120bpm
         {
             err_cnt++;
         }
@@ -1112,9 +1121,33 @@ static int checkQRSTempA(void)
         err_cnt++;
     }
 
-//    INFO("u16EcgProbeInfo = 0x%04x\r\n",gpDspAckResult->u16EcgProbeInfo);
     if (err_cnt) return -1;
     else return 0;
+}
+
+static int setAndWaitPatientType(const PATIENT_TypeDef type)
+{
+    u8 pBuf[1] = {0,};
+    EventBits_t uxBits = 0;
+
+    pBuf[0] = (u8)type;
+    xEventGroupClearBits(xDspPktAckEventGroup, DSP_PKT_ACK_BIT_PATIENT);
+    sendAioDspPktByID(COM_PATIENT_TYPE_ID, (char *)pBuf, 1, 0);
+    
+    uxBits = xEventGroupWaitBits(
+            xDspPktAckEventGroup,   // The event group being tested.
+            DSP_PKT_ACK_BIT_PATIENT,    // The bits within the event group to wait for.
+            pdTRUE,                     // BIT_COMPLETE and BIT_TIMEOUT should be cleared before returning.
+            pdFALSE,                    // Don't wait for both bits, either bit will do.
+            1000 / portTICK_PERIOD_MS );// Wait a maximum of for either bit to be set.
+    if ((EventBits_t)0x0 == (uxBits & DSP_PKT_ACK_BIT_PATIENT))
+    {
+        ERROR("setAndWaitPatientType timeout!!\r\n");
+        return -1;
+    }
+
+    INFO("setAndWaitPatientType OK!!\r\n");
+    return 0;
 }
 
 int testEcgQuickQRS(void)
@@ -1128,9 +1161,21 @@ int testEcgQuickQRS(void)
     EcgDevCtrl(CMD_ECG_LA_SEL, CMD_VAL_SEL_CH0);
     EcgDevCtrl(CMD_ECG_V_SEL, CMD_VAL_SEL_CH0);
 
+    if (setAndWaitPatientType(NEWBORN) < 0)
+    {
+        ERROR("setAndWaitPatientType NEWBORN!!!\r\n");
+        err_cnt++;
+    }
+    
     if (checkQRSTempA() < 0)
     {
         ERROR("testEcgQuickQRS checkQRSTempA!!!\r\n");
+        err_cnt++;
+    }
+    
+    if (setAndWaitPatientType(ADULT) < 0)
+    {
+        ERROR("setAndWaitPatientType ADULT!!!\r\n");
         err_cnt++;
     }
     
